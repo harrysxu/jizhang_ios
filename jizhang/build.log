@@ -1,0 +1,27 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme jizhang -destination "platform=iOS Simulator,name=iPhone 15 Pro" clean build
+
+2026-01-25 17:25:05.209 xcodebuild[42361:7921388] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-01-25 17:26:05.405 xcodebuild[42361:7921388] Writing error result bundle to /var/folders/30/2pnhj2b16d91h_2x6_n1mx4c0000gn/T/ResultBundle_2026-25-01_17-26-0005.xcresult
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ platform:iOS Simulator, OS:latest, name:iPhone 15 Pro }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "jizhang" scheme:
+		{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+		{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+		{ platform:iOS Simulator, arch:arm64, id:1DDE37DC-330C-4C5C-BA19-4214E715947B, OS:26.0.1, name:iPad (A16) }
+		{ platform:iOS Simulator, arch:arm64, id:3A87B679-D1E6-41AE-932F-8D16DDB2D70B, OS:26.0.1, name:iPad Air 11-inch (M3) }
+		{ platform:iOS Simulator, arch:arm64, id:FF1A0F53-BB29-4926-8AF0-F001904D184A, OS:26.0.1, name:iPad Air 13-inch (M3) }
+		{ platform:iOS Simulator, arch:arm64, id:D7DEADE7-E378-4AE5-98DE-B5CE5CC6D3A1, OS:26.0.1, name:iPad Pro 11-inch (M4) }
+		{ platform:iOS Simulator, arch:arm64, id:B6027653-A6B2-4B14-BA5C-7D6EBE81DB15, OS:26.0.1, name:iPad Pro 13-inch (M4) }
+		{ platform:iOS Simulator, arch:arm64, id:FDFB3D42-C7F9-4F97-98ED-7CBEABE66089, OS:26.0.1, name:iPad mini (A17 Pro) }
+		{ platform:iOS Simulator, arch:arm64, id:EDB8FEDE-A2BC-4BB8-B2D9-B8A93BDE7C5E, OS:26.0.1, name:iPhone 16e }
+		{ platform:iOS Simulator, arch:arm64, id:07D3DD59-A6E9-4909-93FF-B18949407A54, OS:26.0.1, name:iPhone 17 }
+		{ platform:iOS Simulator, arch:arm64, id:C8A76483-26AD-4642-8A25-FC4AB6182864, OS:26.0.1, name:iPhone 17 Pro }
+		{ platform:iOS Simulator, arch:arm64, id:3AC82209-BCC8-4885-9D34-A4A30DE45266, OS:26.0.1, name:iPhone 17 Pro Max }
+		{ platform:iOS Simulator, arch:arm64, id:A754DB69-3CA2-4F61-A0D9-9DD91F395A5C, OS:26.0.1, name:iPhone Air }
+
+	Ineligible destinations for the "jizhang" scheme:
+		{ platform:macOS, arch:undefined_arch, variant:Designed for [iPad,iPhone], id:00008132-000205821AF8801C, name:My Mac, error:Xcode doesn’t support My Mac’s macOS 15.7.3 (24G419).  }

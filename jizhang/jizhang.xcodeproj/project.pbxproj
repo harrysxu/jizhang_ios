@@ -1,0 +1,802 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AE7CFA782F24B3B800AED5E2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE7CFA772F24B3B800AED5E2 /* WidgetKit.framework */; };
+		AE7CFA7A2F24B3B800AED5E2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE7CFA792F24B3B800AED5E2 /* SwiftUI.framework */; };
+		AE7CFA852F24B3B900AED5E2 /* jizhangWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AE7CFA752F24B3B800AED5E2 /* jizhangWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AE7CF9562F248F8900AED5E2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE7CF93C2F248F8700AED5E2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE7CF9432F248F8700AED5E2;
+			remoteInfo = jizhang;
+		};
+		AE7CF9602F248F8900AED5E2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE7CF93C2F248F8700AED5E2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE7CF9432F248F8700AED5E2;
+			remoteInfo = jizhang;
+		};
+		AE7CFA832F24B3B900AED5E2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE7CF93C2F248F8700AED5E2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE7CFA742F24B3B800AED5E2;
+			remoteInfo = jizhangWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AE7CFA8A2F24B3B900AED5E2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AE7CFA852F24B3B900AED5E2 /* jizhangWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AE7CF9442F248F8700AED5E2 /* jizhang.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jizhang.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE7CF9552F248F8900AED5E2 /* jizhangTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jizhangTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE7CF95F2F248F8900AED5E2 /* jizhangUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jizhangUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE7CFA752F24B3B800AED5E2 /* jizhangWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jizhangWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE7CFA772F24B3B800AED5E2 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AE7CFA792F24B3B800AED5E2 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AE7CFA9F2F24B48000AED5E2 /* jizhangWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = jizhangWidgetExtension.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AE7CF9672F248F8900AED5E2 /* Exceptions for "jizhang" folder in "jizhang" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AE7CF9432F248F8700AED5E2 /* jizhang */;
+		};
+		AE7CFA892F24B3B900AED5E2 /* Exceptions for "jizhangWidget" folder in "jizhangWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */;
+		};
+		AE7CFAA12F24B6B500AED5E2 /* Exceptions for "jizhang" folder in "jizhangWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/Account.swift,
+				Models/Budget.swift,
+				Models/Category.swift,
+				Models/Ledger.swift,
+				Models/Tag.swift,
+				Models/Transaction.swift,
+				Utilities/Constants.swift,
+			);
+			target = AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AE7CF9462F248F8700AED5E2 /* jizhang */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AE7CF9672F248F8900AED5E2 /* Exceptions for "jizhang" folder in "jizhang" target */,
+				AE7CFAA12F24B6B500AED5E2 /* Exceptions for "jizhang" folder in "jizhangWidgetExtension" target */,
+			);
+			path = jizhang;
+			sourceTree = "<group>";
+		};
+		AE7CF9582F248F8900AED5E2 /* jizhangTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = jizhangTests;
+			sourceTree = "<group>";
+		};
+		AE7CF9622F248F8900AED5E2 /* jizhangUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = jizhangUITests;
+			sourceTree = "<group>";
+		};
+		AE7CFA7B2F24B3B800AED5E2 /* jizhangWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AE7CFA892F24B3B900AED5E2 /* Exceptions for "jizhangWidget" folder in "jizhangWidgetExtension" target */,
+			);
+			path = jizhangWidget;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AE7CF9412F248F8700AED5E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF9522F248F8900AED5E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF95C2F248F8900AED5E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CFA722F24B3B800AED5E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE7CFA7A2F24B3B800AED5E2 /* SwiftUI.framework in Frameworks */,
+				AE7CFA782F24B3B800AED5E2 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AE7CF93B2F248F8700AED5E2 = {
+			isa = PBXGroup;
+			children = (
+				AE7CFA9F2F24B48000AED5E2 /* jizhangWidgetExtension.entitlements */,
+				AE7CF9462F248F8700AED5E2 /* jizhang */,
+				AE7CF9582F248F8900AED5E2 /* jizhangTests */,
+				AE7CF9622F248F8900AED5E2 /* jizhangUITests */,
+				AE7CFA7B2F24B3B800AED5E2 /* jizhangWidget */,
+				AE7CFA762F24B3B800AED5E2 /* Frameworks */,
+				AE7CF9452F248F8700AED5E2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AE7CF9452F248F8700AED5E2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AE7CF9442F248F8700AED5E2 /* jizhang.app */,
+				AE7CF9552F248F8900AED5E2 /* jizhangTests.xctest */,
+				AE7CF95F2F248F8900AED5E2 /* jizhangUITests.xctest */,
+				AE7CFA752F24B3B800AED5E2 /* jizhangWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AE7CFA762F24B3B800AED5E2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AE7CFA772F24B3B800AED5E2 /* WidgetKit.framework */,
+				AE7CFA792F24B3B800AED5E2 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AE7CF9432F248F8700AED5E2 /* jizhang */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE7CF9682F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhang" */;
+			buildPhases = (
+				AE7CF9402F248F8700AED5E2 /* Sources */,
+				AE7CF9412F248F8700AED5E2 /* Frameworks */,
+				AE7CF9422F248F8700AED5E2 /* Resources */,
+				AE7CFA8A2F24B3B900AED5E2 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE7CFA842F24B3B900AED5E2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AE7CF9462F248F8700AED5E2 /* jizhang */,
+			);
+			name = jizhang;
+			packageProductDependencies = (
+			);
+			productName = jizhang;
+			productReference = AE7CF9442F248F8700AED5E2 /* jizhang.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AE7CF9542F248F8900AED5E2 /* jizhangTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE7CF96D2F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangTests" */;
+			buildPhases = (
+				AE7CF9512F248F8900AED5E2 /* Sources */,
+				AE7CF9522F248F8900AED5E2 /* Frameworks */,
+				AE7CF9532F248F8900AED5E2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE7CF9572F248F8900AED5E2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AE7CF9582F248F8900AED5E2 /* jizhangTests */,
+			);
+			name = jizhangTests;
+			packageProductDependencies = (
+			);
+			productName = jizhangTests;
+			productReference = AE7CF9552F248F8900AED5E2 /* jizhangTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		AE7CF95E2F248F8900AED5E2 /* jizhangUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE7CF9702F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangUITests" */;
+			buildPhases = (
+				AE7CF95B2F248F8900AED5E2 /* Sources */,
+				AE7CF95C2F248F8900AED5E2 /* Frameworks */,
+				AE7CF95D2F248F8900AED5E2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE7CF9612F248F8900AED5E2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AE7CF9622F248F8900AED5E2 /* jizhangUITests */,
+			);
+			name = jizhangUITests;
+			packageProductDependencies = (
+			);
+			productName = jizhangUITests;
+			productReference = AE7CF95F2F248F8900AED5E2 /* jizhangUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE7CFA862F24B3B900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangWidgetExtension" */;
+			buildPhases = (
+				AE7CFA712F24B3B800AED5E2 /* Sources */,
+				AE7CFA722F24B3B800AED5E2 /* Frameworks */,
+				AE7CFA732F24B3B800AED5E2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AE7CFA7B2F24B3B800AED5E2 /* jizhangWidget */,
+			);
+			name = jizhangWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = jizhangWidgetExtension;
+			productReference = AE7CFA752F24B3B800AED5E2 /* jizhangWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AE7CF93C2F248F8700AED5E2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					AE7CF9432F248F8700AED5E2 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					AE7CF9542F248F8900AED5E2 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = AE7CF9432F248F8700AED5E2;
+					};
+					AE7CF95E2F248F8900AED5E2 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = AE7CF9432F248F8700AED5E2;
+					};
+					AE7CFA742F24B3B800AED5E2 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+				};
+			};
+			buildConfigurationList = AE7CF93F2F248F8700AED5E2 /* Build configuration list for PBXProject "jizhang" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AE7CF93B2F248F8700AED5E2;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AE7CF9452F248F8700AED5E2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AE7CF9432F248F8700AED5E2 /* jizhang */,
+				AE7CF9542F248F8900AED5E2 /* jizhangTests */,
+				AE7CF95E2F248F8900AED5E2 /* jizhangUITests */,
+				AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AE7CF9422F248F8700AED5E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF9532F248F8900AED5E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF95D2F248F8900AED5E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CFA732F24B3B800AED5E2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AE7CF9402F248F8700AED5E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF9512F248F8900AED5E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CF95B2F248F8900AED5E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE7CFA712F24B3B800AED5E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AE7CF9572F248F8900AED5E2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE7CF9432F248F8700AED5E2 /* jizhang */;
+			targetProxy = AE7CF9562F248F8900AED5E2 /* PBXContainerItemProxy */;
+		};
+		AE7CF9612F248F8900AED5E2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE7CF9432F248F8700AED5E2 /* jizhang */;
+			targetProxy = AE7CF9602F248F8900AED5E2 /* PBXContainerItemProxy */;
+		};
+		AE7CFA842F24B3B900AED5E2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */;
+			targetProxy = AE7CFA832F24B3B900AED5E2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AE7CF9692F248F8900AED5E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = jizhang/jizhang.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = jizhang/Info.plist;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhang;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE7CF96A2F248F8900AED5E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = jizhang/jizhang.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = jizhang/Info.plist;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhang;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AE7CF96B2F248F8900AED5E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AE7CF96C2F248F8900AED5E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AE7CF96E2F248F8900AED5E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhangTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/jizhang.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/jizhang";
+			};
+			name = Debug;
+		};
+		AE7CF96F2F248F8900AED5E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhangTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/jizhang.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/jizhang";
+			};
+			name = Release;
+		};
+		AE7CF9712F248F8900AED5E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhangUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = jizhang;
+			};
+			name = Debug;
+		};
+		AE7CF9722F248F8900AED5E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhangUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = jizhang;
+			};
+			name = Release;
+		};
+		AE7CFA872F24B3B900AED5E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = jizhangWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = jizhangWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = jizhangWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhang.jizhangWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE7CFA882F24B3B900AED5E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = jizhangWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3LSP26D33P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = jizhangWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = jizhangWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xxl.jizhang.jizhangWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AE7CF93F2F248F8700AED5E2 /* Build configuration list for PBXProject "jizhang" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE7CF96B2F248F8900AED5E2 /* Debug */,
+				AE7CF96C2F248F8900AED5E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE7CF9682F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhang" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE7CF9692F248F8900AED5E2 /* Debug */,
+				AE7CF96A2F248F8900AED5E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE7CF96D2F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE7CF96E2F248F8900AED5E2 /* Debug */,
+				AE7CF96F2F248F8900AED5E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE7CF9702F248F8900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE7CF9712F248F8900AED5E2 /* Debug */,
+				AE7CF9722F248F8900AED5E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE7CFA862F24B3B900AED5E2 /* Build configuration list for PBXNativeTarget "jizhangWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE7CFA872F24B3B900AED5E2 /* Debug */,
+				AE7CFA882F24B3B900AED5E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AE7CF93C2F248F8700AED5E2 /* Project object */;
+}

@@ -12,6 +12,7 @@ struct HomeView: View {
     // MARK: - Environment
     
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(AppState.self) private var appState
     
     // MARK: - Query
@@ -60,23 +61,45 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: Spacing.m) {
-                    // 净资产卡片
-                    NetAssetCard(
-                        totalAssets: totalAssets,
-                        monthIncome: monthIncome,
-                        monthExpense: monthExpense
+                VStack(spacing: 16) {
+                    // 本月收支汇总卡片 (随手记风格渐变卡片)
+                    MonthSummaryGradientCard(
+                        totalExpense: monthExpense,
+                        income: monthIncome,
+                        expense: monthExpense
                     )
-                    .padding(.top, Spacing.m)
+                    .padding(.top, 16)
                     
-                    // 今日支出卡片
+                    // 今日支出快速展示
                     TodayExpenseCard(todayExpense: todayExpense)
+                    
+                    // 最近流水标题
+                    HStack {
+                        Text("最近流水")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        NavigationLink(destination: TransactionListView()) {
+                            HStack(spacing: 4) {
+                                Text("查看更多")
+                                    .font(.system(size: 14))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                     
                     // 流水列表
                     TransactionListSection(transactions: recentTransactions)
                 }
-                .padding(.bottom, 80) // 为底部TabBar留出空间
+                .padding(.bottom, 100) // 为底部TabBar留出空间
             }
+            .background(SuishoujiColors.pageBackground(for: colorScheme))
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

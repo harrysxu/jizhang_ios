@@ -50,8 +50,12 @@ struct ReportView: View {
                         ProgressView()
                             .padding()
                     } else {
-                        // 汇总卡片
-                        summaryCard
+                        // 汇总卡片 - 随手记风格渐变卡片
+                        ReportSummaryGradientCard(
+                            income: viewModel.totalIncome,
+                            expense: viewModel.totalExpense,
+                            balance: viewModel.netAmount
+                        )
                         
                         // 报表类型选择器
                         Picker("报表类型", selection: Binding(
@@ -109,97 +113,6 @@ struct ReportView: View {
                 // 账本切换时重新加载数据
                 loadData()
             }
-        }
-    }
-    
-    private var summaryCard: some View {
-        HStack(spacing: 0) {
-            // 收入
-            VStack(spacing: Spacing.xs) {
-                Text("收入")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Text(formatSummaryAmount(viewModel.totalIncome))
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.incomeGreen)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
-            
-            Divider()
-                .frame(height: 40)
-            
-            // 支出
-            VStack(spacing: Spacing.xs) {
-                Text("支出")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Text(formatSummaryAmount(viewModel.totalExpense))
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.expenseRed)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
-            
-            Divider()
-                .frame(height: 40)
-            
-            // 结余
-            VStack(spacing: Spacing.xs) {
-                Text("结余")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                HStack(spacing: 2) {
-                    Text(formatSummaryAmount(viewModel.netAmount))
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-                    
-                    Image(systemName: viewModel.netAmount >= 0 ? "arrow.up" : "arrow.down")
-                        .font(.caption2)
-                        .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
-        }
-        .padding(.vertical, Spacing.m)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.medium)
-                .fill(Color(.systemBackground))
-        )
-        .padding(.horizontal, Spacing.m)
-    }
-    
-    // 格式化汇总卡片金额
-    private func formatSummaryAmount(_ amount: Decimal) -> String {
-        let absAmount = abs(amount)
-        
-        if absAmount >= 100000000 {
-            // 亿级别
-            let value = (amount / 100000000).formatted(.number.precision(.fractionLength(0...1)))
-            return "¥\(value)亿"
-        } else if absAmount >= 10000 {
-            // 万级别
-            let value = (amount / 10000).formatted(.number.precision(.fractionLength(0...1)))
-            return "¥\(value)万"
-        } else if absAmount >= 1000 {
-            // 千级别，显示1位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(0...1))))"
-        } else {
-            // 小于1000，显示2位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(2))))"
         }
     }
     

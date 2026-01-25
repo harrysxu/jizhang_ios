@@ -59,6 +59,7 @@ struct TabContent: View {
 // MARK: - Custom Tab Bar
 
 struct CustomTabBar: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var selectedTab: Tab
     let onAddTap: () -> Void
     
@@ -82,26 +83,31 @@ struct CustomTabBar: View {
                 selectedTab = .transactions
             }
             
-            // 中间大号添加按钮
+            // 中间大号添加按钮 - 使用随手记风格渐变
             Button(action: onAddTap) {
                 ZStack {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
+                                colors: SuishoujiColors.addButtonGradient(for: colorScheme),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 56, height: 56)
-                        .shadow(color: Color.primaryBlue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .shadow(
+                            color: SuishoujiColors.addButtonGradientLight.first?.opacity(0.4) ?? Color.clear,
+                            radius: 8,
+                            x: 0,
+                            y: 4
+                        )
                     
                     Image(systemName: "plus")
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(.white)
                 }
             }
-            .offset(y: -8) // 凸出效果
+            .offset(y: -16) // 向上凸起
             .frame(maxWidth: .infinity)
             
             // 报表
@@ -122,11 +128,10 @@ struct CustomTabBar: View {
                 selectedTab = .settings
             }
         }
-        .frame(height: 50)
-        .padding(.bottom, 8)
+        .frame(height: 60)
         .background(
             Color(.systemBackground)
-                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: -5)
+                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: -2)
                 .ignoresSafeArea(edges: .bottom)
         )
     }
@@ -144,12 +149,12 @@ struct TabBarButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
+                    .font(.system(size: 22))
+                    .foregroundStyle(isSelected ? SuishoujiColors.brandBlue : Color.secondary)
                 
                 Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(isSelected ? SuishoujiColors.brandBlue : Color.secondary)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())

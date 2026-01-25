@@ -140,55 +140,58 @@ struct TransactionListView: View {
             Section {
                 ForEach(group.transactions) { transaction in
                     NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
-                        HStack(spacing: Spacing.m) {
-                            // 图标
+                        HStack(spacing: 12) {
+                            // 图标 - 使用新的CategoryIconView
                             if let category = transaction.category {
-                                Image(systemName: category.iconName)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(Color(hex: category.colorHex))
-                                    .frame(width: 40, height: 40)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color(hex: category.colorHex).opacity(0.15))
-                                    )
+                                CategoryIconView(
+                                    iconName: category.iconName,
+                                    colorHex: category.colorHex,
+                                    size: 44
+                                )
                             } else {
-                                Image(systemName: transaction.type.icon)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.gray)
-                                    .frame(width: 40, height: 40)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color(.systemGray6))
-                                    )
+                                CategoryIconView(
+                                    iconName: transaction.type.icon,
+                                    colorHex: "#8E8E93",
+                                    size: 44
+                                )
                             }
                             
                             // 信息
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(transaction.category?.name ?? transaction.type.displayName)
-                                    .font(.body)
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.primary)
                                 
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     if let account = transaction.fromAccount {
                                         Text(account.name)
-                                            .font(.caption)
+                                            .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                     }
                                     
                                     if transaction.type == .transfer, let toAccount = transaction.toAccount {
                                         Text("→")
-                                            .font(.caption)
+                                            .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                         
                                         Text(toAccount.name)
-                                            .font(.caption)
+                                            .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                     } else {
                                         Text("•")
-                                            .font(.caption)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("本人")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("•")
+                                            .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                         
                                         Text(formatTime(transaction.date))
-                                            .font(.caption)
+                                            .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                     }
                                 }
@@ -196,13 +199,13 @@ struct TransactionListView: View {
                             
                             Spacer()
                             
-                            // 金额
+                            // 金额 - 使用随手记柔和颜色
                             Text(formatAmount(transaction))
-                                .font(.system(size: 17, weight: .medium))
+                                .font(.system(size: 18, weight: .medium, design: .rounded))
                                 .foregroundColor(amountColor(for: transaction))
                                 .monospacedDigit()
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 8)
                     }
                 }
                 .onDelete { indexSet in
@@ -252,10 +255,10 @@ struct TransactionListView: View {
     
     private func amountColor(for transaction: Transaction) -> Color {
         switch transaction.type {
-        case .expense: return .red
-        case .income: return .green
-        case .transfer: return .blue
-        case .adjustment: return .orange
+        case .expense: return SuishoujiColors.expenseRed
+        case .income: return SuishoujiColors.incomeGreen
+        case .transfer: return SuishoujiColors.brandBlue
+        case .adjustment: return SuishoujiColors.warningOrange
         }
     }
     

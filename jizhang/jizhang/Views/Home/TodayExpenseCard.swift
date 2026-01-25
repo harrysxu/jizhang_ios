@@ -16,14 +16,14 @@ struct TodayExpenseCard: View {
     
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("今日支出")
-                    .font(.subheadline)
+                    .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                 
                 Text(formatAmount(todayExpense))
-                    .font(.system(size: FontSize.title2, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.expenseRed)
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(SuishoujiColors.expenseRed)
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.7)
@@ -32,15 +32,23 @@ struct TodayExpenseCard: View {
             
             Spacer()
             
-            // 可以添加预算进度显示
+            // 可视化指示器
+            Circle()
+                .fill(SuishoujiColors.expenseRed.opacity(0.15))
+                .frame(width: 50, height: 50)
+                .overlay(
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(SuishoujiColors.expenseRed)
+                )
         }
-        .padding(Spacing.m)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: CornerRadius.medium)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
-        .padding(.horizontal, Spacing.m)
+        .padding(.horizontal, 16)
     }
     
     // 格式化金额

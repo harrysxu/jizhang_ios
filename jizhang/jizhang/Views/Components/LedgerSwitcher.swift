@@ -19,32 +19,17 @@ struct LedgerSwitcher: View {
         Button(action: {
             showLedgerPicker = true
         }) {
-            HStack(spacing: 4) {
-                // 账本图标 (如果有)
-                if let ledger = appState.currentLedger {
-                    Image(systemName: ledger.iconName)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color(hex: ledger.colorHex))
-                }
-                
+            HStack(spacing: 6) {
                 // 账本名称
                 Text(appState.currentLedger?.name ?? "选择账本")
-                    .font(.body)
-                    .fontWeight(.medium)
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(.primary)
                 
                 // 下拉箭头
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.primary)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: appState.currentLedger?.colorHex ?? "#007AFF").opacity(0.08))
-            )
         }
         .sheet(isPresented: $showLedgerPicker) {
             LedgerPickerSheet(

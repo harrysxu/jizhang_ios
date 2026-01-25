@@ -121,24 +121,25 @@ extension Ledger {
 extension Ledger {
     /// 创建默认分类
     func createDefaultCategories() {
-        // 支出分类
-        let expenseCategories: [(String, String, [String])] = [
-            ("餐饮", "fork.knife", ["早餐", "午餐", "晚餐", "零食", "咖啡", "请客"]),
-            ("交通", "car.fill", ["地铁", "公交", "打车", "加油", "停车"]),
-            ("购物", "cart.fill", ["日用品", "服饰", "电子产品", "图书"]),
-            ("居住", "house.fill", ["房租", "水电", "物业", "维修"]),
-            ("娱乐", "gamecontroller.fill", ["电影", "游戏", "运动", "旅游"]),
-            ("医疗", "cross.case.fill", ["药品", "就医", "保健"]),
-            ("教育", "book.fill", ["学费", "培训", "书籍"]),
-            ("通讯", "phone.fill", ["话费", "宽带", "会员"])
+        // 支出分类 (带颜色)
+        let expenseCategories: [(String, String, String, [String])] = [
+            ("餐饮", "fork.knife", "#FF8F59", ["早餐", "午餐", "晚餐", "零食", "咖啡", "请客"]),
+            ("交通", "car.fill", "#5B9FED", ["地铁", "公交", "打车", "加油", "停车"]),
+            ("购物", "cart.fill", "#FF6B9D", ["日用品", "服饰", "电子产品", "图书"]),
+            ("居住", "house.fill", "#9B59B6", ["房租", "水电", "物业", "维修"]),
+            ("娱乐", "gamecontroller.fill", "#F368E0", ["电影", "游戏", "运动", "旅游"]),
+            ("医疗", "cross.case.fill", "#00D2D3", ["药品", "就医", "保健"]),
+            ("教育", "book.fill", "#FFA502", ["学费", "培训", "书籍"]),
+            ("通讯", "phone.fill", "#786BED", ["话费", "宽带", "会员"])
         ]
         
-        for (index, (parentName, icon, children)) in expenseCategories.enumerated() {
+        for (index, (parentName, icon, color, children)) in expenseCategories.enumerated() {
             let parent = Category(
                 ledger: self,
                 name: parentName,
                 type: .expense,
                 iconName: icon,
+                colorHex: color,
                 sortOrder: index
             )
             categories.append(parent)
@@ -150,25 +151,27 @@ extension Ledger {
                     type: .expense,
                     iconName: icon,
                     parent: parent,
+                    colorHex: color,
                     sortOrder: childIndex
                 )
                 categories.append(child)
             }
         }
         
-        // 收入分类
-        let incomeCategories: [(String, String, [String])] = [
-            ("工资", "banknote.fill", ["基本工资", "奖金", "补贴"]),
-            ("投资", "chart.line.uptrend.xyaxis", ["股票", "基金", "利息"]),
-            ("其他", "ellipsis.circle.fill", ["礼金", "报销", "兼职"])
+        // 收入分类 (带颜色)
+        let incomeCategories: [(String, String, String, [String])] = [
+            ("工资", "banknote.fill", "#26DE81", ["基本工资", "奖金", "补贴"]),
+            ("投资", "chart.line.uptrend.xyaxis", "#1E88E5", ["股票", "基金", "利息"]),
+            ("其他", "ellipsis.circle.fill", "#A8A8A8", ["礼金", "报销", "兼职"])
         ]
         
-        for (index, (parentName, icon, children)) in incomeCategories.enumerated() {
+        for (index, (parentName, icon, color, children)) in incomeCategories.enumerated() {
             let parent = Category(
                 ledger: self,
                 name: parentName,
                 type: .income,
                 iconName: icon,
+                colorHex: color,
                 sortOrder: expenseCategories.count + index
             )
             categories.append(parent)
@@ -180,6 +183,7 @@ extension Ledger {
                     type: .income,
                     iconName: icon,
                     parent: parent,
+                    colorHex: color,
                     sortOrder: childIndex
                 )
                 categories.append(child)

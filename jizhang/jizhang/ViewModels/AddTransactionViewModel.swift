@@ -96,11 +96,14 @@ class AddTransactionViewModel {
     
     /// 处理类型变化
     private func handleTypeChange() {
-        // 清空当前选中的分类
+        // 清空当前选中的分类和转入账户
         selectedCategory = nil
+        selectedToAccount = nil
         
-        // 自动选择对应类型的第一个分类
-        selectDefaultCategory()
+        // 转账不需要分类，其他类型需要自动选择默认分类
+        if type != .transfer {
+            selectDefaultCategory()
+        }
     }
     
     /// 选择默认分类
@@ -140,6 +143,11 @@ class AddTransactionViewModel {
         guard amount > 0 else { return false }
         guard selectedAccount != nil else { return false }
         
+        if type == .transfer {
+            // 转账需要转入账户，且不能是同一账户
+            return selectedToAccount != nil && selectedAccount?.id != selectedToAccount?.id
+        }
+        
         // 支出和收入需要选择分类
         return selectedCategory != nil
     }
@@ -149,10 +157,29 @@ class AddTransactionViewModel {
             return "请输入金额"
         }
         if selectedAccount == nil {
-            return "请选择账户"
+            return type == .transfer ? "请选择转出账户" : "请选择账户"
         }
-        if selectedCategory == nil {
-            return "请选择分类"
+        
+        if type == .transfer {
+            if selectedToAccount == nil {
+                return "请选择转入账户"
+            }
+            if selectedAccount?.id == selectedToAccount?.id {
+                return "转出和转入账户不能相同"
+            }
+            // 检查转出账户余额是否足够
+            if let fromAccount = selectedAccount {
+                if fromAccount.balance < 0 {
+                    return "转出账户余额为负，无法转账"
+                }
+                if fromAccount.balance < amount {
+                    return "转出账户余额不足"
+                }
+            }
+        } else {
+            if selectedCategory == nil {
+                return "请选择分类"
+            }
         }
         return nil
     }

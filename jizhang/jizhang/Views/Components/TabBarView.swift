@@ -85,7 +85,8 @@ struct CustomTabBar: View {
         HStack(spacing: 0) {
             // 首页
             TabBarButton(
-                icon: "house.fill",
+                selectedIcon: "house.fill",
+                unselectedIcon: "house",
                 title: "首页",
                 isSelected: selectedTab == .home
             ) {
@@ -94,7 +95,8 @@ struct CustomTabBar: View {
             
             // 流水
             TabBarButton(
-                icon: "list.bullet.rectangle.fill",
+                selectedIcon: "list.bullet.rectangle.fill",
+                unselectedIcon: "list.bullet.rectangle",
                 title: "流水",
                 isSelected: selectedTab == .transactions
             ) {
@@ -126,7 +128,8 @@ struct CustomTabBar: View {
             
             // 报表
             TabBarButton(
-                icon: "chart.bar.fill",
+                selectedIcon: "chart.bar.fill",
+                unselectedIcon: "chart.bar",
                 title: "报表",
                 isSelected: selectedTab == .report
             ) {
@@ -135,7 +138,8 @@ struct CustomTabBar: View {
             
             // 设置
             TabBarButton(
-                icon: "gearshape.fill",
+                selectedIcon: "gearshape.fill",
+                unselectedIcon: "gearshape",
                 title: "设置",
                 isSelected: selectedTab == .settings
             ) {
@@ -157,12 +161,17 @@ struct CustomTabBar: View {
 // MARK: - Tab Bar Button
 
 struct TabBarButton: View {
-    let icon: String
+    let selectedIcon: String
+    let unselectedIcon: String
     let title: String
     let isSelected: Bool
     let action: () -> Void
     
     @State private var isPressed = false
+    
+    private var currentIcon: String {
+        isSelected ? selectedIcon : unselectedIcon
+    }
     
     var body: some View {
         Button(action: {
@@ -172,7 +181,7 @@ struct TabBarButton: View {
             action()
         }) {
             VStack(spacing: 6) {
-                Image(systemName: icon)
+                Image(systemName: currentIcon)
                     .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
                 

@@ -96,11 +96,11 @@ struct CategoryFormSheet: View {
                                 } label: {
                                     Image(systemName: icon)
                                         .font(.system(size: 24))
-                                        .foregroundColor(icon == iconName ? .blue : .gray)
+                                        .foregroundColor(icon == iconName ? Color(hex: colorHex) : .gray)
                                         .frame(width: 44, height: 44)
                                         .background(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(icon == iconName ? Color.blue.opacity(0.1) : Color(.systemGray6))
+                                            Circle()
+                                                .fill(icon == iconName ? Color(hex: colorHex).opacity(0.15) : Color.clear)
                                         )
                                 }
                                 .buttonStyle(.plain)
@@ -120,13 +120,9 @@ struct CategoryFormSheet: View {
                 Section("预览") {
                     HStack(spacing: Spacing.m) {
                         Image(systemName: iconName)
-                            .font(.system(size: 32))
+                            .font(.system(size: 32, weight: .medium))
                             .foregroundColor(Color(hex: colorHex))
                             .frame(width: 60, height: 60)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color(hex: colorHex).opacity(0.1))
-                            )
                         
                         VStack(alignment: .leading, spacing: 4) {
                             if let parent = parent {

@@ -14,7 +14,8 @@ struct NetAssetCard: View {
     let monthIncome: Decimal
     let monthExpense: Decimal
     
-    @State private var isAmountHidden = false
+    /// 使用 AppStorage 持久化隐藏状态，默认为隐藏（防止泄露）
+    @AppStorage("netAssetHidden") private var isAmountHidden = true
     
     // MARK: - Computed Properties
     

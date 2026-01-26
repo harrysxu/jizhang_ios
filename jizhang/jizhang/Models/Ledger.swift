@@ -119,37 +119,66 @@ extension Ledger {
 // MARK: - Business Logic
 
 extension Ledger {
-    /// 创建默认分类 (使用参考UI样式)
+    /// 创建默认分类 (使用层级结构)
     func createDefaultCategories() {
-        // 支出分类 - 使用CategoryIconConfig
-        for (index, categoryName) in CategoryIconConfig.expenseCategoryNames.enumerated() {
-            let style = CategoryIconConfig.expenseStyle(for: categoryName)
-            
-            let category = Category(
+        var sortOrder = 0
+        
+        // 支出分类 - 使用层级结构
+        for hierarchy in CategoryIconConfig.expenseHierarchy {
+            // 创建一级分类（父分类）
+            let parentCategory = Category(
                 ledger: self,
-                name: categoryName,
+                name: hierarchy.name,
                 type: .expense,
-                iconName: style.icon,
-                colorHex: style.color,
-                sortOrder: index
+                iconName: hierarchy.style.icon,
+                colorHex: hierarchy.style.color,
+                sortOrder: sortOrder
             )
-            categories.append(category)
+            categories.append(parentCategory)
+            sortOrder += 1
+            
+            // 创建二级分类（子分类）
+            for (childIndex, child) in hierarchy.children.enumerated() {
+                let childCategory = Category(
+                    ledger: self,
+                    name: child.name,
+                    type: .expense,
+                    iconName: child.style.icon,
+                    parent: parentCategory,
+                    colorHex: child.style.color,
+                    sortOrder: childIndex
+                )
+                categories.append(childCategory)
+            }
         }
         
-        // 收入分类 - 使用CategoryIconConfig
-        let expenseCount = CategoryIconConfig.expenseCategoryNames.count
-        for (index, categoryName) in CategoryIconConfig.incomeCategoryNames.enumerated() {
-            let style = CategoryIconConfig.incomeStyle(for: categoryName)
-            
-            let category = Category(
+        // 收入分类 - 使用层级结构
+        for hierarchy in CategoryIconConfig.incomeHierarchy {
+            // 创建一级分类（父分类）
+            let parentCategory = Category(
                 ledger: self,
-                name: categoryName,
+                name: hierarchy.name,
                 type: .income,
-                iconName: style.icon,
-                colorHex: style.color,
-                sortOrder: expenseCount + index
+                iconName: hierarchy.style.icon,
+                colorHex: hierarchy.style.color,
+                sortOrder: sortOrder
             )
-            categories.append(category)
+            categories.append(parentCategory)
+            sortOrder += 1
+            
+            // 创建二级分类（子分类）
+            for (childIndex, child) in hierarchy.children.enumerated() {
+                let childCategory = Category(
+                    ledger: self,
+                    name: child.name,
+                    type: .income,
+                    iconName: child.style.icon,
+                    parent: parentCategory,
+                    colorHex: child.style.color,
+                    sortOrder: childIndex
+                )
+                categories.append(childCategory)
+            }
         }
     }
     

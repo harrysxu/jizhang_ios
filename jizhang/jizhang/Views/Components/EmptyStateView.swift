@@ -65,23 +65,8 @@ struct EmptyStateView: View {
                 
                 // 操作按钮
                 if let actionTitle = actionTitle, let action = action {
-                    Button(action: action) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16))
-                            Text(actionTitle)
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(
-                            Capsule()
-                                .fill(Color.blue)
-                        )
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    .padding(.top, Spacing.s)
+                    PrimaryActionButton(actionTitle, icon: "plus.circle.fill", action: action)
+                        .padding(.top, Spacing.s)
                 }
             }
             .padding(.horizontal, Spacing.xxl)
@@ -232,22 +217,8 @@ struct ErrorStateView: View {
                 
                 // 重试按钮
                 if let retryAction = retryAction {
-                    Button(action: retryAction) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.clockwise")
-                            Text("重试")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(
-                            Capsule()
-                                .fill(Color.blue)
-                        )
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    .padding(.top, Spacing.s)
+                    PrimaryActionButton("重试", icon: "arrow.clockwise", action: retryAction)
+                        .padding(.top, Spacing.s)
                 }
             }
             .padding(.horizontal, Spacing.xxl)

@@ -58,15 +58,14 @@ struct LedgerFormSheet: View {
                             Button {
                                 selectedIcon = icon
                             } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(selectedIcon == icon ? Color(hex: selectedColor) : Color.gray.opacity(0.2))
-                                        .frame(width: 50, height: 50)
-                                    
-                                    Image(systemName: icon)
-                                        .font(.system(size: 22))
-                                        .foregroundStyle(selectedIcon == icon ? .white : .gray)
-                                }
+                                Image(systemName: icon)
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(selectedIcon == icon ? Color(hex: selectedColor) : .gray)
+                                    .frame(width: 50, height: 50)
+                                    .background(
+                                        Circle()
+                                            .fill(selectedIcon == icon ? Color(hex: selectedColor).opacity(0.15) : Color.clear)
+                                    )
                             }
                             .buttonStyle(.plain)
                         }
@@ -114,15 +113,10 @@ struct LedgerFormSheet: View {
                 // 预览
                 Section("预览") {
                     HStack {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: selectedColor).opacity(0.2))
-                                .frame(width: 50, height: 50)
-                            
-                            Image(systemName: selectedIcon)
-                                .font(.system(size: 24))
-                                .foregroundStyle(Color(hex: selectedColor))
-                        }
+                        Image(systemName: selectedIcon)
+                            .font(.system(size: 28, weight: .medium))
+                            .foregroundStyle(Color(hex: selectedColor))
+                            .frame(width: 50, height: 50)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(name.isEmpty ? "未命名账本" : name)

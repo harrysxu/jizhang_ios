@@ -65,9 +65,15 @@ struct TransactionListView: View {
                     return true
                 }
                 
-                // 搜索账户名称
+                // 搜索账户名称（转出账户）
                 if let account = transaction.fromAccount,
                    account.name.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                
+                // 搜索转入账户名称（用于转账）
+                if let toAccount = transaction.toAccount,
+                   toAccount.name.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
@@ -95,7 +101,7 @@ struct TransactionListView: View {
                 MonthYearPicker(selectedDate: $selectedMonth)
                     .padding(.vertical, Spacing.s)
                 
-                // 类型筛选（全部、支出、收入）
+                // 类型筛选（全部、支出、收入、转账）
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Spacing.s) {
                         QuickFilterButton(
@@ -117,6 +123,13 @@ struct TransactionListView: View {
                             isSelected: selectedType == .income
                         ) {
                             selectedType = .income
+                        }
+                        
+                        QuickFilterButton(
+                            title: "转账",
+                            isSelected: selectedType == .transfer
+                        ) {
+                            selectedType = .transfer
                         }
                     }
                     .padding(.horizontal, Spacing.m)

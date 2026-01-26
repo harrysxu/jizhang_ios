@@ -111,31 +111,61 @@ private struct SelectionArea: View {
     
     var body: some View {
         VStack(spacing: Spacing.m) {
-            // 第一行：账户和分类
-            HStack(spacing: Spacing.m) {
-                // 账户
-                SelectionCard(
-                    icon: "creditcard.fill",
-                    iconColor: .blue,
-                    title: "账户",
-                    value: viewModel.selectedAccount?.name ?? "请选择",
-                    showArrow: true
-                ) {
-                    viewModel.showAccountPicker = true
+            // 第一行：根据类型显示不同内容
+            if viewModel.type == .transfer {
+                // 转账模式：转出账户和转入账户
+                HStack(spacing: Spacing.m) {
+                    // 转出账户
+                    SelectionCard(
+                        icon: "arrow.up.circle.fill",
+                        iconColor: .red,
+                        title: "转出账户",
+                        value: viewModel.selectedAccount?.name ?? "请选择",
+                        showArrow: true
+                    ) {
+                        viewModel.showAccountPicker = true
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // 转入账户
+                    SelectionCard(
+                        icon: "arrow.down.circle.fill",
+                        iconColor: .green,
+                        title: "转入账户",
+                        value: viewModel.selectedToAccount?.name ?? "请选择",
+                        showArrow: true
+                    ) {
+                        viewModel.showToAccountPicker = true
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-                
-                // 分类
-                SelectionCard(
-                    icon: viewModel.selectedCategory?.iconName ?? "folder.fill",
-                    iconColor: viewModel.selectedCategory != nil ? Color(hex: viewModel.selectedCategory!.colorHex) : .orange,
-                    title: "分类",
-                    value: viewModel.displayCategory,
-                    showArrow: true
-                ) {
-                    viewModel.showCategoryPicker = true
+            } else {
+                // 收支模式：账户和分类
+                HStack(spacing: Spacing.m) {
+                    // 账户
+                    SelectionCard(
+                        icon: "creditcard.fill",
+                        iconColor: .blue,
+                        title: "账户",
+                        value: viewModel.selectedAccount?.name ?? "请选择",
+                        showArrow: true
+                    ) {
+                        viewModel.showAccountPicker = true
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // 分类
+                    SelectionCard(
+                        icon: viewModel.selectedCategory?.iconName ?? "folder.fill",
+                        iconColor: viewModel.selectedCategory != nil ? Color(hex: viewModel.selectedCategory!.colorHex) : .orange,
+                        title: "分类",
+                        value: viewModel.displayCategory,
+                        showArrow: true
+                    ) {
+                        viewModel.showCategoryPicker = true
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
             }
             
             // 第二行：日期和时间
@@ -182,6 +212,12 @@ private struct SelectionArea: View {
         }
         .sheet(isPresented: $viewModel.showAccountPicker) {
             AccountPickerSheet(selectedAccount: $viewModel.selectedAccount)
+        }
+        .sheet(isPresented: $viewModel.showToAccountPicker) {
+            AccountPickerSheet(
+                selectedAccount: $viewModel.selectedToAccount,
+                excludeAccount: viewModel.selectedAccount
+            )
         }
         .sheet(isPresented: $viewModel.showCategoryPicker) {
             CategoryGridPicker(

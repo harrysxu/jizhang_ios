@@ -13,6 +13,7 @@ struct TestDataGeneratorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
+    @Environment(\.hideTabBar) private var hideTabBar
     
     @Query(sort: \Ledger.sortOrder) private var ledgers: [Ledger]
     
@@ -82,6 +83,10 @@ struct TestDataGeneratorView: View {
             .onAppear {
                 // 默认选择当前账本
                 selectedLedger = appState.currentLedger
+                hideTabBar.wrappedValue = true
+            }
+            .onDisappear {
+                hideTabBar.wrappedValue = false
             }
         }
     }

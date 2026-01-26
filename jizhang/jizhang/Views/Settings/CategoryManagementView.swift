@@ -12,6 +12,7 @@ import SwiftData
 struct CategoryManagementView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @Environment(\.hideTabBar) private var hideTabBar
     
     @Query private var allCategories: [Category]
     
@@ -77,10 +78,11 @@ struct CategoryManagementView: View {
                                 } label: {
                                     Label("编辑", systemImage: "pencil")
                                 }
-                                .tint(.blue)
+                                .tint(.primaryBlue)
                             }
                         } else {
                             // 有子分类,使用DisclosureGroup
+                            // 父分类也支持左滑编辑和删除
                             DisclosureGroup {
                                 ForEach(parentCategory.children.sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
                                     CategoryRowButton(category: childCategory, isChild: true) {
@@ -99,13 +101,11 @@ struct CategoryManagementView: View {
                                         } label: {
                                             Label("编辑", systemImage: "pencil")
                                         }
-                                        .tint(.blue)
+                                        .tint(.primaryBlue)
                                     }
                                 }
                             } label: {
-                                CategoryRowLabel(category: parentCategory, childCount: parentCategory.children.count) {
-                                    categoryToEdit = parentCategory
-                                }
+                                CategoryRowLabel(category: parentCategory, childCount: parentCategory.children.count)
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
@@ -120,7 +120,7 @@ struct CategoryManagementView: View {
                                 } label: {
                                     Label("编辑", systemImage: "pencil")
                                 }
-                                .tint(.blue)
+                                .tint(.primaryBlue)
                             }
                         }
                     }
@@ -172,6 +172,12 @@ struct CategoryManagementView: View {
             Button("确定", role: .cancel) {}
         } message: {
             Text(deleteErrorMessage)
+        }
+        .onAppear {
+            hideTabBar.wrappedValue = true
+        }
+        .onDisappear {
+            hideTabBar.wrappedValue = false
         }
     }
     
@@ -226,29 +232,17 @@ private struct CategoryRowButton: View {
                     Spacer()
                         .frame(width: 20)
                     
-                    // 子分类使用小圆形图标
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: category.colorHex))
-                            .frame(width: 32, height: 32)
-                        
-                        Image(systemName: category.iconName)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white)
-                    }
-                    .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 2, y: 1)
+                    // 子分类图标 (无圆形背景)
+                    Image(systemName: category.iconName)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Color(hex: category.colorHex))
+                        .frame(width: 32, height: 32)
                 } else {
-                    // 父分类使用圆形图标
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: category.colorHex))
-                            .frame(width: 40, height: 40)
-                        
-                        Image(systemName: category.iconName)
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(.white)
-                    }
-                    .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
+                    // 父分类图标 (无圆形背景)
+                    Image(systemName: category.iconName)
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundStyle(Color(hex: category.colorHex))
+                        .frame(width: 40, height: 40)
                 }
                 
                 // 名称
@@ -277,21 +271,14 @@ private struct CategoryRowButton: View {
 private struct CategoryRowLabel: View {
     let category: Category
     let childCount: Int
-    var onEdit: (() -> Void)? = nil
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 圆形图标
-            ZStack {
-                Circle()
-                    .fill(Color(hex: category.colorHex))
-                    .frame(width: 40, height: 40)
-                
-                Image(systemName: category.iconName)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(.white)
-            }
-            .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
+            // 图标 (无圆形背景)
+            Image(systemName: category.iconName)
+                .font(.system(size: 24, weight: .medium))
+                .foregroundStyle(Color(hex: category.colorHex))
+                .frame(width: 40, height: 40)
             
             // 名称
             Text(category.name)
@@ -304,18 +291,6 @@ private struct CategoryRowLabel: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .monospacedDigit()
-            
-            // 编辑按钮
-            if let onEdit = onEdit {
-                Button {
-                    onEdit()
-                } label: {
-                    Image(systemName: "pencil.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(.blue.opacity(0.7))
-                }
-                .buttonStyle(.plain)
-            }
         }
     }
 }

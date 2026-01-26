@@ -16,6 +16,9 @@ struct AccountPickerSheet: View {
     
     @Binding var selectedAccount: Account?
     
+    /// 需要排除的账户（用于转账时排除转出账户）
+    var excludeAccount: Account? = nil
+    
     @Query private var allAccounts: [Account]
     
     // MARK: - Computed Properties
@@ -24,6 +27,7 @@ struct AccountPickerSheet: View {
         guard let ledger = appState.currentLedger else { return [] }
         return allAccounts
             .filter { $0.ledger?.id == ledger.id }
+            .filter { excludeAccount == nil || $0.id != excludeAccount?.id }
             .sorted { $0.sortOrder < $1.sortOrder }
     }
     

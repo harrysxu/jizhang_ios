@@ -104,17 +104,11 @@ struct TransactionRow: View {
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 圆形分类图标 (参考UI样式)
-            ZStack {
-                Circle()
-                    .fill(iconBackgroundColor)
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: categoryIcon)
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundStyle(.white)
-            }
-            .shadow(color: iconBackgroundColor.opacity(0.3), radius: 4, y: 2)
+            // 分类图标 (无圆形背景，只显示带颜色的图标)
+            Image(systemName: categoryIcon)
+                .font(.system(size: 26, weight: .medium))
+                .foregroundStyle(iconBackgroundColor)
+                .frame(width: 44, height: 44)
             
             // 交易信息
             VStack(alignment: .leading, spacing: 4) {

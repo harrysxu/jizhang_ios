@@ -19,6 +19,7 @@ struct LedgerManagementView: View {
 private struct LedgerManagementContentView: View {
     let modelContext: ModelContext
     @StateObject private var viewModel: LedgerViewModel
+    @Environment(\.hideTabBar) private var hideTabBar
     
     @Query(sort: \Ledger.sortOrder) private var ledgers: [Ledger]
     
@@ -85,6 +86,12 @@ private struct LedgerManagementContentView: View {
                 Text("确定要删除\"\(ledger.name)\"吗?此操作无法撤销。")
             }
         }
+        .onAppear {
+            hideTabBar.wrappedValue = true
+        }
+        .onDisappear {
+            hideTabBar.wrappedValue = false
+        }
     }
     
     private var activeLedgers: [Ledger] {
@@ -97,17 +104,11 @@ private struct LedgerManagementContentView: View {
     
     private func ledgerRow(_ ledger: Ledger) -> some View {
         HStack(spacing: 16) {
-            // 圆形图标 (参考UI样式 - 完整圆形背景色块)
-            ZStack {
-                Circle()
-                    .fill(Color(hex: ledger.colorHex))
-                    .frame(width: 48, height: 48)
-                
-                Image(systemName: ledger.iconName)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white)
-            }
-            .shadow(color: Color(hex: ledger.colorHex).opacity(0.3), radius: 4, y: 2)
+            // 图标 (无圆形背景，只显示带颜色的图标)
+            Image(systemName: ledger.iconName)
+                .font(.system(size: 28, weight: .medium))
+                .foregroundStyle(Color(hex: ledger.colorHex))
+                .frame(width: 48, height: 48)
             
             // 信息
             VStack(alignment: .leading, spacing: 6) {
@@ -119,11 +120,13 @@ private struct LedgerManagementContentView: View {
                     if ledger.isDefault {
                         Text("默认")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.primaryBlue)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(Color.primaryBlue)
-                            .cornerRadius(6)
+                            .background(
+                                Capsule()
+                                    .stroke(Color.primaryBlue, lineWidth: 1)
+                            )
                     }
                 }
                 

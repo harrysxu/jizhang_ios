@@ -11,6 +11,7 @@ import SwiftData
 struct BudgetView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @Environment(\.hideTabBar) private var hideTabBar
     @StateObject private var viewModel: BudgetViewModel
     
     @Query(sort: \Budget.createdAt, order: .reverse) private var allBudgets: [Budget]
@@ -68,6 +69,10 @@ struct BudgetView: View {
             }
             .onAppear {
                 setupViewModel()
+                hideTabBar.wrappedValue = true
+            }
+            .onDisappear {
+                hideTabBar.wrappedValue = false
             }
         }
     }
@@ -188,16 +193,8 @@ struct BudgetView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             
-            Button {
+            PrimaryActionButton("创建预算", icon: "plus.circle.fill") {
                 viewModel.showCreateBudget()
-            } label: {
-                Label("创建预算", systemImage: "plus.circle.fill")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, Spacing.l)
-                    .padding(.vertical, Spacing.m)
-                    .background(Color.primaryBlue)
-                    .cornerRadius(CornerRadius.medium)
             }
             .padding(.top, Spacing.m)
         }

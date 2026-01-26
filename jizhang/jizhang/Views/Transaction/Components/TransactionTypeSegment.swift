@@ -15,6 +15,7 @@ struct TransactionTypeSegment: View {
         Picker("类型", selection: $selectedType) {
             Text("支出").tag(TransactionType.expense)
             Text("收入").tag(TransactionType.income)
+            Text("转账").tag(TransactionType.transfer)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal, Spacing.m)

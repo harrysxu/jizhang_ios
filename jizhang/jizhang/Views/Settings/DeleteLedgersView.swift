@@ -224,16 +224,11 @@ struct DeleteLedgersView: View {
                     .font(.title2)
                     .foregroundStyle(isSelected ? .red : .secondary)
                 
-                // 账本图标
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: ledger.colorHex))
-                        .frame(width: 44, height: 44)
-                    
-                    Image(systemName: ledger.iconName)
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white)
-                }
+                // 账本图标 (无圆形背景)
+                Image(systemName: ledger.iconName)
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundStyle(Color(hex: ledger.colorHex))
+                    .frame(width: 44, height: 44)
                 
                 // 账本信息
                 VStack(alignment: .leading, spacing: 4) {
@@ -244,13 +239,14 @@ struct DeleteLedgersView: View {
                         
                         if ledger.isDefault {
                             Text("默认")
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.blue)
-                                .cornerRadius(4)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.primaryBlue)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule()
+                                        .stroke(Color.primaryBlue, lineWidth: 1)
+                                )
                         }
                     }
                     
@@ -311,9 +307,11 @@ struct DeleteLedgersView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(canDelete ? Color.red : Color.gray)
+                .background(
+                    Capsule()
+                        .fill(canDelete ? Color.red : Color.gray)
+                )
                 .foregroundStyle(.white)
-                .cornerRadius(12)
             }
             .disabled(!canDelete)
             .padding(.horizontal, 16)
@@ -375,9 +373,11 @@ struct DeleteLedgersView: View {
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(isConfirmationValid ? Color.red : Color.gray)
+                        .background(
+                            Capsule()
+                                .fill(isConfirmationValid ? Color.red : Color.gray)
+                        )
                         .foregroundStyle(.white)
-                        .cornerRadius(12)
                 }
                 .disabled(!isConfirmationValid)
                 .padding(.horizontal)

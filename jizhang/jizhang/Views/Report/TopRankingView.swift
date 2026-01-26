@@ -118,15 +118,10 @@ struct TopRankingView: View {
     }
     
     private func categoryIcon(for item: TopRankingItem) -> some View {
-        ZStack {
-            Circle()
-                .fill(Color(hex: item.colorHex).opacity(0.2))
-                .frame(width: 36, height: 36)
-            
-            Image(systemName: item.iconName)
-                .font(.system(size: 16))
-                .foregroundStyle(Color(hex: item.colorHex))
-        }
+        Image(systemName: item.iconName)
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color(hex: item.colorHex))
+            .frame(width: 36, height: 36)
     }
     
     private var emptyView: some View {

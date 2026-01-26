@@ -12,6 +12,7 @@ import SwiftData
 struct AccountManagementView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @Environment(\.hideTabBar) private var hideTabBar
     
     @Query private var allAccounts: [Account]
     
@@ -113,6 +114,12 @@ struct AccountManagementView: View {
         .sheet(item: $accountToEdit) { account in
             AccountFormSheet(account: account)
         }
+        .onAppear {
+            hideTabBar.wrappedValue = true
+        }
+        .onDisappear {
+            hideTabBar.wrappedValue = false
+        }
     }
     
     // MARK: - Computed Values
@@ -153,17 +160,11 @@ private struct AccountRowButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Spacing.m) {
-                // 圆形图标 (参考UI样式)
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: account.colorHex))
-                        .frame(width: 44, height: 44)
-                    
-                    Image(systemName: account.iconName)
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(.white)
-                }
-                .shadow(color: Color(hex: account.colorHex).opacity(0.3), radius: 4, y: 2)
+                // 图标 (无圆形背景，直接展示图案)
+                Image(systemName: account.iconName)
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundStyle(Color(hex: account.colorHex))
+                    .frame(width: 44, height: 44)
                 
                 // 账户信息
                 VStack(alignment: .leading, spacing: 4) {
@@ -181,7 +182,6 @@ private struct AccountRowButton: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            let currencyCode = account.ledger?.currencyCode ?? "CNY"
                             Text("可用 \(account.availableBalance.formatAmount())")
                                 .font(.caption)
                                 .foregroundColor(.secondary)

@@ -86,10 +86,6 @@
 				Models/Transaction.swift,
 				Utilities/CategoryIconConfig.swift,
 				Utilities/Constants.swift,
-				Utilities/HapticManager.swift,
-				Views/Components/ButtonStyles.swift,
-				Views/Components/EmptyStateView.swift,
-				Views/Components/GlassCard.swift,
 			);
 			target = AE7CFA742F24B3B800AED5E2 /* jizhangWidgetExtension */;
 		};

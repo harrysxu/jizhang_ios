@@ -11,7 +11,7 @@ import SwiftData
 // MARK: - Test Data Configuration
 
 /// 测试数据生成配置
-struct TestDataConfig {
+struct TestDataConfig: Sendable {
     /// 数据时间跨度（月）
     var durationMonths: Int = 3
     
@@ -68,9 +68,14 @@ class TestDataGenerator {
     
     // MARK: - Initialization
     
-    init(modelContext: ModelContext, config: TestDataConfig = .default) {
+    init(modelContext: ModelContext, config: TestDataConfig) {
         self.modelContext = modelContext
         self.config = config
+    }
+    
+    /// 使用默认配置初始化
+    convenience init(modelContext: ModelContext) {
+        self.init(modelContext: modelContext, config: .default)
     }
     
     // MARK: - Public Methods

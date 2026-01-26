@@ -34,6 +34,7 @@ struct CloudSyncStatusView: View {
 
 struct CloudSyncStatusDetailView: View {
     @ObservedObject var cloudKitService: CloudKitService
+    @Environment(\.hideTabBar) private var hideTabBar
     
     var body: some View {
         VStack(spacing: Spacing.m) {
@@ -129,6 +130,12 @@ struct CloudSyncStatusDetailView: View {
             Spacer()
         }
         .padding(Spacing.m)
+        .onAppear {
+            hideTabBar.wrappedValue = true
+        }
+        .onDisappear {
+            hideTabBar.wrappedValue = false
+        }
     }
 }
 

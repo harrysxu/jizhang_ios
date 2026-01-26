@@ -119,71 +119,37 @@ extension Ledger {
 // MARK: - Business Logic
 
 extension Ledger {
-    /// 创建默认分类
+    /// 创建默认分类 (使用参考UI样式)
     func createDefaultCategories() {
-        // 支出分类
-        let expenseCategories: [(String, String, [String])] = [
-            ("餐饮", "fork.knife", ["早餐", "午餐", "晚餐", "零食", "咖啡", "请客"]),
-            ("交通", "car.fill", ["地铁", "公交", "打车", "加油", "停车"]),
-            ("购物", "cart.fill", ["日用品", "服饰", "电子产品", "图书"]),
-            ("居住", "house.fill", ["房租", "水电", "物业", "维修"]),
-            ("娱乐", "gamecontroller.fill", ["电影", "游戏", "运动", "旅游"]),
-            ("医疗", "cross.case.fill", ["药品", "就医", "保健"]),
-            ("教育", "book.fill", ["学费", "培训", "书籍"]),
-            ("通讯", "phone.fill", ["话费", "宽带", "会员"])
-        ]
-        
-        for (index, (parentName, icon, children)) in expenseCategories.enumerated() {
-            let parent = Category(
+        // 支出分类 - 使用CategoryIconConfig
+        for (index, categoryName) in CategoryIconConfig.expenseCategoryNames.enumerated() {
+            let style = CategoryIconConfig.expenseStyle(for: categoryName)
+            
+            let category = Category(
                 ledger: self,
-                name: parentName,
+                name: categoryName,
                 type: .expense,
-                iconName: icon,
+                iconName: style.icon,
+                colorHex: style.color,
                 sortOrder: index
             )
-            categories.append(parent)
-            
-            for (childIndex, childName) in children.enumerated() {
-                let child = Category(
-                    ledger: self,
-                    name: childName,
-                    type: .expense,
-                    iconName: icon,
-                    parent: parent,
-                    sortOrder: childIndex
-                )
-                categories.append(child)
-            }
+            categories.append(category)
         }
         
-        // 收入分类
-        let incomeCategories: [(String, String, [String])] = [
-            ("工资", "banknote.fill", ["基本工资", "奖金", "补贴"]),
-            ("投资", "chart.line.uptrend.xyaxis", ["股票", "基金", "利息"]),
-            ("其他", "ellipsis.circle.fill", ["礼金", "报销", "兼职"])
-        ]
-        
-        for (index, (parentName, icon, children)) in incomeCategories.enumerated() {
-            let parent = Category(
-                ledger: self,
-                name: parentName,
-                type: .income,
-                iconName: icon,
-                sortOrder: expenseCategories.count + index
-            )
-            categories.append(parent)
+        // 收入分类 - 使用CategoryIconConfig
+        let expenseCount = CategoryIconConfig.expenseCategoryNames.count
+        for (index, categoryName) in CategoryIconConfig.incomeCategoryNames.enumerated() {
+            let style = CategoryIconConfig.incomeStyle(for: categoryName)
             
-            for (childIndex, childName) in children.enumerated() {
-                let child = Category(
-                    ledger: self,
-                    name: childName,
-                    type: .income,
-                    iconName: icon,
-                    parent: parent,
-                    sortOrder: childIndex
-                )
-                categories.append(child)
-            }
+            let category = Category(
+                ledger: self,
+                name: categoryName,
+                type: .income,
+                iconName: style.icon,
+                colorHex: style.color,
+                sortOrder: expenseCount + index
+            )
+            categories.append(category)
         }
     }
     

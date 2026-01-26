@@ -35,6 +35,7 @@ class AddTransactionViewModel {
     var showToAccountPicker = false
     var showCategoryPicker = false
     var showDatePicker = false
+    var showTimePicker = false
     var showNotePicker = false
     var showTagPicker = false
     

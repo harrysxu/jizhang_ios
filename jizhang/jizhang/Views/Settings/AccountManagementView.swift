@@ -95,7 +95,8 @@ struct AccountManagementView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                LedgerSwitcher()
+                LedgerSwitcher(displayMode: .fullName)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             
             ToolbarItem(placement: .topBarTrailing) {
@@ -152,11 +153,17 @@ private struct AccountRowButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Spacing.m) {
-                // 图标
-                Image(systemName: account.type.defaultIcon)
-                    .font(.system(size: 22))
-                    .foregroundColor(.blue)
-                    .frame(width: 40)
+                // 圆形图标 (参考UI样式)
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: account.colorHex))
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: account.iconName)
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(.white)
+                }
+                .shadow(color: Color(hex: account.colorHex).opacity(0.3), radius: 4, y: 2)
                 
                 // 账户信息
                 VStack(alignment: .leading, spacing: 4) {
@@ -164,7 +171,7 @@ private struct AccountRowButton: View {
                         .font(.body)
                         .foregroundColor(.primary)
                     
-                    HStack(spacing: 8) {
+                    HStack(spacing: 4) {
                         Text(account.type.displayName)
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -175,7 +182,7 @@ private struct AccountRowButton: View {
                                 .foregroundColor(.secondary)
                             
                             let currencyCode = account.ledger?.currencyCode ?? "CNY"
-                            Text("可用: \(account.availableBalance.formatted(.currency(code: currencyCode)))")
+                            Text("可用 \(account.availableBalance.formatAmount())")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -186,14 +193,13 @@ private struct AccountRowButton: View {
                 
                 // 余额
                 VStack(alignment: .trailing, spacing: 4) {
-                    let currencyCode = account.ledger?.currencyCode ?? "CNY"
-                    Text(account.balance.formatted(.currency(code: currencyCode)))
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(account.balance < 0 ? .red : .primary)
+                    Text(account.balance.formatAmount())
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundColor(account.balance < 0 ? .expenseRed : .primary)
+                        .monospacedDigit()
                     
                     if account.type == .creditCard, let limit = account.creditLimit {
-                        Text("额度: \(limit.formatted(.currency(code: currencyCode)))")
+                        Text("额度 \(limit.formatAmount())")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

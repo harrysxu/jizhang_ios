@@ -104,28 +104,41 @@ struct TransactionRow: View {
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 分类图标
+            // 圆形分类图标 (参考UI样式)
             ZStack {
                 Circle()
-                    .fill(categoryColor.opacity(0.1))
+                    .fill(iconBackgroundColor)
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: categoryIcon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(categoryColor)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(.white)
             }
+            .shadow(color: iconBackgroundColor.opacity(0.3), radius: 4, y: 2)
             
             // 交易信息
-            VStack(alignment: .leading, spacing: Spacing.xs) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(displayTitle)
                     .font(.body)
                     .foregroundStyle(.primary)
                 
-                if let note = transaction.note, !note.isEmpty {
-                    Text(note)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                HStack(spacing: 4) {
+                    if let accountName = transaction.primaryAccount?.name {
+                        Text(accountName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    if let note = transaction.note, !note.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Text(note)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             
@@ -133,13 +146,14 @@ struct TransactionRow: View {
             
             // 金额
             Text(transaction.displayAmount)
-                .font(.system(size: FontSize.body, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(amountColor)
                 .monospacedDigit()
         }
-        .padding(.horizontal, Spacing.m)
-        .padding(.vertical, Spacing.s)
+        .padding(.horizontal, Spacing.l)
+        .padding(.vertical, Spacing.m)
         .background(Color(.systemBackground))
+        .contentShape(Rectangle())
     }
     
     // MARK: - Private Properties
@@ -169,7 +183,11 @@ struct TransactionRow: View {
         }
     }
     
-    private var categoryColor: Color {
+    private var iconBackgroundColor: Color {
+        if let category = transaction.category {
+            return Color(hex: category.colorHex)
+        }
+        
         switch transaction.type {
         case .expense:
             return Color.expenseRed
@@ -178,7 +196,7 @@ struct TransactionRow: View {
         case .transfer:
             return Color.primaryBlue
         case .adjustment:
-            return .secondary
+            return Color.gray
         }
     }
     

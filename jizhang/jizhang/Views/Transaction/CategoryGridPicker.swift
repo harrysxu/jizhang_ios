@@ -64,10 +64,10 @@ struct CategoryGridPicker: View {
             
             Divider()
             
-            // 分类网格
+            // 分类网格 (参考UI样式: 5列布局)
             ScrollView {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.m), count: 4),
+                    columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.m), count: 5),
                     spacing: Spacing.l
                 ) {
                     ForEach(displayCategories) { category in
@@ -101,16 +101,21 @@ struct CategoryGridPicker: View {
     // MARK: - Computed Properties
     
     private var parentCategories: [Category] {
-        categories.filter { $0.parent == nil }
+        categories.filter { $0.parent == nil }.sorted { $0.sortOrder < $1.sortOrder }
     }
     
     private var displayCategories: [Category] {
         if let parent = selectedParent {
-            // 显示选中父分类的子分类
-            return categories.filter { $0.parent?.id == parent.id }
+            // 显示选中父分类本身 + 其子分类（允许选择一级分类）
+            var result = [parent]
+            let children = categories
+                .filter { $0.parent?.id == parent.id }
+                .sorted { $0.sortOrder < $1.sortOrder }
+            result.append(contentsOf: children)
+            return result
         } else {
-            // 显示所有分类(父+子)
-            return categories
+            // 显示所有父分类
+            return parentCategories
         }
     }
     
@@ -159,27 +164,50 @@ private struct CategoryGridItem: View {
     let isSelected: Bool
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                // 图标
-                Image(systemName: category.iconName)
-                    .font(.system(size: 28))
-                    .foregroundColor(isSelected ? .white : Color(hex: category.colorHex))
-                    .frame(width: 60, height: 60)
-                    .background(
-                        Circle()
-                            .fill(isSelected ? Color(hex: category.colorHex) : Color(hex: category.colorHex).opacity(0.15))
-                    )
+            VStack(spacing: 6) {
+                // 图标背景圆 (参考UI标准: 圆形色块)
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: category.colorHex))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: category.iconName)
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .scaleEffect(isPressed ? 0.9 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+                .overlay(
+                    Circle()
+                        .stroke(isSelected ? Color.primaryBlue : Color.clear, lineWidth: 2.5)
+                        .frame(width: 52, height: 52)
+                )
+                .shadow(
+                    color: isSelected ? Color.primaryBlue.opacity(0.3) : Color.clear,
+                    radius: 8,
+                    x: 0,
+                    y: 4
+                )
                 
                 // 名称
                 Text(category.name)
-                    .font(.caption)
-                    .foregroundColor(.primary)
+                    .font(.system(size: 11))
+                    .foregroundColor(isSelected ? .primaryBlue : .primary)
+                    .fontWeight(isSelected ? .semibold : .regular)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 

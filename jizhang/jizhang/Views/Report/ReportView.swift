@@ -16,8 +16,9 @@ struct ReportView: View {
     @Query private var transactions: [Transaction]
     @Query private var accounts: [Account]
     
-    @State private var showExportSheet = false
-    @State private var csvContent = ""
+    // 周期选择器状态
+    @State private var selectedPeriod: ReportPeriod = .month
+    @State private var selectedDate = Date()
     
     init() {
         // 临时初始化一个空的 ModelContext，实际会在 onAppear 中使用环境中的 modelContext
@@ -29,22 +30,15 @@ struct ReportView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.m) {
-                    // 时间范围选择器
-                    TimeRangePicker(
-                        selectedRange: Binding(
-                            get: { viewModel.selectedRange },
-                            set: { viewModel.selectedRange = $0; loadData() }
-                        ),
-                        customStartDate: Binding(
-                            get: { viewModel.customStartDate },
-                            set: { viewModel.customStartDate = $0 }
-                        ),
-                        customEndDate: Binding(
-                            get: { viewModel.customEndDate },
-                            set: { viewModel.customEndDate = $0 }
-                        )
-                    )
-                    .padding(.top, Spacing.s)
+                    // 周期选择器 (按周/按月/按年)
+                    ReportPeriodPicker(selectedPeriod: $selectedPeriod, selectedDate: $selectedDate)
+                        .onChange(of: selectedDate) { oldValue, newValue in
+                            loadData()
+                        }
+                        .onChange(of: selectedPeriod) { oldValue, newValue in
+                            loadData()
+                        }
+                        .padding(.top, Spacing.s)
                     
                     if viewModel.isLoading {
                         ProgressView()
@@ -65,7 +59,7 @@ struct ReportView: View {
                         .padding(.horizontal, Spacing.m)
                         
                         // 收支趋势图
-                        IncomeExpenseChartView(data: viewModel.dailyData, reportType: viewModel.reportType)
+                        IncomeExpenseChartView(data: viewModel.dailyData, reportType: viewModel.reportType, period: selectedPeriod)
                             .padding(.horizontal, Spacing.m)
                         
                         // 分类占比图
@@ -79,28 +73,21 @@ struct ReportView: View {
                 }
                 .padding(.bottom, Spacing.l)
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    LedgerSwitcher()
+                ToolbarItem(placement: .principal) {
+                    LedgerSwitcher(displayMode: .fullName)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            exportCSV()
-                        } label: {
-                            Label("导出CSV", systemImage: "square.and.arrow.up")
-                        }
+                    Button {
+                        exportReportCSV()
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "square.and.arrow.up")
                     }
                 }
-            }
-            .sheet(isPresented: $showExportSheet) {
-                ActivityViewController(activityItems: [csvContent])
             }
             .onAppear {
                 loadData()
@@ -113,97 +100,128 @@ struct ReportView: View {
     }
     
     private var summaryCard: some View {
-        HStack(spacing: 0) {
-            // 收入
-            VStack(spacing: Spacing.xs) {
-                Text("收入")
-                    .font(.caption)
+        GlassCard(padding: Spacing.l) {
+            HStack(spacing: 0) {
+                // 收入
+                VStack(spacing: Spacing.s) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up")
+                            .font(.caption2)
+                        Text("收入")
+                            .font(.caption)
+                    }
                     .foregroundStyle(.secondary)
-                
-                Text(formatSummaryAmount(viewModel.totalIncome))
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.incomeGreen)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
-            
-            Divider()
-                .frame(height: 40)
-            
-            // 支出
-            VStack(spacing: Spacing.xs) {
-                Text("支出")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Text(formatSummaryAmount(viewModel.totalExpense))
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.expenseRed)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
-            
-            Divider()
-                .frame(height: 40)
-            
-            // 结余
-            VStack(spacing: Spacing.xs) {
-                Text("结余")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                HStack(spacing: 2) {
-                    Text(formatSummaryAmount(viewModel.netAmount))
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
+                    
+                    Text(formatSummaryAmount(viewModel.totalIncome))
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.incomeGreen)
                         .monospacedDigit()
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
-                    
-                    Image(systemName: viewModel.netAmount >= 0 ? "arrow.up" : "arrow.down")
-                        .font(.caption2)
-                        .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
                 }
+                .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 50)
+                
+                // 支出
+                VStack(spacing: Spacing.s) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down")
+                            .font(.caption2)
+                        Text("支出")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                    
+                    Text(formatSummaryAmount(viewModel.totalExpense))
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.expenseRed)
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 50)
+                
+                // 结余
+                VStack(spacing: Spacing.s) {
+                    Text("结余")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    HStack(spacing: 2) {
+                        Text(formatSummaryAmount(viewModel.netAmount))
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                        
+                        Image(systemName: viewModel.netAmount >= 0 ? "arrow.up" : "arrow.down")
+                            .font(.caption2)
+                            .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 4)
         }
-        .padding(.vertical, Spacing.m)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.medium)
-                .fill(Color(.systemBackground))
-        )
-        .padding(.horizontal, Spacing.m)
+        .padding(.horizontal, Spacing.l)
     }
     
     // 格式化汇总卡片金额
     private func formatSummaryAmount(_ amount: Decimal) -> String {
-        let absAmount = abs(amount)
+        amount.formatSummaryAmount()
+    }
+    
+    // 计算当前选中周期的日期范围
+    private var periodDateRange: (start: Date, end: Date) {
+        let calendar = Calendar.current
         
-        if absAmount >= 100000000 {
-            // 亿级别
-            let value = (amount / 100000000).formatted(.number.precision(.fractionLength(0...1)))
-            return "¥\(value)亿"
-        } else if absAmount >= 10000 {
-            // 万级别
-            let value = (amount / 10000).formatted(.number.precision(.fractionLength(0...1)))
-            return "¥\(value)万"
-        } else if absAmount >= 1000 {
-            // 千级别，显示1位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(0...1))))"
-        } else {
-            // 小于1000，显示2位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(2))))"
+        switch selectedPeriod {
+        case .week:
+            // 周: 从周一到周日
+            let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: selectedDate))!
+            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
+            return (weekStart, weekEnd)
+            
+        case .month:
+            // 月: 从1号到月末
+            let components = calendar.dateComponents([.year, .month], from: selectedDate)
+            let monthStart = calendar.date(from: components)!
+            let monthEnd = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)!
+            return (monthStart, monthEnd)
+            
+        case .year:
+            // 年: 从1月1日到12月31日
+            let year = calendar.component(.year, from: selectedDate)
+            var startComponents = DateComponents()
+            startComponents.year = year
+            startComponents.month = 1
+            startComponents.day = 1
+            let yearStart = calendar.date(from: startComponents)!
+            
+            var endComponents = DateComponents()
+            endComponents.year = year
+            endComponents.month = 12
+            endComponents.day = 31
+            let yearEnd = calendar.date(from: endComponents)!
+            
+            return (yearStart, yearEnd)
         }
     }
     
     private func loadData() {
+        // 获取周期日期范围
+        let range = periodDateRange
+        
+        // 设置viewModel的日期范围为自定义模式
+        viewModel.selectedRange = .custom
+        viewModel.customStartDate = range.start
+        viewModel.customEndDate = range.end
+        
         // 根据当前账本过滤交易
         let filteredTransactions = if let currentLedger = appState.currentLedger {
             transactions.filter { $0.ledger?.id == currentLedger.id }
@@ -221,38 +239,30 @@ struct ReportView: View {
         viewModel.loadData(transactions: filteredTransactions, accounts: filteredAccounts)
     }
     
-    private func exportCSV() {
-        // 筛选时间范围内的交易
-        let range = viewModel.dateRange
-        var filteredTransactions = transactions.filter { transaction in
-            transaction.date >= range.start && transaction.date <= range.end
-        }
+    /// 导出统计报表CSV
+    private func exportReportCSV() {
+        let range = periodDateRange
         
-        // 按当前账本过滤
-        if let currentLedger = appState.currentLedger {
-            filteredTransactions = filteredTransactions.filter { $0.ledger?.id == currentLedger.id }
-        }
+        // 生成文件名
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        let startStr = dateFormatter.string(from: range.start)
+        let endStr = dateFormatter.string(from: range.end)
+        let ledgerName = appState.currentLedger?.name ?? "全部"
+        let fileName = "统计报表_\(ledgerName)_\(startStr)-\(endStr).csv"
         
-        csvContent = viewModel.exportCSV(transactions: filteredTransactions)
-        showExportSheet = true
-    }
-}
-
-// MARK: - ActivityViewController
-
-struct ActivityViewController: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: activityItems,
-            applicationActivities: nil
-        )
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No updates needed
+        if let url = CSVExporter.exportReportToFile(
+            totalIncome: viewModel.totalIncome,
+            totalExpense: viewModel.totalExpense,
+            netAmount: viewModel.netAmount,
+            categoryData: viewModel.categoryData,
+            reportType: viewModel.reportType,
+            startDate: range.start,
+            endDate: range.end,
+            fileName: fileName
+        ) {
+            ShareUtils.share(url: url)
+        }
     }
 }
 

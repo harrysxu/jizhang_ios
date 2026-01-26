@@ -10,22 +10,38 @@ import SwiftUI
 /// 金额显示组件
 struct AmountDisplay: View {
     @Binding var amount: Decimal
+    let fontSize: CGFloat
+    let isLargeDisplay: Bool
+    let showCurrency: Bool
+    
+    init(
+        amount: Binding<Decimal>,
+        fontSize: CGFloat = 56,
+        isLargeDisplay: Bool = true,
+        showCurrency: Bool = true
+    ) {
+        self._amount = amount
+        self.fontSize = fontSize
+        self.isLargeDisplay = isLargeDisplay
+        self.showCurrency = showCurrency
+    }
     
     var body: some View {
         HStack(spacing: 4) {
-            Text("¥")
-                .font(.system(size: 28, weight: .regular))
-                .foregroundColor(.gray)
+            if showCurrency {
+                Text("¥")
+                    .font(.system(size: fontSize * 0.5, weight: .regular))
+                    .foregroundColor(.secondary)
+            }
             
             Text(formattedAmount)
-                .font(.system(size: 56, weight: .bold, design: .rounded))
+                .font(.system(size: fontSize, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
-                .monospacedDigit()
+                .monospacedDigit() // 关键:等宽数字防止跳动
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 80)
     }
     
     private var formattedAmount: String {
@@ -35,7 +51,7 @@ struct AmountDisplay: View {
         
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
+        formatter.minimumFractionDigits = isLargeDisplay ? 2 : 0
         formatter.maximumFractionDigits = 2
         formatter.groupingSeparator = ","
         

@@ -84,8 +84,9 @@ struct CalculatorKeyboard: View {
                         }
                     }
                     
-                    // 确认按钮
+                    // 确认按钮 (参考UI标准: 红色保存按钮)
                     Button(action: {
+                        HapticManager.saveSuccess()
                         onConfirm()
                         dismiss()
                     }) {
@@ -97,10 +98,10 @@ struct CalculatorKeyboard: View {
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 50)
+                        .frame(height: 54)
                         .background(
                             RoundedRectangle(cornerRadius: CornerRadius.medium)
-                                .fill(isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
+                                .fill(isValid ? Color.expenseRed : Color.gray.opacity(0.5))
                         )
                     }
                     .disabled(!isValid)
@@ -157,16 +158,16 @@ struct CalculatorButtonView: View {
             Group {
                 if let icon = button.icon {
                     Image(systemName: icon)
-                        .font(.system(size: 20))
+                        .font(.system(size: 22, weight: .medium))
                 } else {
                     Text(button.title)
-                        .font(.system(size: 24, weight: .medium))
+                        .font(.system(size: 26, weight: .semibold))
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: 60)
             .background(
-                RoundedRectangle(cornerRadius: CornerRadius.medium)
+                RoundedRectangle(cornerRadius: CornerRadius.small)
                     .fill(buttonBackground)
             )
             .foregroundColor(buttonForeground)
@@ -329,18 +330,15 @@ struct CalculatorButtonView: View {
     }
     
     private func triggerHaptic() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
-    }
-}
-
-// MARK: - Scale Button Style
-
-struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+        // 使用HapticManager提供不同操作的反馈
+        switch button {
+        case .equals:
+            HapticManager.medium()
+        case .clear:
+            HapticManager.heavy()
+        default:
+            HapticManager.light()
+        }
     }
 }
 

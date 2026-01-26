@@ -67,6 +67,32 @@ extension Date {
         }
     }
     
+    /// 格式化为时间字符串 (HH:mm)
+    var timeString: String {
+        return toString(format: "HH:mm")
+    }
+    
+    /// 合并日期和时间
+    /// - Parameters:
+    ///   - date: 日期部分
+    ///   - time: 时间部分
+    /// - Returns: 合并后的日期
+    static func combine(date: Date, time: Date) -> Date {
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: time)
+        
+        var combined = DateComponents()
+        combined.year = dateComponents.year
+        combined.month = dateComponents.month
+        combined.day = dateComponents.day
+        combined.hour = timeComponents.hour
+        combined.minute = timeComponents.minute
+        combined.second = timeComponents.second
+        
+        return calendar.date(from: combined) ?? date
+    }
+    
     /// 获取月初日期
     var startOfMonth: Date {
         let components = Calendar.current.dateComponents([.year, .month], from: self)

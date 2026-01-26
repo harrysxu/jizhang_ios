@@ -138,7 +138,7 @@ private struct SelectionArea: View {
                 .frame(maxWidth: .infinity)
             }
             
-            // 第二行：日期和备注
+            // 第二行：日期和时间
             HStack(spacing: Spacing.m) {
                 // 日期
                 SelectionCard(
@@ -152,6 +152,21 @@ private struct SelectionArea: View {
                 }
                 .frame(maxWidth: .infinity)
                 
+                // 时间
+                SelectionCard(
+                    icon: "clock",
+                    iconColor: .green,
+                    title: "时间",
+                    value: viewModel.date.timeString,
+                    showArrow: true
+                ) {
+                    viewModel.showTimePicker = true
+                }
+                .frame(maxWidth: .infinity)
+            }
+            
+            // 第三行：备注
+            HStack(spacing: Spacing.m) {
                 // 备注
                 SelectionCard(
                     icon: "note.text",
@@ -176,6 +191,9 @@ private struct SelectionArea: View {
         }
         .sheet(isPresented: $viewModel.showDatePicker) {
             QuickDatePicker(selectedDate: $viewModel.date)
+        }
+        .sheet(isPresented: $viewModel.showTimePicker) {
+            TimePickerSheet(selectedDate: $viewModel.date)
         }
         .sheet(isPresented: $viewModel.showNotePicker) {
             NoteInputSheet(note: $viewModel.note)
@@ -254,6 +272,56 @@ private struct DatePickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完成") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+// MARK: - Time Picker Sheet
+
+private struct TimePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedDate: Date
+    
+    @State private var selectedTime: Date
+    
+    init(selectedDate: Binding<Date>) {
+        self._selectedDate = selectedDate
+        self._selectedTime = State(initialValue: selectedDate.wrappedValue)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: Spacing.l) {
+                DatePicker(
+                    "选择时间",
+                    selection: $selectedTime,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .environment(\.locale, Locale(identifier: "zh_CN"))
+                
+                Spacer()
+            }
+            .padding(.top, Spacing.l)
+            .navigationTitle("选择时间")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        // 合并日期和时间
+                        selectedDate = Date.combine(date: selectedDate, time: selectedTime)
                         dismiss()
                     }
                 }

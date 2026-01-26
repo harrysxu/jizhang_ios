@@ -72,9 +72,14 @@ struct LedgerPickerSheet: View {
     
     private func ledgerButton(for ledger: Ledger) -> some View {
         Button {
+            HapticManager.selection()
             currentLedger = ledger
             onSelect?(ledger)
-            dismiss()
+            
+            // 延迟关闭,让用户看到选中效果
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                dismiss()
+            }
         } label: {
             ledgerRow(for: ledger)
         }
@@ -82,26 +87,37 @@ struct LedgerPickerSheet: View {
     }
     
     private func ledgerRow(for ledger: Ledger) -> some View {
-        HStack(spacing: 12) {
-            // 账本图标
+        HStack(spacing: 16) {
+            // 账本图标（圆形背景）
             ledgerIcon(for: ledger)
             
             // 账本信息
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(ledger.name)
-                    .font(.body)
-                    .fontWeight(.medium)
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.primary)
                 
                 // 统计信息
-                HStack(spacing: 12) {
-                    Label("\(ledger.activeAccountsCount)个账户", systemImage: "creditcard")
-                        .font(.caption)
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "creditcard")
+                            .font(.system(size: 11))
+                        Text("\(ledger.activeAccountsCount)个账户")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(.secondary)
+                    
+                    Text("•")
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     
-                    Label("\(ledger.thisMonthTransactionCount)笔交易", systemImage: "list.bullet")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 11))
+                        Text("\(ledger.thisMonthTransactionCount)笔交易")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(.secondary)
                 }
             }
             
@@ -110,23 +126,26 @@ struct LedgerPickerSheet: View {
             // 选中标记
             if currentLedger?.id == ledger.id {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.title3)
+                    .font(.system(size: 24))
                     .foregroundStyle(.blue)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
     }
     
     private func ledgerIcon(for ledger: Ledger) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(hex: ledger.colorHex).opacity(0.15))
-                .frame(width: 44, height: 44)
+            // 圆形背景色块 (参考UI样式)
+            Circle()
+                .fill(Color(hex: ledger.colorHex))
+                .frame(width: 48, height: 48)
             
+            // 白色图标
             Image(systemName: ledger.iconName)
-                .font(.system(size: 20))
-                .foregroundStyle(Color(hex: ledger.colorHex))
+                .font(.system(size: 24, weight: .medium))
+                .foregroundStyle(.white)
         }
+        .shadow(color: Color(hex: ledger.colorHex).opacity(0.3), radius: 4, y: 2)
     }
     
     @ToolbarContentBuilder

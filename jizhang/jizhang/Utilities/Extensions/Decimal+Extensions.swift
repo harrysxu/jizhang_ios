@@ -47,6 +47,58 @@ extension Decimal {
         }
     }
     
+    /// 智能格式化金额 - 根据金额大小自动选择合适的显示方式
+    /// - Parameters:
+    ///   - isMainAmount: 是否为主要金额（如净资产），主要金额会保留更多精度
+    ///   - currencyCode: 货币代码(默认CNY)
+    /// - Returns: 格式化后的字符串
+    func formatAmount(isMainAmount: Bool = false, currencyCode: String = "CNY") -> String {
+        let absAmount = abs(self)
+        let symbol = currencySymbol(for: currencyCode)
+        
+        if absAmount >= 100000000 {
+            // 亿级别
+            let precision = isMainAmount ? 2 : 1
+            let value = (self / 100000000).formatted(.number.precision(.fractionLength(0...precision)))
+            return "\(symbol)\(value)亿"
+        } else if absAmount >= 10000 {
+            // 万级别
+            let precision = isMainAmount ? 2 : 1
+            let value = (self / 10000).formatted(.number.precision(.fractionLength(0...precision)))
+            return "\(symbol)\(value)万"
+        } else if absAmount >= 1000 {
+            // 千级别，显示1位小数
+            return "\(symbol)\(self.formatted(.number.precision(.fractionLength(0...1))))"
+        } else {
+            // 小于1000，显示2位小数
+            return "\(symbol)\(self.formatted(.number.precision(.fractionLength(2))))"
+        }
+    }
+    
+    /// 格式化汇总卡片金额 - 用于报表等汇总显示
+    /// - Parameter currencyCode: 货币代码(默认CNY)
+    /// - Returns: 格式化后的字符串
+    func formatSummaryAmount(currencyCode: String = "CNY") -> String {
+        let absAmount = abs(self)
+        let symbol = currencySymbol(for: currencyCode)
+        
+        if absAmount >= 100000000 {
+            // 亿级别
+            let value = (self / 100000000).formatted(.number.precision(.fractionLength(0...1)))
+            return "\(symbol)\(value)亿"
+        } else if absAmount >= 10000 {
+            // 万级别
+            let value = (self / 10000).formatted(.number.precision(.fractionLength(0...1)))
+            return "\(symbol)\(value)万"
+        } else if absAmount >= 1000 {
+            // 千级别，显示1位小数
+            return "\(symbol)\(self.formatted(.number.precision(.fractionLength(0...1))))"
+        } else {
+            // 小于1000，显示2位小数
+            return "\(symbol)\(self.formatted(.number.precision(.fractionLength(2))))"
+        }
+    }
+    
     /// 获取货币符号
     private func currencySymbol(for code: String) -> String {
         switch code {

@@ -61,7 +61,7 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.m) {
-                    // 净资产卡片
+                    // 净资产卡片 (毛玻璃效果)
                     NetAssetCard(
                         totalAssets: totalAssets,
                         monthIncome: monthIncome,
@@ -72,6 +72,11 @@ struct HomeView: View {
                     // 今日支出卡片
                     TodayExpenseCard(todayExpense: todayExpense)
                     
+                    // 最近7日支出趋势图
+                    SevenDayExpenseChart(
+                        data: SevenDayExpenseChart.generateData(from: currentLedgerTransactions)
+                    )
+                    
                     // 流水列表
                     TransactionListSection(transactions: recentTransactions)
                 }
@@ -80,8 +85,9 @@ struct HomeView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    LedgerSwitcher()
+                ToolbarItem(placement: .principal) {
+                    LedgerSwitcher(displayMode: .fullName)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
             }
             .onAppear {

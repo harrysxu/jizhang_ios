@@ -49,7 +49,8 @@ struct BudgetView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    LedgerSwitcher()
+                    LedgerSwitcher(displayMode: .fullName)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
                 
                 toolbarContent

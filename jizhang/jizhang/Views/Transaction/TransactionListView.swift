@@ -17,18 +17,20 @@ struct TransactionListView: View {
     
     @State private var searchText = ""
     @State private var selectedType: TransactionType? = nil
-    @State private var selectedTimeRange: TimeRange = .thisMonth
-    @State private var customStartDate = Date()
-    @State private var customEndDate = Date()
+    @State private var selectedMonth = Date()  // 选中的月份
+    @State private var showExportOptions = false
+    @State private var showDateRangePicker = false
+    @State private var exportStartDate = Date()
+    @State private var exportEndDate = Date()
     
     // MARK: - Computed Properties
     
     private var dateRange: (start: Date, end: Date) {
-        if selectedTimeRange == .custom {
-            return (customStartDate, customEndDate)
-        } else {
-            return selectedTimeRange.dateRange
-        }
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: selectedMonth)
+        let startOfMonth = calendar.date(from: components)!
+        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+        return (startOfMonth, endOfMonth)
     }
     
     private var filteredTransactions: [Transaction] {
@@ -89,13 +91,9 @@ struct TransactionListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // 时间范围选择器
-                TimeRangePicker(
-                    selectedRange: $selectedTimeRange,
-                    customStartDate: $customStartDate,
-                    customEndDate: $customEndDate
-                )
-                .padding(.top, Spacing.s)
+                // 月份选择器 (参考UI样式: 2026-01格式)
+                MonthYearPicker(selectedDate: $selectedMonth)
+                    .padding(.vertical, Spacing.s)
                 
                 // 类型筛选（全部、支出、收入）
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -141,25 +139,29 @@ struct TransactionListView: View {
                 ForEach(group.transactions) { transaction in
                     NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
                         HStack(spacing: Spacing.m) {
-                            // 图标
+                            // 圆形图标 (参考UI样式)
                             if let category = transaction.category {
-                                Image(systemName: category.iconName)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(Color(hex: category.colorHex))
-                                    .frame(width: 40, height: 40)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color(hex: category.colorHex).opacity(0.15))
-                                    )
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(hex: category.colorHex))
+                                        .frame(width: 44, height: 44)
+                                    
+                                    Image(systemName: category.iconName)
+                                        .font(.system(size: 22, weight: .medium))
+                                        .foregroundStyle(.white)
+                                }
+                                .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
                             } else {
-                                Image(systemName: transaction.type.icon)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.gray)
-                                    .frame(width: 40, height: 40)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color(.systemGray6))
-                                    )
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.gray)
+                                        .frame(width: 44, height: 44)
+                                    
+                                    Image(systemName: transaction.type.icon)
+                                        .font(.system(size: 22, weight: .medium))
+                                        .foregroundStyle(.white)
+                                }
+                                .shadow(color: Color.gray.opacity(0.3), radius: 4, y: 2)
                             }
                             
                             // 信息
@@ -198,11 +200,11 @@ struct TransactionListView: View {
                             
                             // 金额
                             Text(formatAmount(transaction))
-                                .font(.system(size: 17, weight: .medium))
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
                                 .foregroundColor(amountColor(for: transaction))
                                 .monospacedDigit()
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 8)
                     }
                 }
                 .onDelete { indexSet in
@@ -223,11 +225,137 @@ struct TransactionListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "搜索流水...")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    LedgerSwitcher()
+                ToolbarItem(placement: .principal) {
+                    LedgerSwitcher(displayMode: .fullName)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showExportOptions = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
+            .sheet(isPresented: $showExportOptions) {
+                exportOptionsSheet
+            }
+            .sheet(isPresented: $showDateRangePicker) {
+                dateRangePickerSheet
+            }
+        }
+    }
+    
+    // MARK: - Export Options Sheet
+    
+    private var exportOptionsSheet: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Button {
+                        showExportOptions = false
+                        exportCurrentFiltered()
+                    } label: {
+                        HStack {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .foregroundStyle(.blue)
+                                .frame(width: 28)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("导出当前筛选数据")
+                                    .foregroundStyle(.primary)
+                                Text("共 \(filteredTransactions.count) 条记录")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    
+                    Button {
+                        showExportOptions = false
+                        // 初始化日期范围为当月
+                        let calendar = Calendar.current
+                        let components = calendar.dateComponents([.year, .month], from: Date())
+                        exportStartDate = calendar.date(from: components)!
+                        exportEndDate = Date()
+                        showDateRangePicker = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(.blue)
+                                .frame(width: 28)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("选择时间范围导出")
+                                    .foregroundStyle(.primary)
+                                Text("自定义起止日期")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("导出选项")
+                }
+            }
+            .navigationTitle("导出流水")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        showExportOptions = false
+                    }
                 }
             }
         }
+        .presentationDetents([.medium])
+    }
+    
+    // MARK: - Date Range Picker Sheet
+    
+    private var dateRangePickerSheet: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    DatePicker("开始日期", selection: $exportStartDate, displayedComponents: .date)
+                        .environment(\.locale, Locale(identifier: "zh_CN"))
+                    DatePicker("结束日期", selection: $exportEndDate, displayedComponents: .date)
+                        .environment(\.locale, Locale(identifier: "zh_CN"))
+                } header: {
+                    Text("选择时间范围")
+                }
+                
+                Section {
+                    let count = countTransactionsInRange()
+                    HStack {
+                        Text("符合条件的记录")
+                        Spacer()
+                        Text("\(count) 条")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .environment(\.locale, Locale(identifier: "zh_CN"))
+            .navigationTitle("选择日期")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        showDateRangePicker = false
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("导出") {
+                        showDateRangePicker = false
+                        exportByDateRange()
+                    }
+                    .disabled(countTransactionsInRange() == 0)
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
     
     // MARK: - Methods
@@ -296,6 +424,73 @@ struct TransactionListView: View {
         }
         
         try? modelContext.save()
+    }
+    
+    /// 导出当前筛选的数据
+    private func exportCurrentFiltered() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM"
+        let monthStr = dateFormatter.string(from: selectedMonth)
+        let ledgerName = appState.currentLedger?.name ?? "全部"
+        
+        var typeSuffix = ""
+        if let type = selectedType {
+            typeSuffix = "_\(type.displayName)"
+        }
+        
+        let fileName = "流水明细_\(ledgerName)_\(monthStr)\(typeSuffix).csv"
+        
+        if let url = CSVExporter.exportToFile(transactions: filteredTransactions, fileName: fileName) {
+            ShareUtils.share(url: url)
+        }
+    }
+    
+    /// 导出指定时间范围的数据
+    private func exportByDateRange() {
+        // 获取时间范围内的交易（只按账本和时间过滤，不按类型和搜索过滤）
+        var transactions = allTransactions
+        
+        // 按账本过滤
+        if let currentLedger = appState.currentLedger {
+            transactions = transactions.filter { $0.ledger?.id == currentLedger.id }
+        }
+        
+        // 按时间范围过滤
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: exportStartDate)
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: exportEndDate)!
+        transactions = transactions.filter { $0.date >= startOfDay && $0.date <= endOfDay }
+        
+        // 生成文件名
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        let startStr = dateFormatter.string(from: exportStartDate)
+        let endStr = dateFormatter.string(from: exportEndDate)
+        let ledgerName = appState.currentLedger?.name ?? "全部"
+        
+        let fileName = "流水明细_\(ledgerName)_\(startStr)-\(endStr).csv"
+        
+        if let url = CSVExporter.exportToFile(transactions: transactions, fileName: fileName) {
+            ShareUtils.share(url: url)
+        }
+    }
+    
+    /// 计算指定时间范围内的交易数量
+    private func countTransactionsInRange() -> Int {
+        var transactions = allTransactions
+        
+        // 按账本过滤
+        if let currentLedger = appState.currentLedger {
+            transactions = transactions.filter { $0.ledger?.id == currentLedger.id }
+        }
+        
+        // 按时间范围过滤
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: exportStartDate)
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: exportEndDate)!
+        transactions = transactions.filter { $0.date >= startOfDay && $0.date <= endOfDay }
+        
+        return transactions.count
     }
 }
 

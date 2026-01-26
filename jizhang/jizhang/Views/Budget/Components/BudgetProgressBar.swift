@@ -34,13 +34,19 @@ struct BudgetProgressBar: View {
             ZStack(alignment: .leading) {
                 // 背景
                 RoundedRectangle(cornerRadius: height / 2)
-                    .fill(Color.gray.opacity(0.2))
+                    .fill(Color(.systemGray5))
                 
-                // 进度条
+                // 进度条 (使用渐变,参考UI样式)
                 RoundedRectangle(cornerRadius: height / 2)
-                    .fill(progressColor)
+                    .fill(
+                        LinearGradient(
+                            colors: [progressColor, progressColor.opacity(0.7)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(width: geometry.size.width * CGFloat(displayProgress / maxProgress))
-                    .animation(.easeInOut(duration: AnimationDuration.normal), value: progress)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
             }
         }
         .frame(height: height)

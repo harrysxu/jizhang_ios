@@ -12,6 +12,7 @@ struct TabBarView: View {
     
     @State private var selectedTab: Tab = .home
     @State private var showAddTransaction = false
+    @State private var hideTabBar = false
     
     // MARK: - Body
     
@@ -20,18 +21,36 @@ struct TabBarView: View {
             // 主内容区域
             TabContent(selectedTab: selectedTab)
                 .ignoresSafeArea(.keyboard)
+                .environment(\.hideTabBar, $hideTabBar)
             
             // 自定义底部TabBar
-            CustomTabBar(
-                selectedTab: $selectedTab,
-                onAddTap: {
-                    showAddTransaction = true
-                }
-            )
+            if !hideTabBar {
+                CustomTabBar(
+                    selectedTab: $selectedTab,
+                    onAddTap: {
+                        showAddTransaction = true
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: hideTabBar)
         .sheet(isPresented: $showAddTransaction) {
             AddTransactionSheet()
         }
+    }
+}
+
+// MARK: - Hide TabBar Environment Key
+
+private struct HideTabBarKey: EnvironmentKey {
+    static let defaultValue: Binding<Bool> = .constant(false)
+}
+
+extension EnvironmentValues {
+    var hideTabBar: Binding<Bool> {
+        get { self[HideTabBarKey.self] }
+        set { self[HideTabBarKey.self] = newValue }
     }
 }
 
@@ -82,7 +101,7 @@ struct CustomTabBar: View {
                 selectedTab = .transactions
             }
             
-            // 中间大号添加按钮
+            // 中间大号添加按钮 (参考UI样式: FAB浮动按钮)
             Button(action: onAddTap) {
                 ZStack {
                     Circle()
@@ -93,15 +112,16 @@ struct CustomTabBar: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 56, height: 56)
-                        .shadow(color: Color.primaryBlue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .frame(width: 60, height: 60)
+                        .shadow(color: Color.primaryBlue.opacity(0.4), radius: 12, x: 0, y: 6)
                     
                     Image(systemName: "plus")
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.system(size: 26, weight: .semibold))
                         .foregroundStyle(.white)
                 }
             }
-            .offset(y: -8) // 凸出效果
+            .buttonStyle(ScaleButtonStyle())
+            .offset(y: -12) // 凸出效果
             .frame(maxWidth: .infinity)
             
             // 报表
@@ -122,11 +142,13 @@ struct CustomTabBar: View {
                 selectedTab = .settings
             }
         }
-        .frame(height: 50)
+        .frame(height: 54)
         .padding(.bottom, 8)
         .background(
-            Color(.systemBackground)
-                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: -5)
+            // 毛玻璃效果 (参考UI样式)
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: -6)
                 .ignoresSafeArea(edges: .bottom)
         )
     }
@@ -140,21 +162,42 @@ struct TabBarButton: View {
     let isSelected: Bool
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
+        Button(action: {
+            // 触觉反馈
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            action()
+        }) {
+            VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
                 
                 Text(title)
-                    .font(.caption2)
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
+            .scaleEffect(isPressed ? 0.9 : 1.0)
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isPressed = true
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isPressed = false
+                    }
+                }
+        )
     }
 }
 

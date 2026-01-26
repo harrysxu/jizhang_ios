@@ -96,48 +96,57 @@ private struct LedgerManagementContentView: View {
     }
     
     private func ledgerRow(_ ledger: Ledger) -> some View {
-        HStack(spacing: 12) {
-            // 图标
+        HStack(spacing: 16) {
+            // 圆形图标 (参考UI样式 - 完整圆形背景色块)
             ZStack {
                 Circle()
-                    .fill(Color(hex: ledger.colorHex).opacity(0.2))
-                    .frame(width: 44, height: 44)
+                    .fill(Color(hex: ledger.colorHex))
+                    .frame(width: 48, height: 48)
                 
                 Image(systemName: ledger.iconName)
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color(hex: ledger.colorHex))
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.white)
             }
+            .shadow(color: Color(hex: ledger.colorHex).opacity(0.3), radius: 4, y: 2)
             
             // 信息
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
                     Text(ledger.name)
-                        .font(.body)
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.primary)
                     
                     if ledger.isDefault {
                         Text("默认")
-                            .font(.caption2)
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
                             .background(Color.primaryBlue)
-                            .cornerRadius(4)
+                            .cornerRadius(6)
                     }
                 }
                 
                 HStack(spacing: 8) {
-                    Text("\(ledger.activeAccountsCount) 个账户")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "creditcard")
+                            .font(.system(size: 11))
+                        Text("\(ledger.activeAccountsCount)个账户")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(.secondary)
                     
                     Text("•")
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     
-                    Text("\(ledger.thisMonthTransactionCount) 笔交易")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 11))
+                        Text("\(ledger.thisMonthTransactionCount)笔交易")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(.secondary)
                 }
             }
             
@@ -145,12 +154,12 @@ private struct LedgerManagementContentView: View {
             
             if ledger.isArchived {
                 Text("已归档")
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, Spacing.s)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(Color.gray.opacity(0.2))
-                    .cornerRadius(4)
+                    .cornerRadius(6)
             }
             
             // 菜单按钮
@@ -207,6 +216,7 @@ private struct LedgerManagementContentView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
+            HapticManager.light()
             viewModel.showEditLedger(ledger)
         }
     }

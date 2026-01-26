@@ -9,23 +9,26 @@ import SwiftUI
 
 // MARK: - Spacing
 
-/// 间距系统
+/// 间距系统 (基于8点网格系统)
 enum Spacing {
-    static let xs: CGFloat = 4
-    static let s: CGFloat = 8
-    static let m: CGFloat = 16
-    static let l: CGFloat = 24
-    static let xl: CGFloat = 32
-    static let xxl: CGFloat = 48
+    static let xxs: CGFloat = 2     // 极小间距
+    static let xs: CGFloat = 4      // 超小间距
+    static let s: CGFloat = 8       // 小间距
+    static let m: CGFloat = 12      // 中间距
+    static let l: CGFloat = 16      // 标准间距 ⭐
+    static let xl: CGFloat = 20     // 大间距
+    static let xxl: CGFloat = 24    // 超大间距
+    static let xxxl: CGFloat = 32   // 特大间距
 }
 
 // MARK: - CornerRadius
 
 /// 圆角系统
 enum CornerRadius {
-    static let small: CGFloat = 10
-    static let medium: CGFloat = 12
-    static let large: CGFloat = 16
+    static let small: CGFloat = 8    // 小圆角(按钮)
+    static let medium: CGFloat = 12  // 中圆角(小卡片)
+    static let large: CGFloat = 16   // 大圆角(主卡片) ⭐
+    static let xlarge: CGFloat = 20  // 超大圆角(特殊组件)
 }
 
 // MARK: - FontSize
@@ -43,10 +46,12 @@ enum FontSize {
     static let footnote: CGFloat = 13
     static let caption: CGFloat = 12
     
-    // 金额显示
-    static let amountLarge: CGFloat = 48
-    static let amountMedium: CGFloat = 32
-    static let amountSmall: CGFloat = 24
+    // 金额显示 (参考UI标准)
+    static let amountXLarge: CGFloat = 52   // 净资产金额 ⭐
+    static let amountLarge: CGFloat = 48    // 超大金额
+    static let amountMedium: CGFloat = 30   // 月收支金额 ⭐
+    static let amountSmall: CGFloat = 20    // 列表金额
+    static let amountMini: CGFloat = 16     // 小号金额
 }
 
 // MARK: - AnimationDuration
@@ -98,6 +103,51 @@ extension Color {
     
     /// 分组背景(暗色模式)
     static let groupedBackgroundDark = Color(hex: "#000000")
+    
+    // MARK: - Category Colors
+    
+    /// 分类颜色预设 (参考UI样式)
+    enum CategoryColors {
+        // 餐饮类
+        static let meals = Color(hex: "FFB74D")         // 三餐 - 橙色
+        static let snacks = Color(hex: "A1887F")        // 零食 - 棕色
+        
+        // 购物类
+        static let clothing = Color(hex: "E57373")      // 衣服 - 红色
+        static let dailyGoods = Color(hex: "AED581")    // 日用品 - 浅绿
+        
+        // 出行类
+        static let transport = Color(hex: "64B5F6")     // 交通 - 蓝色
+        static let travel = Color(hex: "81C784")        // 旅行 - 绿色
+        static let carGas = Color(hex: "90A4AE")        // 汽车/加油 - 灰蓝
+        
+        // 家庭类
+        static let housing = Color(hex: "FFB74D")       // 住房 - 橙色
+        static let utilities = Color(hex: "9FA8DA")     // 水电煤 - 蓝紫
+        static let children = Color(hex: "FFD54F")      // 孩子 - 黄色
+        
+        // 娱乐类
+        static let entertainment = Color(hex: "BA68C8") // 娱乐 - 紫色
+        static let sports = Color(hex: "4DB6AC")        // 运动 - 青色
+        
+        // 生活服务类
+        static let phone = Color(hex: "4DD0E1")         // 话费网费 - 青色
+        static let medical = Color(hex: "EF5350")       // 医疗 - 红色
+        static let beauty = Color(hex: "F48FB1")        // 美妆 - 粉色
+        
+        // 学习工作类
+        static let study = Color(hex: "4FC3F7")         // 学习 - 浅蓝
+        static let electronics = Color(hex: "78909C")   // 电器数码 - 灰色
+        
+        // 社交类
+        static let gifts = Color(hex: "FF8A65")         // 请客送礼 - 橙红
+        static let redEnvelope = Color(hex: "E57373")   // 发红包 - 红色
+        
+        // 其他类
+        static let pets = Color(hex: "9575CD")          // 宠物 - 紫色
+        static let tobacco = Color(hex: "F06292")       // 烟酒 - 粉色
+        static let other = Color(hex: "BDBDBD")         // 其它 - 灰色
+    }
     
     // MARK: - Helper: Hex Initializer
     

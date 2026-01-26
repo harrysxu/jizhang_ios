@@ -33,9 +33,9 @@ struct BudgetOverviewCard: View {
             BudgetProgressBar(progress: progress, height: 12)
             bottomInfoSection
         }
-        .padding(Spacing.m)
+        .padding(Spacing.xl)
         .background(cardBackground)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
     
     private var headerSection: some View {
@@ -46,7 +46,7 @@ struct BudgetOverviewCard: View {
             
             Spacer()
             
-            Text(formatAmount(totalBudget))
+            Text(totalBudget.formatAmount())
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
                 .monospacedDigit()
@@ -63,7 +63,7 @@ struct BudgetOverviewCard: View {
             
             Spacer()
             
-            Text(formatAmount(totalUsed))
+            Text(totalUsed.formatAmount())
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
                 .foregroundStyle(progress >= 1.0 ? Color.expenseRed : .primary)
                 .monospacedDigit()
@@ -91,7 +91,7 @@ struct BudgetOverviewCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             
-            Text(formatAmount(dailyAverage))
+            Text(dailyAverage.formatAmount())
                 .font(.headline)
                 .foregroundStyle(Color.incomeGreen)
                 .monospacedDigit()
@@ -113,31 +113,12 @@ struct BudgetOverviewCard: View {
     }
     
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: CornerRadius.medium)
+        RoundedRectangle(cornerRadius: CornerRadius.large)
             .fill(.ultraThinMaterial)
             .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.medium)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
             )
-    }
-    
-    // 格式化金额
-    private func formatAmount(_ amount: Decimal) -> String {
-        let absAmount = abs(amount)
-        
-        if absAmount >= 100000000 {
-            // 亿级别
-            return "¥\((amount / 100000000).formatted(.number.precision(.fractionLength(0...1))))亿"
-        } else if absAmount >= 10000 {
-            // 万级别
-            return "¥\((amount / 10000).formatted(.number.precision(.fractionLength(0...1))))万"
-        } else if absAmount >= 1000 {
-            // 千级别，显示1位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(0...1))))"
-        } else {
-            // 小于1000，显示2位小数
-            return "¥\(amount.formatted(.number.precision(.fractionLength(2))))"
-        }
     }
 }
 

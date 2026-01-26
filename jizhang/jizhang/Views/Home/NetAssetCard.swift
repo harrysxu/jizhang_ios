@@ -24,80 +24,85 @@ struct NetAssetCard: View {
         let length = amountString.count
         
         if length > 15 {
-            return FontSize.amountMedium // 32pt
+            return FontSize.amountMedium // 30pt
         } else if length > 12 {
-            return FontSize.amountSmall // 24pt  
+            return FontSize.amountSmall // 20pt  
         } else {
-            return FontSize.amountLarge // 48pt
+            return FontSize.amountXLarge // 52pt ⭐
         }
     }
     
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: Spacing.m) {
-            // 标题栏
-            HStack {
-                Text("净资产")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                
-                Spacer()
-                
-                Button(action: {
-                    withAnimation(.easeInOut(duration: AnimationDuration.fast)) {
-                        isAmountHidden.toggle()
-                    }
-                }) {
-                    Image(systemName: isAmountHidden ? "eye.slash.fill" : "eye.fill")
+        GlassCard(cornerRadius: CornerRadius.xlarge, padding: Spacing.xxl) {
+            VStack(spacing: Spacing.l) {
+                // 标题栏
+                HStack {
+                    Text("净资产")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            isAmountHidden.toggle()
+                        }
+                        // 触觉反馈
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                    }) {
+                        Image(systemName: isAmountHidden ? "eye.slash.fill" : "eye.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            }
-            
-            // 金额显示
-            HStack(alignment: .firstTextBaseline, spacing: Spacing.xs) {
-                Text("¥")
-                    .font(.title2)
-                    .fontWeight(.semibold)
                 
-                if isAmountHidden {
-                    Text("****")
-                        .font(.system(size: adaptiveFontSize, weight: .bold, design: .rounded))
-                } else {
-                    Text(totalAssets.toCurrencyString(showSymbol: false))
-                        .font(.system(size: adaptiveFontSize, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
+                // 大金额显示
+                HStack(alignment: .firstTextBaseline, spacing: Spacing.xs) {
+                    Text("¥")
+                        .font(.system(size: 24, weight: .regular))
+                        .foregroundStyle(.secondary)
+                    
+                    if isAmountHidden {
+                        Text("****")
+                            .font(.system(size: FontSize.amountXLarge, weight: .bold, design: .rounded))
+                    } else {
+                        Text(totalAssets.toCurrencyString(showSymbol: false))
+                            .font(.system(size: adaptiveFontSize, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                            .minimumScaleFactor(0.5)
+                            .lineLimit(1)
+                    }
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // 本月收支
-            HStack(spacing: Spacing.l) {
-                MonthlyAmountView(
-                    title: "本月支出",
-                    amount: monthExpense,
-                    color: Color.expenseRed,
-                    isHidden: isAmountHidden
-                )
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                MonthlyAmountView(
-                    title: "本月收入",
-                    amount: monthIncome,
-                    color: Color.incomeGreen,
-                    isHidden: isAmountHidden
-                )
+                // 本月收支
+                HStack(spacing: Spacing.xxxl) {
+                    MonthlyAmountView(
+                        title: "支出",
+                        amount: monthExpense,
+                        color: Color.expenseRed,
+                        icon: "arrow.down",
+                        isHidden: isAmountHidden
+                    )
+                    
+                    Divider()
+                        .frame(height: 40)
+                    
+                    MonthlyAmountView(
+                        title: "收入",
+                        amount: monthIncome,
+                        color: Color.incomeGreen,
+                        icon: "arrow.up",
+                        isHidden: isAmountHidden
+                    )
+                }
             }
         }
-        .padding(Spacing.l)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.large)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
-        )
-        .padding(.horizontal, Spacing.m)
+        .padding(.horizontal, Spacing.l)
     }
 }
 
@@ -107,26 +112,27 @@ struct MonthlyAmountView: View {
     let title: String
     let amount: Decimal
     let color: Color
+    let icon: String
     let isHidden: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Circle()
-                    .fill(color)
-                    .frame(width: 8, height: 8)
-                
+        VStack(spacing: Spacing.s) {
+            // 标题和图标
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
                 Text(title)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
             }
+            .foregroundStyle(.secondary)
             
+            // 金额
             if isHidden {
                 Text("****")
-                    .font(.system(size: FontSize.title3, weight: .semibold, design: .rounded))
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
             } else {
-                Text(formatAmount(amount))
-                    .font(.system(size: FontSize.title3, weight: .semibold, design: .rounded))
+                Text(amount.formatAmount())
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(color)
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -134,23 +140,7 @@ struct MonthlyAmountView: View {
                     .lineLimit(1)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    // 格式化金额
-    private func formatAmount(_ amount: Decimal) -> String {
-        let absAmount = abs(amount)
-        
-        if absAmount >= 100000000 {
-            // 亿级别
-            return "¥\((amount / 100000000).formatted(.number.precision(.fractionLength(0...2))))亿"
-        } else if absAmount >= 10000 {
-            // 万级别
-            return "¥\((amount / 10000).formatted(.number.precision(.fractionLength(0...2))))万"
-        } else {
-            // 小于1万，显示完整金额
-            return "¥\(amount.formatted(.number.precision(.fractionLength(2))))"
-        }
+        .frame(maxWidth: .infinity)
     }
 }
 

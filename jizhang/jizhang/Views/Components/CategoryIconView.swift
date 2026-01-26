@@ -4,19 +4,22 @@
 //
 //  Created by Cursor on 2026/1/26.
 //
+//  分类图标组件
+//  直接使用彩色图标，无圆形背景
+//
 
 import SwiftUI
 
 // MARK: - Category Icon View
 
-/// 分类图标组件 (参考UI样式 - 圆形背景色块)
+/// 分类图标组件 (无圆形背景，直接彩色显示)
 struct CategoryIconView: View {
     
     // MARK: - Properties
     
-    let icon: String
+    let iconName: String
     let name: String
-    let backgroundColor: Color
+    let iconColor: Color
     let isSelected: Bool
     let size: IconSize
     let action: () -> Void
@@ -24,31 +27,35 @@ struct CategoryIconView: View {
     // MARK: - Icon Size Enum
     
     enum IconSize {
-        case small      // 40×40
-        case medium     // 48×48
-        case large      // 56×56
-        
-        var circleSize: CGFloat {
-            switch self {
-            case .small: return 40
-            case .medium: return 48
-            case .large: return 56
-            }
-        }
+        case small      // 24pt
+        case medium     // 32pt
+        case large      // 40pt
+        case xlarge     // 48pt
         
         var iconSize: CGFloat {
             switch self {
-            case .small: return 20
-            case .medium: return 24
-            case .large: return 28
+            case .small: return 24
+            case .medium: return 32
+            case .large: return 40
+            case .xlarge: return 48
             }
         }
         
         var nameFont: Font {
             switch self {
-            case .small: return .system(size: 11)
-            case .medium: return .system(size: 13)
-            case .large: return .system(size: 15)
+            case .small: return .system(size: 10)
+            case .medium: return .system(size: 12)
+            case .large: return .system(size: 13)
+            case .xlarge: return .system(size: 14)
+            }
+        }
+        
+        var spacing: CGFloat {
+            switch self {
+            case .small: return 4
+            case .medium: return 6
+            case .large: return 8
+            case .xlarge: return 10
             }
         }
     }
@@ -56,16 +63,16 @@ struct CategoryIconView: View {
     // MARK: - Initialization
     
     init(
-        icon: String,
+        iconName: String,
         name: String,
-        backgroundColor: Color,
+        iconColor: Color,
         isSelected: Bool = false,
         size: IconSize = .medium,
         action: @escaping () -> Void
     ) {
-        self.icon = icon
+        self.iconName = iconName
         self.name = name
-        self.backgroundColor = backgroundColor
+        self.iconColor = iconColor
         self.isSelected = isSelected
         self.size = size
         self.action = action
@@ -75,30 +82,13 @@ struct CategoryIconView: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                // 图标背景圆
-                ZStack {
-                    Circle()
-                        .fill(backgroundColor)
-                        .frame(width: size.circleSize, height: size.circleSize)
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: size.iconSize))
-                        .foregroundColor(.white)
-                }
-                .overlay(
-                    Circle()
-                        .stroke(
-                            isSelected ? Color.primaryBlue : Color.clear,
-                            lineWidth: 2.5
-                        )
-                )
-                .shadow(
-                    color: isSelected ? Color.primaryBlue.opacity(0.3) : Color.clear,
-                    radius: 8,
-                    x: 0,
-                    y: 4
-                )
+            VStack(spacing: size.spacing) {
+                // 图标 (直接彩色显示)
+                PhosphorIcon.icon(named: iconName, weight: isSelected ? .fill : .regular)
+                    .frame(width: size.iconSize, height: size.iconSize)
+                    .foregroundStyle(isSelected ? .primaryBlue : iconColor)
+                    .scaleEffect(isSelected ? 1.1 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                 
                 // 分类名称
                 Text(name)
@@ -124,9 +114,9 @@ struct CategoryIconFromModel: View {
     
     var body: some View {
         CategoryIconView(
-            icon: category.iconName,
+            iconName: category.iconName,
             name: category.name,
-            backgroundColor: Color(hex: category.colorHex),
+            iconColor: Color(hex: category.colorHex),
             isSelected: isSelected,
             size: size,
             action: action
@@ -134,61 +124,109 @@ struct CategoryIconFromModel: View {
     }
 }
 
+// MARK: - Category Icon (Static Display)
+
+/// 静态分类图标 (不可点击)
+struct CategoryIconStatic: View {
+    let iconName: String
+    let iconColor: Color
+    let size: CGFloat
+    let weight: PhosphorIcon.IconWeight
+    
+    init(
+        iconName: String,
+        iconColor: Color,
+        size: CGFloat = 24,
+        weight: PhosphorIcon.IconWeight = .fill
+    ) {
+        self.iconName = iconName
+        self.iconColor = iconColor
+        self.size = size
+        self.weight = weight
+    }
+    
+    var body: some View {
+        PhosphorIcon.icon(named: iconName, weight: weight)
+            .frame(width: size, height: size)
+            .foregroundStyle(iconColor)
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Category Icon Sizes") {
     VStack(spacing: 40) {
-        HStack(spacing: 20) {
+        HStack(spacing: 30) {
             CategoryIconView(
-                icon: "fork.knife",
-                name: "三餐",
-                backgroundColor: Color(hex: "FFB74D"),
+                iconName: "forkKnife",
+                name: "餐饮",
+                iconColor: Color(hex: "FFB74D"),
                 isSelected: false,
                 size: .small
             ) {}
             
             CategoryIconView(
-                icon: "fork.knife",
-                name: "三餐",
-                backgroundColor: Color(hex: "FFB74D"),
+                iconName: "forkKnife",
+                name: "餐饮",
+                iconColor: Color(hex: "FFB74D"),
                 isSelected: false,
                 size: .medium
             ) {}
             
             CategoryIconView(
-                icon: "fork.knife",
-                name: "三餐",
-                backgroundColor: Color(hex: "FFB74D"),
+                iconName: "forkKnife",
+                name: "餐饮",
+                iconColor: Color(hex: "FFB74D"),
                 isSelected: false,
                 size: .large
             ) {}
+            
+            CategoryIconView(
+                iconName: "forkKnife",
+                name: "餐饮",
+                iconColor: Color(hex: "FFB74D"),
+                isSelected: false,
+                size: .xlarge
+            ) {}
         }
         
-        Text("不同尺寸")
+        Text("不同尺寸 (small / medium / large / xlarge)")
             .font(.caption)
             .foregroundStyle(.secondary)
         
         Divider()
         
-        HStack(spacing: 20) {
+        HStack(spacing: 30) {
             CategoryIconView(
-                icon: "car.fill",
+                iconName: "car",
                 name: "交通",
-                backgroundColor: Color(hex: "64B5F6"),
+                iconColor: Color(hex: "64B5F6"),
                 isSelected: false,
-                size: .medium
+                size: .large
             ) {}
             
             CategoryIconView(
-                icon: "car.fill",
+                iconName: "car",
                 name: "交通",
-                backgroundColor: Color(hex: "64B5F6"),
+                iconColor: Color(hex: "64B5F6"),
                 isSelected: true,
-                size: .medium
+                size: .large
             ) {}
         }
         
-        Text("选中状态")
+        Text("选中状态对比")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        
+        Divider()
+        
+        // 静态图标展示
+        HStack(spacing: 20) {
+            CategoryIconStatic(iconName: "gift", iconColor: Color(hex: "FF8A65"), size: 32, weight: .regular)
+            CategoryIconStatic(iconName: "gift", iconColor: Color(hex: "FF8A65"), size: 32, weight: .fill)
+        }
+        
+        Text("不同权重 (regular / fill)")
             .font(.caption)
             .foregroundStyle(.secondary)
     }
@@ -198,20 +236,18 @@ struct CategoryIconFromModel: View {
 #Preview("Category Grid") {
     ScrollView {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 5),
-            spacing: 20
+            columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5),
+            spacing: 16
         ) {
-            ForEach(CategoryIconConfig.expenseCategoryNames, id: \.self) { name in
-                let style = CategoryIconConfig.expenseStyle(for: name)
-                
+            ForEach(CategoryIconConfig.expenseHierarchy, id: \.name) { hierarchy in
                 CategoryIconView(
-                    icon: style.icon,
-                    name: name,
-                    backgroundColor: style.colorValue,
-                    isSelected: name == "三餐",
+                    iconName: hierarchy.style.iconName,
+                    name: hierarchy.name,
+                    iconColor: hierarchy.style.colorValue,
+                    isSelected: hierarchy.name == "餐饮",
                     size: .medium
                 ) {
-                    print("Selected: \(name)")
+                    print("Selected: \(hierarchy.name)")
                 }
             }
         }

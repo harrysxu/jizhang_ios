@@ -4,6 +4,8 @@
 //
 //  Created by Cursor on 2026/1/24.
 //
+//  交易列表区块
+//
 
 import SwiftUI
 
@@ -104,10 +106,10 @@ struct TransactionRow: View {
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 分类图标 (无圆形背景，只显示带颜色的图标)
-            Image(systemName: categoryIcon)
-                .font(.system(size: 26, weight: .medium))
-                .foregroundStyle(iconBackgroundColor)
+            // 分类图标 (直接彩色显示，无圆形背景)
+            PhosphorIcon.icon(named: categoryIconName, weight: .fill)
+                .frame(width: 28, height: 28)
+                .foregroundStyle(iconColor)
                 .frame(width: 44, height: 44)
             
             // 交易信息
@@ -166,18 +168,19 @@ struct TransactionRow: View {
         }
     }
     
-    private var categoryIcon: String {
+    /// 图标名称
+    private var categoryIconName: String {
         switch transaction.type {
         case .expense, .income:
-            return transaction.category?.iconName ?? "questionmark.circle"
+            return transaction.category?.iconName ?? "question"
         case .transfer:
-            return "arrow.left.arrow.right"
+            return "arrowsLeftRight"
         case .adjustment:
-            return "slider.horizontal.3"
+            return "slidersHorizontal"
         }
     }
     
-    private var iconBackgroundColor: Color {
+    private var iconColor: Color {
         if let category = transaction.category {
             return Color(hex: category.colorHex)
         }
@@ -211,8 +214,8 @@ struct TransactionRow: View {
 struct EmptyTransactionView: View {
     var body: some View {
         VStack(spacing: Spacing.l) {
-            Image(systemName: "tray")
-                .font(.system(size: 60))
+            PhosphorIcon.icon(named: "tray", weight: .regular)
+                .frame(width: 60, height: 60)
                 .foregroundStyle(.secondary)
             
             Text("暂无流水记录")

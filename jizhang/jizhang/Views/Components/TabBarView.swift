@@ -4,6 +4,8 @@
 //
 //  Created by Cursor on 2026/1/24.
 //
+//  底部导航栏
+//
 
 import SwiftUI
 
@@ -85,8 +87,7 @@ struct CustomTabBar: View {
         HStack(spacing: 0) {
             // 首页
             TabBarButton(
-                selectedIcon: "house.fill",
-                unselectedIcon: "house",
+                iconName: "house",
                 title: "首页",
                 isSelected: selectedTab == .home
             ) {
@@ -95,8 +96,7 @@ struct CustomTabBar: View {
             
             // 流水
             TabBarButton(
-                selectedIcon: "list.bullet.rectangle.fill",
-                unselectedIcon: "list.bullet.rectangle",
+                iconName: "listDashes",
                 title: "流水",
                 isSelected: selectedTab == .transactions
             ) {
@@ -117,8 +117,8 @@ struct CustomTabBar: View {
                         .frame(width: 60, height: 60)
                         .shadow(color: Color.primaryBlue.opacity(0.4), radius: 12, x: 0, y: 6)
                     
-                    Image(systemName: "plus")
-                        .font(.system(size: 26, weight: .semibold))
+                    PhosphorIcon.icon(named: "plus", weight: .bold)
+                        .frame(width: 26, height: 26)
                         .foregroundStyle(.white)
                 }
             }
@@ -128,8 +128,7 @@ struct CustomTabBar: View {
             
             // 报表
             TabBarButton(
-                selectedIcon: "chart.bar.fill",
-                unselectedIcon: "chart.bar",
+                iconName: "chartBar",
                 title: "报表",
                 isSelected: selectedTab == .report
             ) {
@@ -138,8 +137,7 @@ struct CustomTabBar: View {
             
             // 设置
             TabBarButton(
-                selectedIcon: "gearshape.fill",
-                unselectedIcon: "gearshape",
+                iconName: "gear",
                 title: "设置",
                 isSelected: selectedTab == .settings
             ) {
@@ -161,17 +159,12 @@ struct CustomTabBar: View {
 // MARK: - Tab Bar Button
 
 struct TabBarButton: View {
-    let selectedIcon: String
-    let unselectedIcon: String
+    let iconName: String
     let title: String
     let isSelected: Bool
     let action: () -> Void
     
     @State private var isPressed = false
-    
-    private var currentIcon: String {
-        isSelected ? selectedIcon : unselectedIcon
-    }
     
     var body: some View {
         Button(action: {
@@ -181,8 +174,9 @@ struct TabBarButton: View {
             action()
         }) {
             VStack(spacing: 6) {
-                Image(systemName: currentIcon)
-                    .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
+                // 图标
+                PhosphorIcon.icon(named: iconName, weight: isSelected ? .fill : .regular)
+                    .frame(width: 24, height: 24)
                     .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
                 
                 Text(title)

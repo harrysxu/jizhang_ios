@@ -4,6 +4,8 @@
 //
 //  Created by Cursor on 2026/1/24.
 //
+//  分类管理视图
+//
 
 import SwiftUI
 import SwiftData
@@ -232,15 +234,15 @@ private struct CategoryRowButton: View {
                     Spacer()
                         .frame(width: 20)
                     
-                    // 子分类图标 (无圆形背景)
-                    Image(systemName: category.iconName)
-                        .font(.system(size: 20, weight: .medium))
+                    // 子分类图标 (使用 PhosphorIcon)
+                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                        .frame(width: 20, height: 20)
                         .foregroundStyle(Color(hex: category.colorHex))
                         .frame(width: 32, height: 32)
                 } else {
-                    // 父分类图标 (无圆形背景)
-                    Image(systemName: category.iconName)
-                        .font(.system(size: 24, weight: .medium))
+                    // 父分类图标 (使用 PhosphorIcon)
+                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                        .frame(width: 24, height: 24)
                         .foregroundStyle(Color(hex: category.colorHex))
                         .frame(width: 40, height: 40)
                 }
@@ -274,9 +276,9 @@ private struct CategoryRowLabel: View {
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 图标 (无圆形背景)
-            Image(systemName: category.iconName)
-                .font(.system(size: 24, weight: .medium))
+            // 图标 (使用 PhosphorIcon)
+            PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                .frame(width: 24, height: 24)
                 .foregroundStyle(Color(hex: category.colorHex))
                 .frame(width: 40, height: 40)
             

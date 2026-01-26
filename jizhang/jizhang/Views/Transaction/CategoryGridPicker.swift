@@ -4,6 +4,8 @@
 //
 //  Created by Cursor on 2026/1/25.
 //
+//  分类选择器
+//
 
 import SwiftUI
 import SwiftData
@@ -169,29 +171,13 @@ private struct CategoryGridItem: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                // 图标背景圆 (参考UI标准: 圆形色块)
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: category.colorHex))
-                        .frame(width: 48, height: 48)
-                    
-                    Image(systemName: category.iconName)
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(.white)
-                }
-                .scaleEffect(isPressed ? 0.9 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-                .overlay(
-                    Circle()
-                        .stroke(isSelected ? Color.primaryBlue : Color.clear, lineWidth: 2.5)
-                        .frame(width: 52, height: 52)
-                )
-                .shadow(
-                    color: isSelected ? Color.primaryBlue.opacity(0.3) : Color.clear,
-                    radius: 8,
-                    x: 0,
-                    y: 4
-                )
+                // 图标 (直接彩色显示，无圆形背景)
+                PhosphorIcon.icon(named: category.iconName, weight: isSelected ? .fill : .regular)
+                    .frame(width: 32, height: 32)
+                    .foregroundStyle(isSelected ? .primaryBlue : Color(hex: category.colorHex))
+                    .scaleEffect(isPressed ? 0.9 : (isSelected ? 1.1 : 1.0))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                 
                 // 名称
                 Text(category.name)

@@ -4,6 +4,8 @@
 //
 //  Created by Cursor on 2026/1/24.
 //
+//  分类表单Sheet (创建/编辑)
+//
 
 import SwiftUI
 import SwiftData
@@ -22,7 +24,7 @@ struct CategoryFormSheet: View {
     @State private var name: String = ""
     @State private var type: CategoryType = .expense
     @State private var parent: Category? = nil
-    @State private var iconName: String = "folder.fill"
+    @State private var iconName: String = "folder"
     @State private var colorHex: String = "#007AFF"
     @State private var sortOrder: Int = 0
     
@@ -46,14 +48,20 @@ struct CategoryFormSheet: View {
             .sorted { $0.sortOrder < $1.sortOrder }
     }
     
-    // 常用图标
+    // 常用图标 (Phosphor 图标名称)
     private let commonIcons = [
-        "fork.knife", "cup.and.saucer", "cart.fill", "house.fill",
-        "car.fill", "bus.fill", "tram.fill", "bicycle",
-        "heart.fill", "gamecontroller.fill", "book.fill", "pencil",
-        "pills.fill", "cross.case.fill", "dumbbell.fill", "figure.walk",
-        "gift.fill", "creditcard.fill", "banknote", "dollarsign.circle.fill",
-        "bag.fill", "tshirt.fill", "phone.fill", "laptopcomputer"
+        // 餐饮
+        "forkKnife", "coffee", "shoppingBag", "houseLine",
+        // 交通
+        "car", "bus", "taxi", "airplaneTilt",
+        // 生活
+        "heart", "gameController", "bookOpen", "pencilSimple",
+        // 医疗
+        "pill", "firstAidKit", "personSimpleRun", "gift",
+        // 金融
+        "creditCard", "money", "piggyBank", "wallet",
+        // 其他
+        "tShirt", "phone", "laptop", "briefcase"
     ]
     
     var body: some View {
@@ -73,7 +81,9 @@ struct CategoryFormSheet: View {
                         Text("无(一级分类)").tag(nil as Category?)
                         ForEach(availableParentCategories) { parentCategory in
                             HStack {
-                                Image(systemName: parentCategory.iconName)
+                                PhosphorIcon.icon(named: parentCategory.iconName, weight: .fill)
+                                    .frame(width: 20, height: 20)
+                                    .foregroundStyle(Color(hex: parentCategory.colorHex))
                                 Text(parentCategory.name)
                             }
                             .tag(parentCategory as Category?)
@@ -94,8 +104,8 @@ struct CategoryFormSheet: View {
                                 Button {
                                     iconName = icon
                                 } label: {
-                                    Image(systemName: icon)
-                                        .font(.system(size: 24))
+                                    PhosphorIcon.icon(named: icon, weight: icon == iconName ? .fill : .regular)
+                                        .frame(width: 24, height: 24)
                                         .foregroundColor(icon == iconName ? Color(hex: colorHex) : .gray)
                                         .frame(width: 44, height: 44)
                                         .background(
@@ -119,8 +129,8 @@ struct CategoryFormSheet: View {
                 // 预览
                 Section("预览") {
                     HStack(spacing: Spacing.m) {
-                        Image(systemName: iconName)
-                            .font(.system(size: 32, weight: .medium))
+                        PhosphorIcon.icon(named: iconName, weight: .fill)
+                            .frame(width: 32, height: 32)
                             .foregroundColor(Color(hex: colorHex))
                             .frame(width: 60, height: 60)
                         

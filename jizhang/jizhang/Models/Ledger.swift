@@ -130,7 +130,7 @@ extension Ledger {
                 ledger: self,
                 name: hierarchy.name,
                 type: .expense,
-                iconName: hierarchy.style.icon,
+                iconName: hierarchy.style.iconName,
                 colorHex: hierarchy.style.color,
                 sortOrder: sortOrder
             )
@@ -143,7 +143,7 @@ extension Ledger {
                     ledger: self,
                     name: child.name,
                     type: .expense,
-                    iconName: child.style.icon,
+                    iconName: child.style.iconName,
                     parent: parentCategory,
                     colorHex: child.style.color,
                     sortOrder: childIndex
@@ -159,7 +159,7 @@ extension Ledger {
                 ledger: self,
                 name: hierarchy.name,
                 type: .income,
-                iconName: hierarchy.style.icon,
+                iconName: hierarchy.style.iconName,
                 colorHex: hierarchy.style.color,
                 sortOrder: sortOrder
             )
@@ -172,7 +172,7 @@ extension Ledger {
                     ledger: self,
                     name: child.name,
                     type: .income,
-                    iconName: child.style.icon,
+                    iconName: child.style.iconName,
                     parent: parentCategory,
                     colorHex: child.style.color,
                     sortOrder: childIndex

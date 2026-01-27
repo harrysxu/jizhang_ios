@@ -38,10 +38,10 @@ enum TransactionType: String, Codable {
     /// Phosphor 图标名称
     var phosphorIcon: String {
         switch self {
-        case .expense: return "arrow-circle-down"
-        case .income: return "arrow-circle-up"
-        case .transfer: return "arrows-left-right"
-        case .adjustment: return "sliders-horizontal"
+        case .expense: return "arrowCircleDown"
+        case .income: return "arrowCircleUp"
+        case .transfer: return "arrowsLeftRight"
+        case .adjustment: return "slidersHorizontal"
         }
     }
 }

@@ -167,94 +167,25 @@ struct TransactionListView: View {
                         description: Text(searchText.isEmpty ? "点击 + 添加第一笔记录" : "尝试调整筛选条件")
                     )
                 } else {
-    List {
-        ForEach(groupedTransactions, id: \.date) { group in
-            Section {
-                ForEach(group.transactions) { transaction in
-                    NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
-                        HStack(spacing: Spacing.m) {
-                            // 圆形图标 (参考UI样式)
-                            if let category = transaction.category {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color(hex: category.colorHex))
-                                        .frame(width: 44, height: 44)
-                                    
-                                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
-                                        .frame(width: 24, height: 24)
-                                        .foregroundStyle(.white)
-                                }
-                                .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
-                            } else {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.gray)
-                                        .frame(width: 44, height: 44)
-                                    
-                                    PhosphorIcon.icon(named: transaction.type.phosphorIcon, weight: .fill)
-                                        .frame(width: 24, height: 24)
-                                        .foregroundStyle(.white)
-                                }
-                                .shadow(color: Color.gray.opacity(0.3), radius: 4, y: 2)
-                            }
-                            
-                            // 信息
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(transaction.category?.name ?? transaction.type.displayName)
-                                    .font(.body)
-                                
-                                HStack(spacing: 4) {
-                                    if let account = transaction.fromAccount {
-                                        Text(account.name)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                    ScrollView {
+                        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                            ForEach(groupedTransactions, id: \.date) { group in
+                                Section {
+                                    ForEach(group.transactions) { transaction in
+                                        TransactionRowLink(transaction: transaction)
                                     }
-                                    
-                                    if transaction.type == .transfer, let toAccount = transaction.toAccount {
-                                        Text("→")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        
-                                        Text(toAccount.name)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    } else {
-                                        Text("•")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        
-                                        Text(formatTime(transaction.date))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
+                                } header: {
+                                    TransactionSectionHeader(
+                                        date: group.date,
+                                        totalExpense: calculateExpense(group.transactions)
+                                    )
+                                    .background(Color(.systemGroupedBackground))
                                 }
                             }
-                            
-                            Spacer()
-                            
-                            // 金额
-                            Text(formatAmount(transaction))
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                                .foregroundColor(amountColor(for: transaction))
-                                .monospacedDigit()
                         }
-                        .padding(.vertical, 8)
                     }
+                    .contentMargins(.bottom, Layout.tabBarBottomPadding, for: .scrollContent)
                 }
-                .onDelete { indexSet in
-                    deleteTransactions(at: indexSet, from: group.transactions)
-                }
-            } header: {
-                TransactionSectionHeader(
-                    date: group.date,
-                    totalExpense: calculateExpense(group.transactions)
-                )
-            }
-        }
-    }
-    .listStyle(.plain)
-    .contentMargins(.bottom, Layout.tabBarBottomPadding, for: .scrollContent)
-}
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showExportOptions) {
@@ -401,39 +332,6 @@ struct TransactionListView: View {
             .reduce(0) { $0 + $1.amount }
     }
     
-    private func deleteTransactions(at offsets: IndexSet, from transactions: [Transaction]) {
-        for index in offsets {
-            let transaction = transactions[index]
-            
-            // 恢复账户余额
-            switch transaction.type {
-            case .expense:
-                if let account = transaction.fromAccount {
-                    account.balance += transaction.amount
-                }
-            case .income:
-                if let account = transaction.fromAccount {
-                    account.balance -= transaction.amount
-                }
-            case .transfer:
-                if let fromAccount = transaction.fromAccount {
-                    fromAccount.balance += transaction.amount
-                }
-                if let toAccount = transaction.toAccount {
-                    toAccount.balance -= transaction.amount
-                }
-            case .adjustment:
-                if let account = transaction.fromAccount {
-                    account.balance -= transaction.amount
-                }
-            }
-            
-            modelContext.delete(transaction)
-        }
-        
-        try? modelContext.save()
-    }
-    
     /// 导出当前筛选的数据
     private func exportCurrentFiltered() {
         let dateFormatter = DateFormatter()
@@ -502,6 +400,119 @@ struct TransactionListView: View {
     }
 }
 
+// MARK: - Transaction Row Link
+
+private struct TransactionRowLink: View {
+    let transaction: Transaction
+    
+    var body: some View {
+        NavigationLink(destination: TransactionDetailView(transaction: transaction)) {
+            HStack(spacing: Spacing.m) {
+                // 圆形图标 (参考UI样式)
+                if let category = transaction.category {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: category.colorHex))
+                            .frame(width: 44, height: 44)
+                        
+                        PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.white)
+                    }
+                    .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray)
+                            .frame(width: 44, height: 44)
+                        
+                        PhosphorIcon.icon(named: transaction.type.phosphorIcon, weight: .fill)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.white)
+                    }
+                    .shadow(color: Color.gray.opacity(0.3), radius: 4, y: 2)
+                }
+                
+                // 信息
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(transaction.category?.name ?? transaction.type.displayName)
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    
+                    HStack(spacing: 4) {
+                        if let account = transaction.fromAccount {
+                            Text(account.name)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if transaction.type == .transfer, let toAccount = transaction.toAccount {
+                            Text("→")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text(toAccount.name)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("•")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text(formatTime(transaction.date))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // 金额
+                Text(formatAmount(transaction))
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(amountColor(for: transaction))
+                    .monospacedDigit()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, Spacing.l)
+            .padding(.vertical, Spacing.m)
+            .background(Color(.systemBackground))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
+    }
+    
+    private func formatAmount(_ transaction: Transaction) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = transaction.fromAccount?.ledger?.currencyCode ?? "CNY"
+        
+        let sign = transaction.type == .expense ? "-" : (transaction.type == .income ? "+" : "")
+        let amount = formatter.string(from: transaction.amount as NSDecimalNumber) ?? "¥0"
+        
+        return sign + amount
+    }
+    
+    private func amountColor(for transaction: Transaction) -> Color {
+        switch transaction.type {
+        case .expense: return .expenseRed
+        case .income: return .incomeGreen
+        case .transfer: return .primaryBlue
+        case .adjustment: return .warningOrange
+        }
+    }
+}
+
 // MARK: - Quick Filter Button
 
 private struct QuickFilterButton: View {
@@ -541,7 +552,7 @@ private struct TransactionSectionHeader: View {
         } else {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "zh_CN")
-            formatter.dateFormat = "yyyy年MM月dd日"
+            formatter.dateFormat = "MM月dd日"
             return formatter.string(from: date)
         }
     }
@@ -572,7 +583,8 @@ private struct TransactionSectionHeader: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.l)
+        .padding(.vertical, Spacing.s)
     }
 }
 

@@ -55,6 +55,29 @@ class AddTransactionViewModel {
     var suggestedAmounts: [Decimal] = []
     var showQuickMode: Bool = true
     
+    // MARK: - Quick Select Categories
+    
+    /// 获取当前类型的快速选择分类（最多显示两行，每行约4-5个）
+    var quickSelectCategories: [Category] {
+        guard let ledger = appState?.currentLedger else { return [] }
+        
+        let categoryType: CategoryType = type == .expense ? .expense : .income
+        
+        // 获取标记为快速选择的分类，按排序顺序排列
+        let categories = ledger.categories
+            .filter { $0.type == categoryType && $0.isQuickSelect && !$0.isHidden }
+            .sorted { $0.sortOrder < $1.sortOrder }
+        
+        // 最多返回10个（约两行）
+        return Array(categories.prefix(10))
+    }
+    
+    /// 选择快速分类
+    func selectQuickCategory(_ category: Category) {
+        selectedCategory = category
+        HapticManager.light()
+    }
+    
     // MARK: - Initialization
     
     init() {}

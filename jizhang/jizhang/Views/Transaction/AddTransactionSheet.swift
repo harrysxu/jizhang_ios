@@ -35,6 +35,18 @@ struct AddTransactionSheet: View {
             }
             .buttonStyle(.plain)
             
+            // 快速选择分类区域
+            if viewModel.type != .transfer && !viewModel.quickSelectCategories.isEmpty {
+                QuickCategorySelection(
+                    categories: viewModel.quickSelectCategories,
+                    selectedCategory: viewModel.selectedCategory,
+                    onSelect: { category in
+                        viewModel.selectQuickCategory(category)
+                    }
+                )
+                .padding(.horizontal, Spacing.m)
+            }
+            
             Divider()
                 .padding(.vertical, Spacing.s)
             
@@ -386,6 +398,115 @@ private struct NoteInputSheet: View {
             isFocused = true
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+// MARK: - Quick Category Selection
+
+/// 快速选择分类区域 - 最多显示两行
+private struct QuickCategorySelection: View {
+    let categories: [Category]
+    let selectedCategory: Category?
+    let onSelect: (Category) -> Void
+    
+    // 每行最多显示的数量
+    private let maxPerRow = 5
+    
+    private var firstRowCategories: [Category] {
+        Array(categories.prefix(maxPerRow))
+    }
+    
+    private var secondRowCategories: [Category] {
+        if categories.count > maxPerRow {
+            return Array(categories.dropFirst(maxPerRow).prefix(maxPerRow))
+        }
+        return []
+    }
+    
+    var body: some View {
+        VStack(spacing: Spacing.s) {
+            // 第一行
+            HStack(spacing: Spacing.s) {
+                ForEach(firstRowCategories) { category in
+                    QuickCategoryButton(
+                        category: category,
+                        isSelected: selectedCategory?.id == category.id,
+                        onTap: { onSelect(category) }
+                    )
+                }
+                
+                // 如果第一行不满，添加空白占位
+                if firstRowCategories.count < maxPerRow {
+                    ForEach(0..<(maxPerRow - firstRowCategories.count), id: \.self) { _ in
+                        Color.clear
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 36)
+                    }
+                }
+            }
+            
+            // 第二行（如果有）
+            if !secondRowCategories.isEmpty {
+                HStack(spacing: Spacing.s) {
+                    ForEach(secondRowCategories) { category in
+                        QuickCategoryButton(
+                            category: category,
+                            isSelected: selectedCategory?.id == category.id,
+                            onTap: { onSelect(category) }
+                        )
+                    }
+                    
+                    // 如果第二行不满，添加空白占位
+                    if secondRowCategories.count < maxPerRow {
+                        ForEach(0..<(maxPerRow - secondRowCategories.count), id: \.self) { _ in
+                            Color.clear
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 36)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, Spacing.s)
+    }
+}
+
+/// 快速分类按钮
+private struct QuickCategoryButton: View {
+    let category: Category
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    private var displayName: String {
+        // 如果是子分类，显示简短名称
+        category.name
+    }
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 4) {
+                PhosphorIcon.icon(named: category.iconName, weight: isSelected ? .fill : .regular)
+                    .frame(width: 14, height: 14)
+                
+                Text(displayName)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
+            .foregroundColor(isSelected ? .white : Color(hex: category.colorHex))
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color(hex: category.colorHex) : Color(hex: category.colorHex).opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(hex: category.colorHex).opacity(isSelected ? 0 : 0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

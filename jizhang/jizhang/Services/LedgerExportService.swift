@@ -140,6 +140,7 @@ struct CategoryDTO: Codable {
     let colorHex: String
     let sortOrder: Int
     let isHidden: Bool
+    let isQuickSelect: Bool
     let createdAt: Date
     let parentId: UUID? // 父分类ID引用
     
@@ -151,8 +152,24 @@ struct CategoryDTO: Codable {
         self.colorHex = category.colorHex
         self.sortOrder = category.sortOrder
         self.isHidden = category.isHidden
+        self.isQuickSelect = category.isQuickSelect
         self.createdAt = category.createdAt
         self.parentId = category.parent?.id
+    }
+    
+    // 支持向后兼容：旧版本导出的数据可能没有 isQuickSelect 字段
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        iconName = try container.decode(String.self, forKey: .iconName)
+        type = try container.decode(String.self, forKey: .type)
+        colorHex = try container.decode(String.self, forKey: .colorHex)
+        sortOrder = try container.decode(Int.self, forKey: .sortOrder)
+        isHidden = try container.decode(Bool.self, forKey: .isHidden)
+        isQuickSelect = try container.decodeIfPresent(Bool.self, forKey: .isQuickSelect) ?? false
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        parentId = try container.decodeIfPresent(UUID.self, forKey: .parentId)
     }
 }
 

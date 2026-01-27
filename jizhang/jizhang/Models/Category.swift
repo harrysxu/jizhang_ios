@@ -56,6 +56,9 @@ final class Category {
     /// 是否隐藏
     var isHidden: Bool
     
+    /// 是否快速选择（在记账页面显示为快捷按钮）
+    var isQuickSelect: Bool
+    
     /// 创建时间
     var createdAt: Date
     
@@ -98,6 +101,7 @@ final class Category {
         self.colorHex = colorHex ?? type.color
         self.sortOrder = sortOrder
         self.isHidden = false
+        self.isQuickSelect = false
         self.createdAt = Date()
         self.ledger = ledger
         self.children = []

@@ -244,6 +244,13 @@ private struct CategoryRowView: View {
                         .font(isChild ? .subheadline : .body)
                         .foregroundColor(.primary)
                     
+                    // 快速选择标识
+                    if category.isQuickSelect {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.orange)
+                    }
+                    
                     Spacer()
                 }
                 .contentShape(Rectangle())

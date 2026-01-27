@@ -242,6 +242,7 @@ class LedgerImportService {
         )
         
         category.isHidden = dto.isHidden
+        category.isQuickSelect = dto.isQuickSelect
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(category)

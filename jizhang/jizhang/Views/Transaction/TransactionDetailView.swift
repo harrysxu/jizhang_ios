@@ -367,86 +367,90 @@ struct TransactionDetailView: View {
     @State private var showDeleteAlert = false
     
     var body: some View {
-        List {
-            // 交易信息
-            Section {
-                DetailRow(label: "类型", value: transaction.type.displayName)
-                
-                DetailRow(
-                    label: "金额",
-                    value: transaction.amount.formatted(.currency(code: transaction.fromAccount?.ledger?.currencyCode ?? "CNY")),
-                    valueColor: transaction.type == .expense ? .red : .green
-                )
-                
-                if let account = transaction.fromAccount {
-                    DetailRow(label: "账户", value: account.name)
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "交易详情") {
+                Button("编辑") {
+                    showEditSheet = true
                 }
-                
-                if let toAccount = transaction.toAccount {
-                    DetailRow(label: "转入账户", value: toAccount.name)
-                }
-                
-                if let category = transaction.category {
-                    let categoryName = category.parent != nil ? "\(category.parent!.name) - \(category.name)" : category.name
-                    DetailRow(label: "分类", value: categoryName)
-                }
-                
-                DetailRow(
-                    label: "日期",
-                    value: transaction.date.toChineseDateTimeString
-                )
+                .foregroundStyle(.primary)
             }
             
-            // 标签
-            if !transaction.tags.isEmpty {
-                Section("标签") {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Spacing.s) {
-                            ForEach(transaction.tags) { tag in
-                                TagBadge(tag: tag)
+            List {
+                // 交易信息
+                Section {
+                    DetailRow(label: "类型", value: transaction.type.displayName)
+                    
+                    DetailRow(
+                        label: "金额",
+                        value: transaction.amount.formatted(.currency(code: transaction.fromAccount?.ledger?.currencyCode ?? "CNY")),
+                        valueColor: transaction.type == .expense ? .expenseRed : .incomeGreen
+                    )
+                    
+                    if let account = transaction.fromAccount {
+                        DetailRow(label: "账户", value: account.name)
+                    }
+                    
+                    if let toAccount = transaction.toAccount {
+                        DetailRow(label: "转入账户", value: toAccount.name)
+                    }
+                    
+                    if let category = transaction.category {
+                        let categoryName = category.parent != nil ? "\(category.parent!.name) - \(category.name)" : category.name
+                        DetailRow(label: "分类", value: categoryName)
+                    }
+                    
+                    DetailRow(
+                        label: "日期",
+                        value: transaction.date.toChineseDateTimeString
+                    )
+                }
+                
+                // 标签
+                if !transaction.tags.isEmpty {
+                    Section("标签") {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: Spacing.s) {
+                                ForEach(transaction.tags) { tag in
+                                    TagBadge(tag: tag)
+                                }
                             }
                         }
                     }
                 }
-            }
-            
-            // 备注
-            if let note = transaction.note, !note.isEmpty {
-                Section("备注") {
-                    Text(note)
-                        .font(.body)
+                
+                // 备注
+                if let note = transaction.note, !note.isEmpty {
+                    Section("备注") {
+                        Text(note)
+                            .font(.body)
+                    }
                 }
-            }
-            
-            // 操作
-            Section {
-                Button(role: .destructive) {
-                    showDeleteAlert = true
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text("删除交易")
-                        Spacer()
+                
+                // 操作
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteAlert = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("删除交易")
+                            Spacer()
+                        }
                     }
                 }
             }
+            .contentMargins(.bottom, Layout.tabBarBottomPadding, for: .scrollContent)
         }
-        .navigationTitle("交易详情")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("编辑") {
-                    showEditSheet = true
-                }
-            }
-        }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .alert("确认删除", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) {
                 deleteTransaction()
             }
         } message: {
-            Text("删除后将恢复账户余额,此操作无法撤销")
+            Text("删除后将恢复账户余额，此操作无法撤销")
         }
         .sheet(isPresented: $showEditSheet) {
             EditTransactionSheet(transaction: transaction)

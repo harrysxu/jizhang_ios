@@ -188,6 +188,26 @@ class TestDataGenerator {
         if ledger.categories.isEmpty {
             ledger.createDefaultCategories()
         }
+        
+        // 为一些常用分类启用快速选择
+        setupQuickSelectCategories(for: ledger)
+    }
+    
+    /// 设置快速选择分类
+    private func setupQuickSelectCategories(for ledger: Ledger) {
+        // 常用的支出分类名称（子分类）
+        let quickSelectExpenseNames = ["早餐", "午餐", "晚餐", "地铁公交", "打车", "日用品", "水果零食"]
+        
+        // 常用的收入分类名称
+        let quickSelectIncomeNames = ["工资", "奖金"]
+        
+        for category in ledger.categories {
+            if category.type == .expense && quickSelectExpenseNames.contains(category.name) {
+                category.isQuickSelect = true
+            } else if category.type == .income && quickSelectIncomeNames.contains(category.name) {
+                category.isQuickSelect = true
+            }
+        }
     }
     
     /// 生成交易

@@ -27,6 +27,7 @@ struct CategoryFormSheet: View {
     @State private var iconName: String = "folder"
     @State private var colorHex: String = "#007AFF"
     @State private var sortOrder: Int = 0
+    @State private var isQuickSelect: Bool = false
     
     @State private var showError = false
     @State private var errorMessage = ""
@@ -104,6 +105,21 @@ struct CategoryFormSheet: View {
                                 Text(parentCategory.name)
                             }
                             .tag(parentCategory as Category?)
+                        }
+                    }
+                    
+                    Toggle("快速选择", isOn: $isQuickSelect)
+                }
+                
+                // 快速选择说明
+                if isQuickSelect {
+                    Section {
+                        HStack(spacing: Spacing.s) {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.blue)
+                            Text("开启后，该分类会在记账页面显示为快捷按钮，方便快速选择")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
@@ -192,6 +208,7 @@ struct CategoryFormSheet: View {
             iconName = category.iconName
             colorHex = category.colorHex
             sortOrder = category.sortOrder
+            isQuickSelect = category.isQuickSelect
         } else {
             type = defaultType
             // 设置默认排序
@@ -218,6 +235,7 @@ struct CategoryFormSheet: View {
             category.parent = parent
             category.iconName = iconName
             category.colorHex = colorHex
+            category.isQuickSelect = isQuickSelect
             
         } else {
             // 创建新分类
@@ -231,6 +249,7 @@ struct CategoryFormSheet: View {
             newCategory.parent = parent
             newCategory.colorHex = colorHex
             newCategory.sortOrder = sortOrder
+            newCategory.isQuickSelect = isQuickSelect
             
             modelContext.insert(newCategory)
         }

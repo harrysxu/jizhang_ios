@@ -16,7 +16,7 @@ struct EditTransactionSheet: View {
     
     let transaction: Transaction
     @State private var viewModel = AddTransactionViewModel()
-    @State private var showKeyboard = false
+    @FocusState private var isAmountFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,14 +28,13 @@ struct EditTransactionSheet: View {
                 .padding(.top, Spacing.m)
                 .disabled(true) // 编辑时不允许修改类型
             
-            // 金额显示 - 可点击唤起键盘
-            Button(action: {
-                showKeyboard = true
-            }) {
-                AmountDisplay(amount: $viewModel.amount)
-                    .padding(.vertical, Spacing.l)
-            }
-            .buttonStyle(.plain)
+            // 金额输入 - 使用系统键盘
+            AmountInputField(
+                amount: $viewModel.amount,
+                isFocused: $isAmountFocused,
+                currencyCode: appState.currentLedger?.currencyCode ?? "CNY"
+            )
+            .padding(.vertical, Spacing.l)
             
             Divider()
                 .padding(.vertical, Spacing.s)
@@ -78,25 +77,16 @@ struct EditTransactionSheet: View {
         }
         .background(Color(.systemBackground))
         .onAppear {
-                viewModel.configure(modelContext: modelContext, appState: appState)
-                loadTransactionData()
-            }
-            .alert("错误", isPresented: $viewModel.showErrorAlert) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .sheet(isPresented: $showKeyboard) {
-                CalculatorKeyboard(
-                    amount: $viewModel.amount,
-                    onConfirm: {
-                        // 键盘完成后不做其他操作，用户需要点击底部确认按钮
-                    },
-                    isValid: true
-                )
-            }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            viewModel.configure(modelContext: modelContext, appState: appState)
+            loadTransactionData()
+        }
+        .alert("错误", isPresented: $viewModel.showErrorAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
     
     private func loadTransactionData() {
@@ -407,11 +397,11 @@ struct TransactionDetailView: View {
                 }
                 
                 // 标签
-                if !transaction.tags.isEmpty {
+                if !(transaction.tags ?? []).isEmpty {
                     Section("标签") {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: Spacing.s) {
-                                ForEach(transaction.tags) { tag in
+                                ForEach(transaction.tags ?? []) { tag in
                                     TagBadge(tag: tag)
                                 }
                             }

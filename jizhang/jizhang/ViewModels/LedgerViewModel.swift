@@ -193,7 +193,7 @@ class LedgerViewModel: ObservableObject {
     /// 删除账本
     func deleteLedger(_ ledger: Ledger) throws {
         // 检查是否有交易
-        if !ledger.transactions.isEmpty {
+        if !(ledger.transactions ?? []).isEmpty {
             throw LedgerError.hasTransactions
         }
         
@@ -245,7 +245,7 @@ class LedgerViewModel: ObservableObject {
     /// 复制账本设置(账户和分类结构)到新账本
     func copyLedgerSettings(from sourceLedger: Ledger, to targetLedger: Ledger) throws {
         // 1. 复制账户结构
-        for sourceAccount in sourceLedger.accounts where !sourceAccount.isArchived {
+        for sourceAccount in (sourceLedger.accounts ?? []) where !sourceAccount.isArchived {
             let newAccount = Account(
                 ledger: targetLedger,
                 name: sourceAccount.name,
@@ -272,7 +272,7 @@ class LedgerViewModel: ObservableObject {
         // 先复制父分类
         var categoryMapping: [UUID: Category] = [:]
         
-        let parentCategories = sourceLedger.categories.filter { $0.parent == nil && !$0.isHidden }
+        let parentCategories = (sourceLedger.categories ?? []).filter { $0.parent == nil && !$0.isHidden }
         for sourceCategory in parentCategories {
             let newCategory = Category(
                 ledger: targetLedger,
@@ -289,7 +289,7 @@ class LedgerViewModel: ObservableObject {
         }
         
         // 再复制子分类
-        let childCategories = sourceLedger.categories.filter { $0.parent != nil && !$0.isHidden }
+        let childCategories = (sourceLedger.categories ?? []).filter { $0.parent != nil && !$0.isHidden }
         for sourceCategory in childCategories {
             if let sourceParent = sourceCategory.parent,
                let newParent = categoryMapping[sourceParent.id] {

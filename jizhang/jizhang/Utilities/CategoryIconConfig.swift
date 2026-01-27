@@ -263,7 +263,11 @@ struct CategoryIconConfig {
         "slidersHorizontal": "slider.horizontal.3",
         "tray": "tray.fill",
         "arrowCircleDown": "arrow.down.circle.fill",
-        "arrowCircleUp": "arrow.up.circle.fill"
+        "arrowCircleUp": "arrow.up.circle.fill",
+        
+        // 导入导出图标
+        "download": "square.and.arrow.down",
+        "upload": "square.and.arrow.up"
     ]
     
     // MARK: - Expense Categories (支出分类) - 父子结构
@@ -655,6 +659,10 @@ private enum PhosphorIconInternal {
         case "tray": Ph.tray.weight(phWeight)
         case "arrowCircleDown": Ph.arrowCircleDown.weight(phWeight)
         case "arrowCircleUp": Ph.arrowCircleUp.weight(phWeight)
+        
+        // 导入导出图标
+        case "download": Ph.downloadSimple.weight(phWeight)
+        case "upload": Ph.uploadSimple.weight(phWeight)
             
         default:
             Ph.question.weight(phWeight)

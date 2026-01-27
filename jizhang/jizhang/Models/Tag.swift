@@ -12,7 +12,8 @@ import SwiftData
 final class Tag {
     // MARK: - Properties
     
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 标签名称
     var name: String
@@ -31,8 +32,8 @@ final class Tag {
     /// 所属账本
     var ledger: Ledger?
     
-    /// 关联的交易
-    var transactions: [Transaction]
+    /// 关联的交易 (CloudKit要求关系必须为可选)
+    var transactions: [Transaction]?
     
     // MARK: - Initialization
     
@@ -48,7 +49,7 @@ final class Tag {
         self.sortOrder = sortOrder
         self.createdAt = Date()
         self.ledger = ledger
-        self.transactions = []
+        self.transactions = nil
     }
 }
 

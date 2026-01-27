@@ -57,7 +57,8 @@ enum AccountType: String, Codable, CaseIterable {
 final class Account {
     // MARK: - Properties
     
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 账户名称
     var name: String
@@ -106,13 +107,13 @@ final class Account {
     /// 所属账本
     var ledger: Ledger?
     
-    /// 作为来源账户的交易
+    /// 作为来源账户的交易 (CloudKit要求关系必须为可选)
     @Relationship(inverse: \Transaction.fromAccount)
-    var outgoingTransactions: [Transaction]
+    var outgoingTransactions: [Transaction]?
     
-    /// 作为目标账户的交易
+    /// 作为目标账户的交易 (CloudKit要求关系必须为可选)
     @Relationship(inverse: \Transaction.toAccount)
-    var incomingTransactions: [Transaction]
+    var incomingTransactions: [Transaction]?
     
     // MARK: - Initialization
     
@@ -136,8 +137,8 @@ final class Account {
         self.createdAt = Date()
         self.sortOrder = sortOrder
         self.ledger = ledger
-        self.outgoingTransactions = []
-        self.incomingTransactions = []
+        self.outgoingTransactions = nil
+        self.incomingTransactions = nil
     }
 }
 

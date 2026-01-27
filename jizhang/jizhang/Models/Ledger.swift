@@ -13,7 +13,8 @@ final class Ledger {
     // MARK: - Properties
     
     /// 唯一标识符
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 账本名称
     var name: String
@@ -44,25 +45,25 @@ final class Ledger {
     
     // MARK: - Relationships
     
-    /// 关联的账户
+    /// 关联的账户 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Account.ledger)
-    var accounts: [Account]
+    var accounts: [Account]?
     
-    /// 关联的分类
+    /// 关联的分类 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Category.ledger)
-    var categories: [Category]
+    var categories: [Category]?
     
-    /// 关联的流水
+    /// 关联的流水 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Transaction.ledger)
-    var transactions: [Transaction]
+    var transactions: [Transaction]?
     
-    /// 关联的预算
+    /// 关联的预算 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Budget.ledger)
-    var budgets: [Budget]
+    var budgets: [Budget]?
     
-    /// 关联的标签
+    /// 关联的标签 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Tag.ledger)
-    var tags: [Tag]
+    var tags: [Tag]?
     
     // MARK: - Initialization
     
@@ -83,11 +84,11 @@ final class Ledger {
         self.isArchived = false
         self.isDefault = isDefault
         self.sortOrder = sortOrder
-        self.accounts = []
-        self.categories = []
-        self.transactions = []
-        self.budgets = []
-        self.tags = []
+        self.accounts = nil
+        self.categories = nil
+        self.transactions = nil
+        self.budgets = nil
+        self.tags = nil
     }
 }
 
@@ -96,21 +97,21 @@ final class Ledger {
 extension Ledger {
     /// 计算总资产
     var totalAssets: Decimal {
-        accounts
+        (accounts ?? [])
             .filter { !$0.excludeFromTotal && !$0.isArchived }
             .reduce(0) { $0 + $1.balance }
     }
     
     /// 活跃账户数量
     var activeAccountsCount: Int {
-        accounts.filter { !$0.isArchived }.count
+        (accounts ?? []).filter { !$0.isArchived }.count
     }
     
     /// 本月交易数量
     var thisMonthTransactionCount: Int {
         let calendar = Calendar.current
         let now = Date()
-        return transactions.filter { transaction in
+        return (transactions ?? []).filter { transaction in
             calendar.isDate(transaction.date, equalTo: now, toGranularity: .month)
         }.count
     }
@@ -134,7 +135,8 @@ extension Ledger {
                 colorHex: hierarchy.style.color,
                 sortOrder: sortOrder
             )
-            categories.append(parentCategory)
+            if categories == nil { categories = [] }
+            categories?.append(parentCategory)
             sortOrder += 1
             
             // 创建二级分类（子分类）
@@ -148,7 +150,7 @@ extension Ledger {
                     colorHex: child.style.color,
                     sortOrder: childIndex
                 )
-                categories.append(childCategory)
+                categories?.append(childCategory)
             }
         }
         
@@ -163,7 +165,8 @@ extension Ledger {
                 colorHex: hierarchy.style.color,
                 sortOrder: sortOrder
             )
-            categories.append(parentCategory)
+            if categories == nil { categories = [] }
+            categories?.append(parentCategory)
             sortOrder += 1
             
             // 创建二级分类（子分类）
@@ -177,7 +180,7 @@ extension Ledger {
                     colorHex: child.style.color,
                     sortOrder: childIndex
                 )
-                categories.append(childCategory)
+                categories?.append(childCategory)
             }
         }
     }
@@ -190,6 +193,7 @@ extension Ledger {
             type: .cash,
             iconName: "banknote.fill"
         )
-        accounts.append(cash)
+        if accounts == nil { accounts = [] }
+        accounts?.append(cash)
     }
 }

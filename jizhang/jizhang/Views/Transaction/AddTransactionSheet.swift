@@ -15,7 +15,7 @@ struct AddTransactionSheet: View {
     @Environment(AppState.self) private var appState
     
     @State private var viewModel = AddTransactionViewModel()
-    @State private var showKeyboard = false
+    @FocusState private var isAmountFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -26,14 +26,13 @@ struct AddTransactionSheet: View {
             TransactionTypeSegment(selectedType: $viewModel.type)
                 .padding(.top, Spacing.m)
             
-            // 金额显示 - 可点击唤起键盘
-            Button(action: {
-                showKeyboard = true
-            }) {
-                AmountDisplay(amount: $viewModel.amount)
-                    .padding(.vertical, Spacing.l)
-            }
-            .buttonStyle(.plain)
+            // 金额输入 - 使用系统键盘
+            AmountInputField(
+                amount: $viewModel.amount,
+                isFocused: $isAmountFocused,
+                currencyCode: appState.currentLedger?.currencyCode ?? "CNY"
+            )
+            .padding(.vertical, Spacing.l)
             
             // 快速选择分类区域
             if viewModel.type != .transfer && !viewModel.quickSelectCategories.isEmpty {
@@ -88,24 +87,19 @@ struct AddTransactionSheet: View {
         }
         .background(Color(.systemBackground))
         .onAppear {
-                viewModel.configure(modelContext: modelContext, appState: appState)
+            viewModel.configure(modelContext: modelContext, appState: appState)
+            // 自动聚焦金额输入
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isAmountFocused = true
             }
-            .alert("错误", isPresented: $viewModel.showErrorAlert) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .sheet(isPresented: $showKeyboard) {
-                CalculatorKeyboard(
-                    amount: $viewModel.amount,
-                    onConfirm: {
-                        // 键盘完成后不做其他操作，用户需要点击底部确认按钮
-                    },
-                    isValid: true
-                )
-            }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+        }
+        .alert("错误", isPresented: $viewModel.showErrorAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 

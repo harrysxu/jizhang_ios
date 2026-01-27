@@ -18,6 +18,7 @@ struct HomeView: View {
     
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @Query private var ledgers: [Ledger]
+    @Query private var allBudgets: [Budget]
     
     
     // MARK: - Computed Properties
@@ -28,6 +29,26 @@ struct HomeView: View {
             return transactions
         }
         return transactions.filter { $0.ledger?.id == currentLedger.id }
+    }
+    
+    /// 当前账本的活跃预算（在当前周期内的预算）
+    private var currentLedgerBudgets: [Budget] {
+        guard let currentLedger = appState.currentLedger else {
+            return []
+        }
+        let today = Date()
+        return allBudgets.filter { budget in
+            budget.ledger?.id == currentLedger.id &&
+            budget.startDate <= today &&
+            budget.endDate > today
+        }
+    }
+    
+    /// 每日预算总额（所有活跃预算的每日预算之和）
+    private var totalDailyBudget: Decimal {
+        currentLedgerBudgets.reduce(Decimal(0)) { total, budget in
+            total + calculateDailyBudget(for: budget)
+        }
     }
     
     private var totalAssets: Decimal {
@@ -76,7 +97,10 @@ struct HomeView: View {
                         )
                         
                         // 今日支出卡片
-                        TodayExpenseCard(todayExpense: todayExpense)
+                        TodayExpenseCard(
+                            todayExpense: todayExpense,
+                            dailyBudget: totalDailyBudget
+                        )
                         
                         // 最近7日支出趋势图
                         SevenDayExpenseChart(
@@ -101,6 +125,19 @@ struct HomeView: View {
                 // 无需手动刷新，因为我们使用的是响应式数据绑定
             }
         }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// 计算单个预算的每日预算金额
+    private func calculateDailyBudget(for budget: Budget) -> Decimal {
+        let calendar = Calendar.current
+        let totalDays = calendar.dateComponents([.day], from: budget.startDate, to: budget.endDate).day ?? 1
+        guard totalDays > 0 else { return 0 }
+        
+        // 总预算 = 预算金额 + 结转金额
+        let totalBudget = budget.amount + budget.rolloverAmount
+        return totalBudget / Decimal(totalDays)
     }
     
     // MARK: - Private Methods

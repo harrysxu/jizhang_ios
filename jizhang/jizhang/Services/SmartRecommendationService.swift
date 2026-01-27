@@ -108,13 +108,13 @@ class SmartRecommendationService {
             }
             
             if let mostCommonId = samePeriodFrequency.max(by: { $0.value < $1.value })?.key {
-                return ledger.categories.first { $0.id == mostCommonId }
+                return (ledger.categories ?? []).first { $0.id == mostCommonId }
             }
         }
         
         // 返回总体最常用的分类
         if let mostCommonId = categoryFrequency.max(by: { $0.value < $1.value })?.key {
-            return ledger.categories.first { $0.id == mostCommonId }
+            return (ledger.categories ?? []).first { $0.id == mostCommonId }
         }
         
         return nil
@@ -137,11 +137,11 @@ class SmartRecommendationService {
             }
         }
         
-        return ledger.categories.first { $0.type == (type == .expense ? .expense : .income) }
+        return (ledger.categories ?? []).first { $0.type == (type == .expense ? .expense : .income) }
     }
     
     private func findCategory(named name: String, in ledger: Ledger) -> Category? {
-        return ledger.categories.first { category in
+        return (ledger.categories ?? []).first { category in
             category.name.contains(name) || name.contains(category.name)
         }
     }
@@ -174,11 +174,11 @@ class SmartRecommendationService {
         
         // 返回最常用的账户
         if let mostCommonId = accountFrequency.max(by: { $0.value < $1.value })?.key {
-            return ledger.accounts.first { $0.id == mostCommonId }
+            return (ledger.accounts ?? []).first { $0.id == mostCommonId }
         }
         
         // 如果没有历史记录,返回第一个非信用卡账户
-        return ledger.accounts.first { $0.type != .creditCard } ?? ledger.accounts.first
+        return (ledger.accounts ?? []).first { $0.type != .creditCard } ?? (ledger.accounts ?? []).first
     }
     
     // MARK: - 金额建议

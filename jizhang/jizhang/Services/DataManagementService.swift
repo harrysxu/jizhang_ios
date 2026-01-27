@@ -119,25 +119,22 @@ class DataManagementService {
     /// 重置账本数据的内部实现
     private func resetLedgerData(_ ledger: Ledger) throws {
         // 1. 删除所有交易
-        let transactionsToDelete = ledger.transactions
-        for transaction in transactionsToDelete {
+        for transaction in (ledger.transactions ?? []) {
             modelContext.delete(transaction)
         }
         
         // 2. 删除所有预算
-        let budgetsToDelete = ledger.budgets
-        for budget in budgetsToDelete {
+        for budget in (ledger.budgets ?? []) {
             modelContext.delete(budget)
         }
         
         // 3. 删除所有标签
-        let tagsToDelete = ledger.tags
-        for tag in tagsToDelete {
+        for tag in (ledger.tags ?? []) {
             modelContext.delete(tag)
         }
         
         // 4. 重置所有账户余额
-        for account in ledger.accounts {
+        for account in (ledger.accounts ?? []) {
             account.balance = 0
             // 清空信用卡的已用额度
             if account.type == .creditCard {
@@ -151,11 +148,11 @@ class DataManagementService {
     /// 获取账本的数据统计信息
     func getLedgerStatistics(_ ledger: Ledger) -> LedgerStatistics {
         return LedgerStatistics(
-            transactionCount: ledger.transactions.count,
-            accountCount: ledger.accounts.count,
-            categoryCount: ledger.categories.count,
-            budgetCount: ledger.budgets.count,
-            tagCount: ledger.tags.count,
+            transactionCount: (ledger.transactions ?? []).count,
+            accountCount: (ledger.accounts ?? []).count,
+            categoryCount: (ledger.categories ?? []).count,
+            budgetCount: (ledger.budgets ?? []).count,
+            tagCount: (ledger.tags ?? []).count,
             totalAssets: ledger.totalAssets
         )
     }

@@ -92,8 +92,8 @@ struct BudgetDetailView: View {
                 .fill(Color(hex: budget.category?.colorHex ?? "#007AFF").opacity(0.2))
                 .frame(width: 50, height: 50)
             
-            Image(systemName: budget.category?.iconName ?? "folder.fill")
-                .font(.system(size: 22))
+            PhosphorIcon.icon(named: budget.category?.iconName ?? "folder", weight: .fill)
+                .frame(width: 22, height: 22)
                 .foregroundStyle(Color(hex: budget.category?.colorHex ?? "#007AFF"))
         }
     }

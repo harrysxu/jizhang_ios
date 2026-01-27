@@ -36,8 +36,8 @@ struct BudgetCardView: View {
                                 .fill(Color(hex: budget.category?.colorHex ?? "#007AFF"))
                                 .frame(width: 40, height: 40)
                             
-                            Image(systemName: budget.category?.iconName ?? "folder.fill")
-                                .font(.system(size: 20, weight: .medium))
+                            PhosphorIcon.icon(named: budget.category?.iconName ?? "folder", weight: .fill)
+                                .frame(width: 20, height: 20)
                                 .foregroundStyle(.white)
                         }
                         .shadow(color: Color(hex: budget.category?.colorHex ?? "#007AFF").opacity(0.3), radius: 4, y: 2)

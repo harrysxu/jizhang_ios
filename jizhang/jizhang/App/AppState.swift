@@ -83,47 +83,108 @@ class AppState {
         // 数据库文件路径
         let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
         
-        // 检查是否需要清理数据库（用于开发阶段的schema变更）
-        let needsCleanDatabase = sharedDefaults?.bool(forKey: "needsCleanDatabase_v2") ?? true
+        // 检查是否需要清理数据库（schema变更时需要清理）
+        // v5: 移除CloudKit不支持的unique约束
+        // 注意：此版本默认true是为了强制清理不兼容的schema，之后的版本应改为false
+        let needsCleanDatabase = sharedDefaults?.bool(forKey: "needsCleanDatabase_v5") ?? true
         
         if needsCleanDatabase {
             print("🗑️ 清理旧数据库（schema已更新）...")
             try? FileManager.default.removeItem(at: storeURL)
             try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
             try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-            sharedDefaults?.set(false, forKey: "needsCleanDatabase_v2")
+            sharedDefaults?.set(false, forKey: "needsCleanDatabase_v5")
             print("✅ 旧数据库已清理")
         }
         
         // CloudKit + App Groups配置
-        let modelConfiguration = ModelConfiguration(
+        let cloudKitConfig = ModelConfiguration(
             url: storeURL,
             cloudKitDatabase: .automatic  // 自动使用Private Database
         )
         
-        do {
-            modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [modelConfiguration]
-            )
-            print("✅ 成功创建ModelContainer")
-        } catch {
-            // 如果创建失败（通常是因为数据库schema变更），删除旧数据库并重新创建
-            print("⚠️ 创建ModelContainer失败: \(error)")
-            print("🗑️ 删除旧数据库并重新创建...")
-            
-            try? FileManager.default.removeItem(at: storeURL)
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-            
+        // 本地模式配置（不使用CloudKit）
+        let localConfig = ModelConfiguration(
+            url: storeURL,
+            cloudKitDatabase: .none  // 不使用CloudKit
+        )
+        
+        // 先检查 iCloud 账户状态
+        let iCloudAvailable = FileManager.default.ubiquityIdentityToken != nil
+        print("📱 iCloud 账户状态: \(iCloudAvailable ? "已登录" : "未登录")")
+        
+        if !iCloudAvailable {
+            // iCloud 未登录，直接使用本地模式
+            print("⚠️ iCloud 未登录，使用本地模式")
             do {
                 modelContainer = try ModelContainer(
                     for: schema,
-                    configurations: [modelConfiguration]
+                    configurations: [localConfig]
                 )
-                print("✅ 成功重新创建ModelContainer")
+                print("✅ 成功创建ModelContainer (本地模式)")
+                print("💡 提示：请在设备设置中登录 iCloud 以启用云同步")
             } catch {
                 fatalError("无法创建ModelContainer: \(error)")
+            }
+        } else {
+            // iCloud 已登录，尝试使用 CloudKit
+            do {
+                modelContainer = try ModelContainer(
+                    for: schema,
+                    configurations: [cloudKitConfig]
+                )
+                print("✅ 成功创建ModelContainer (CloudKit模式)")
+            } catch {
+                // CloudKit失败，打印详细错误
+                print("⚠️ CloudKit模式失败")
+                print("📋 错误详情: \(error)")
+                print("📋 错误类型: \(type(of: error))")
+                if let nsError = error as NSError? {
+                    print("📋 NSError Domain: \(nsError.domain)")
+                    print("📋 NSError Code: \(nsError.code)")
+                    print("📋 NSError UserInfo: \(nsError.userInfo)")
+                }
+                
+                print("🗑️ 删除旧数据库并重试...")
+                
+                try? FileManager.default.removeItem(at: storeURL)
+                try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
+                try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
+                
+                do {
+                    modelContainer = try ModelContainer(
+                        for: schema,
+                        configurations: [cloudKitConfig]
+                    )
+                    print("✅ 成功重新创建ModelContainer (CloudKit模式)")
+                } catch let retryError {
+                    // CloudKit仍然失败，回退到本地模式
+                    print("⚠️ CloudKit模式仍然失败，回退到本地模式")
+                    print("📋 重试错误: \(retryError)")
+                    
+                    // 可能的原因提示
+                    print("💡 可能的原因:")
+                    print("   1. CloudKit 容器未在 Apple Developer Portal 中创建")
+                    print("   2. 容器标识符不匹配: \(AppConstants.iCloudContainerIdentifier)")
+                    print("   3. 模拟器需要重置 (Device > Erase All Content and Settings)")
+                    print("   4. 需要在真机上测试 CloudKit")
+                    
+                    // 再次清理数据库
+                    try? FileManager.default.removeItem(at: storeURL)
+                    try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
+                    try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
+                    
+                    do {
+                        modelContainer = try ModelContainer(
+                            for: schema,
+                            configurations: [localConfig]
+                        )
+                        print("✅ 成功创建ModelContainer (本地模式)")
+                        print("⚠️ 注意：当前未启用iCloud同步，数据仅保存在本地")
+                    } catch {
+                        fatalError("无法创建ModelContainer: \(error)")
+                    }
+                }
             }
         }
         

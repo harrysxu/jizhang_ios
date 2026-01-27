@@ -222,7 +222,8 @@ class LedgerImportService {
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(account)
-        ledger.accounts.append(account)
+        if ledger.accounts == nil { ledger.accounts = [] }
+        ledger.accounts?.append(account)
         
         return account
     }
@@ -246,11 +247,13 @@ class LedgerImportService {
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(category)
-        ledger.categories.append(category)
+        if ledger.categories == nil { ledger.categories = [] }
+        ledger.categories?.append(category)
         
         // 如果有父分类，添加到父分类的 children
         if let parent = parent {
-            parent.children.append(category)
+            if parent.children == nil { parent.children = [] }
+            parent.children?.append(category)
         }
         
         return category
@@ -267,7 +270,8 @@ class LedgerImportService {
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(tag)
-        ledger.tags.append(tag)
+        if ledger.tags == nil { ledger.tags = [] }
+        ledger.tags?.append(tag)
         
         return tag
     }
@@ -303,28 +307,36 @@ class LedgerImportService {
         transaction.imageURL = dto.imageURL
         
         // 关联标签
-        for tagId in dto.tagIds {
-            if let tag = tagMap[tagId] {
-                transaction.tags.append(tag)
-                tag.transactions.append(transaction)
+        if !dto.tagIds.isEmpty {
+            if transaction.tags == nil { transaction.tags = [] }
+            for tagId in dto.tagIds {
+                if let tag = tagMap[tagId] {
+                    transaction.tags?.append(tag)
+                    if tag.transactions == nil { tag.transactions = [] }
+                    tag.transactions?.append(transaction)
+                }
             }
         }
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(transaction)
-        ledger.transactions.append(transaction)
+        if ledger.transactions == nil { ledger.transactions = [] }
+        ledger.transactions?.append(transaction)
         
         // 更新账户的交易关系
         if let fromAccount = fromAccount {
-            fromAccount.outgoingTransactions.append(transaction)
+            if fromAccount.outgoingTransactions == nil { fromAccount.outgoingTransactions = [] }
+            fromAccount.outgoingTransactions?.append(transaction)
         }
         if let toAccount = toAccount {
-            toAccount.incomingTransactions.append(transaction)
+            if toAccount.incomingTransactions == nil { toAccount.incomingTransactions = [] }
+            toAccount.incomingTransactions?.append(transaction)
         }
         
         // 更新分类的交易关系
         if let category = category {
-            category.transactions.append(transaction)
+            if category.transactions == nil { category.transactions = [] }
+            category.transactions?.append(transaction)
         }
         
         return transaction
@@ -359,10 +371,12 @@ class LedgerImportService {
         
         // 插入到 context 并添加到账本关系
         modelContext.insert(budget)
-        ledger.budgets.append(budget)
+        if ledger.budgets == nil { ledger.budgets = [] }
+        ledger.budgets?.append(budget)
         
         // 更新分类的预算关系
-        category.budgets.append(budget)
+        if category.budgets == nil { category.budgets = [] }
+        category.budgets?.append(budget)
         
         return budget
     }

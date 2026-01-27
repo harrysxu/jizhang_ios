@@ -203,7 +203,7 @@ struct TransactionDTO: Codable {
         self.fromAccountId = transaction.fromAccount?.id
         self.toAccountId = transaction.toAccount?.id
         self.categoryId = transaction.category?.id
-        self.tagIds = transaction.tags.map { $0.id }
+        self.tagIds = (transaction.tags ?? []).map { $0.id }
     }
 }
 
@@ -275,23 +275,23 @@ class LedgerExportService {
         progressHandler?(0.2, "正在导出账户...")
         
         // 创建账户DTOs
-        let accountDTOs = ledger.accounts.map { AccountDTO(from: $0) }
+        let accountDTOs = (ledger.accounts ?? []).map { AccountDTO(from: $0) }
         progressHandler?(0.3, "正在导出分类...")
         
         // 创建分类DTOs
-        let categoryDTOs = ledger.categories.map { CategoryDTO(from: $0) }
+        let categoryDTOs = (ledger.categories ?? []).map { CategoryDTO(from: $0) }
         progressHandler?(0.5, "正在导出交易记录...")
         
         // 创建交易DTOs
-        let transactionDTOs = ledger.transactions.map { TransactionDTO(from: $0) }
+        let transactionDTOs = (ledger.transactions ?? []).map { TransactionDTO(from: $0) }
         progressHandler?(0.7, "正在导出预算...")
         
         // 创建预算DTOs
-        let budgetDTOs = ledger.budgets.map { BudgetDTO(from: $0) }
+        let budgetDTOs = (ledger.budgets ?? []).map { BudgetDTO(from: $0) }
         progressHandler?(0.8, "正在导出标签...")
         
         // 创建标签DTOs
-        let tagDTOs = ledger.tags.map { TagDTO(from: $0) }
+        let tagDTOs = (ledger.tags ?? []).map { TagDTO(from: $0) }
         progressHandler?(0.9, "正在生成文件...")
         
         // 创建导出数据
@@ -376,11 +376,11 @@ extension LedgerExportService {
     /// 获取账本的导出统计信息
     func getStatistics(for ledger: Ledger) -> ExportStatistics {
         return ExportStatistics(
-            accountCount: ledger.accounts.count,
-            categoryCount: ledger.categories.count,
-            transactionCount: ledger.transactions.count,
-            budgetCount: ledger.budgets.count,
-            tagCount: ledger.tags.count
+            accountCount: (ledger.accounts ?? []).count,
+            categoryCount: (ledger.categories ?? []).count,
+            transactionCount: (ledger.transactions ?? []).count,
+            budgetCount: (ledger.budgets ?? []).count,
+            tagCount: (ledger.tags ?? []).count
         )
     }
 }

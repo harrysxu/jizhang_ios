@@ -45,7 +45,7 @@ struct CategoryPickerSheet: View {
                     )
                 } else {
                     ForEach(filteredCategories) { parentCategory in
-                        if parentCategory.children.isEmpty {
+                        if (parentCategory.children ?? []).isEmpty {
                             // 无子分类,直接显示
                             CategoryRowView(
                                 category: parentCategory,
@@ -57,7 +57,7 @@ struct CategoryPickerSheet: View {
                         } else {
                             // 有子分类,使用DisclosureGroup
                             DisclosureGroup {
-                                ForEach(parentCategory.children.sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
+                                ForEach((parentCategory.children ?? []).sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
                                     CategoryRowView(
                                         category: childCategory,
                                         isSelected: selectedCategory?.id == childCategory.id,
@@ -70,8 +70,8 @@ struct CategoryPickerSheet: View {
                             } label: {
                                 HStack(spacing: Spacing.m) {
                                     // 图标
-                                    Image(systemName: parentCategory.iconName)
-                                        .font(.system(size: 20))
+                                    PhosphorIcon.icon(named: parentCategory.iconName, weight: .fill)
+                                        .frame(width: 20, height: 20)
                                         .foregroundColor(Color(hex: parentCategory.colorHex))
                                         .frame(width: 32)
                                     
@@ -82,7 +82,7 @@ struct CategoryPickerSheet: View {
                                     Spacer()
                                     
                                     // 子分类数量
-                                    Text("\(parentCategory.children.count)")
+                                    Text("\((parentCategory.children ?? []).count)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -114,8 +114,8 @@ private struct CategoryRowView: View {
                 }
                 
                 // 图标
-                Image(systemName: category.iconName)
-                    .font(.system(size: isChild ? 18 : 20))
+                PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                    .frame(width: isChild ? 18 : 20, height: isChild ? 18 : 20)
                     .foregroundColor(Color(hex: category.colorHex))
                     .frame(width: 32)
                 

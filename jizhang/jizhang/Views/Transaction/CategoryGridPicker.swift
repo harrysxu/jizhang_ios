@@ -127,7 +127,7 @@ struct CategoryGridPicker: View {
         guard let ledger = appState.currentLedger else { return }
         
         let categoryType: CategoryType = type == .expense ? .expense : .income
-        categories = ledger.categories.filter { $0.type == categoryType }
+        categories = (ledger.categories ?? []).filter { $0.type == categoryType }
         
         // 默认选择第一个父分类
         if selectedParent == nil {

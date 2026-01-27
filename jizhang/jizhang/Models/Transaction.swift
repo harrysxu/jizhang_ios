@@ -52,7 +52,8 @@ enum TransactionType: String, Codable {
 final class Transaction {
     // MARK: - Properties
     
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 金额
     var amount: Decimal
@@ -92,8 +93,8 @@ final class Transaction {
     /// 分类
     var category: Category?
     
-    /// 标签
-    var tags: [Tag]
+    /// 标签 (CloudKit要求关系必须为可选)
+    var tags: [Tag]?
     
     // MARK: - Initialization
     
@@ -120,7 +121,7 @@ final class Transaction {
         self.fromAccount = fromAccount
         self.toAccount = toAccount
         self.category = category
-        self.tags = []
+        self.tags = nil
     }
 }
 

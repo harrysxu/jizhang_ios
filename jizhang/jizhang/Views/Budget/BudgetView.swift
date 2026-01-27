@@ -10,16 +10,23 @@ import SwiftData
 
 struct BudgetView: View {
     @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        BudgetContentView(modelContext: modelContext)
+    }
+}
+
+private struct BudgetContentView: View {
+    let modelContext: ModelContext
     @Environment(AppState.self) private var appState
     @Environment(\.hideTabBar) private var hideTabBar
     @StateObject private var viewModel: BudgetViewModel
     
     @Query(sort: \Budget.createdAt, order: .reverse) private var allBudgets: [Budget]
     
-    init() {
-        // 临时初始化一个空的 ModelContext，实际会在 onAppear 中使用环境中的 modelContext
-        let container = try! ModelContainer(for: Budget.self, Category.self, Ledger.self)
-        _viewModel = StateObject(wrappedValue: BudgetViewModel(modelContext: container.mainContext))
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        _viewModel = StateObject(wrappedValue: BudgetViewModel(modelContext: modelContext))
     }
     
     // 过滤当前账本的预算
@@ -194,14 +201,6 @@ struct BudgetView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 100)
-    }
-}
-
-// MARK: - Preview Helpers
-
-extension BudgetView {
-    init(preview: Bool) {
-        self.init()
     }
 }
 

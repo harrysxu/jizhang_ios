@@ -126,6 +126,9 @@ enum AppConstants {
     /// App Groups标识符 (用于Widget和Live Activity数据共享)
     static let appGroupIdentifier = "group.com.xxl.jizhang"
     
+    /// iCloud容器标识符 (用于CloudKit同步)
+    static let iCloudContainerIdentifier = "iCloud.com.xxl.jizhang"
+    
     /// URL Scheme
     static let urlScheme = "jizhang"
     

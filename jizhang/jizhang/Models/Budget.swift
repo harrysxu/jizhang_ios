@@ -31,7 +31,8 @@ enum BudgetPeriod: String, Codable {
 final class Budget {
     // MARK: - Properties
     
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 预算金额
     var amount: Decimal

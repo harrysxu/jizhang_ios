@@ -175,7 +175,7 @@ struct AccountFormSheet: View {
             newAccount.statementDay = type == .creditCard ? statementDay : nil
             newAccount.dueDay = type == .creditCard ? dueDay : nil
             newAccount.colorHex = colorHex
-            newAccount.sortOrder = (ledger.accounts.map { $0.sortOrder }.max() ?? 0) + 1
+            newAccount.sortOrder = ((ledger.accounts ?? []).map { $0.sortOrder }.max() ?? 0) + 1
             
             modelContext.insert(newAccount)
         }

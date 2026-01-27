@@ -185,7 +185,7 @@ class TestDataGenerator {
     
     /// 确保分类存在
     private func ensureCategoriesExist(for ledger: Ledger) {
-        if ledger.categories.isEmpty {
+        if (ledger.categories ?? []).isEmpty {
             ledger.createDefaultCategories()
         }
         
@@ -201,7 +201,7 @@ class TestDataGenerator {
         // 常用的收入分类名称
         let quickSelectIncomeNames = ["工资", "奖金"]
         
-        for category in ledger.categories {
+        for category in (ledger.categories ?? []) {
             if category.type == .expense && quickSelectExpenseNames.contains(category.name) {
                 category.isQuickSelect = true
             } else if category.type == .income && quickSelectIncomeNames.contains(category.name) {
@@ -222,8 +222,8 @@ class TestDataGenerator {
         var transactionCount = 0
         
         // 获取分类
-        let expenseCategories = ledger.categories.filter { $0.type == .expense }
-        let incomeCategories = ledger.categories.filter { $0.type == .income }
+        let expenseCategories = (ledger.categories ?? []).filter { $0.type == .expense }
+        let incomeCategories = (ledger.categories ?? []).filter { $0.type == .income }
         
         guard !expenseCategories.isEmpty, !incomeCategories.isEmpty, !accounts.isEmpty else {
             return 0
@@ -366,7 +366,7 @@ class TestDataGenerator {
     
     /// 生成预算
     private func generateBudgets(for ledger: Ledger) throws -> Int {
-        let expenseCategories = ledger.categories.filter { $0.type == .expense && $0.parent == nil }
+        let expenseCategories = (ledger.categories ?? []).filter { $0.type == .expense && $0.parent == nil }
         guard !expenseCategories.isEmpty else { return 0 }
         
         let count = min(config.budgetCount, expenseCategories.count)

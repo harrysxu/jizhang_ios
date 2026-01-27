@@ -36,7 +36,8 @@ enum CategoryType: String, Codable {
 final class Category {
     // MARK: - Properties
     
-    @Attribute(.unique) var id: UUID
+    /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
+    var id: UUID
     
     /// 分类名称
     var name: String
@@ -70,17 +71,17 @@ final class Category {
     /// 父分类
     var parent: Category?
     
-    /// 子分类
+    /// 子分类 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Category.parent)
-    var children: [Category]
+    var children: [Category]?
     
-    /// 关联的交易
+    /// 关联的交易 (CloudKit要求关系必须为可选)
     @Relationship(inverse: \Transaction.category)
-    var transactions: [Transaction]
+    var transactions: [Transaction]?
     
-    /// 关联的预算
+    /// 关联的预算 (CloudKit要求关系必须为可选)
     @Relationship(deleteRule: .cascade, inverse: \Budget.category)
-    var budgets: [Budget]
+    var budgets: [Budget]?
     
     // MARK: - Initialization
     
@@ -104,9 +105,9 @@ final class Category {
         self.isQuickSelect = false
         self.createdAt = Date()
         self.ledger = ledger
-        self.children = []
-        self.transactions = []
-        self.budgets = []
+        self.children = nil
+        self.transactions = nil
+        self.budgets = nil
     }
 }
 
@@ -133,9 +134,9 @@ extension Category {
     
     /// 所有子分类的交易(包括自己)
     var allTransactions: [Transaction] {
-        var all = transactions
-        for child in children {
-            all.append(contentsOf: child.transactions)
+        var all = transactions ?? []
+        for child in (children ?? []) {
+            all.append(contentsOf: child.transactions ?? [])
         }
         return all
     }

@@ -64,7 +64,7 @@ class AddTransactionViewModel {
         let categoryType: CategoryType = type == .expense ? .expense : .income
         
         // 获取标记为快速选择的分类，按排序顺序排列
-        let categories = ledger.categories
+        let categories = (ledger.categories ?? [])
             .filter { $0.type == categoryType && $0.isQuickSelect && !$0.isHidden }
             .sorted { $0.sortOrder < $1.sortOrder }
         
@@ -100,7 +100,7 @@ class AddTransactionViewModel {
         if selectedAccount == nil {
             // 优先使用记忆的账户
             if let lastAccountId = UserPreferences.shared.getLastAccount(for: type),
-               let account = ledger.accounts.first(where: { $0.id == lastAccountId }) {
+               let account = (ledger.accounts ?? []).first(where: { $0.id == lastAccountId }) {
                 selectedAccount = account
             } else {
                 // 否则使用智能推荐
@@ -135,14 +135,14 @@ class AddTransactionViewModel {
         
         // 优先使用记忆的分类
         if let lastCategoryId = UserPreferences.shared.getLastCategory(for: type),
-           let category = ledger.categories.first(where: { $0.id == lastCategoryId }) {
+           let category = (ledger.categories ?? []).first(where: { $0.id == lastCategoryId }) {
             selectedCategory = category
             return
         }
         
         // 根据类型获取对应的分类列表
         let categoryType: CategoryType = type == .expense ? .expense : .income
-        let categories = ledger.categories.filter { $0.type == categoryType }
+        let categories = (ledger.categories ?? []).filter { $0.type == categoryType }
         
         // 选中第一个分类（优先选择子分类的第一个，如果没有则选父分类第一个）
         let childCategories = categories.filter { $0.parent != nil }.sorted { $0.sortOrder < $1.sortOrder }
@@ -237,8 +237,8 @@ class AddTransactionViewModel {
         transaction.note = note.isEmpty ? nil : note
         
         // 添加标签
-        for tag in selectedTags {
-            transaction.tags.append(tag)
+        if !selectedTags.isEmpty {
+            transaction.tags = Array(selectedTags)
         }
         
         // 插入到context

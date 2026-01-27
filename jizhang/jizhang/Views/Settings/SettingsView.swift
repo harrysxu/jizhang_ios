@@ -103,7 +103,7 @@ struct SettingsView: View {
                             LedgerExportView()
                         } label: {
                             SettingsRow(
-                                iconName: "export",
+                                iconName: "upload",
                                 iconColor: .blue,
                                 title: "导出账本"
                             )

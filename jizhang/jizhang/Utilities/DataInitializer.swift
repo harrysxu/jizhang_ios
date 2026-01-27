@@ -35,7 +35,7 @@ struct DataInitializer {
     /// 创建测试数据(用于开发和演示)
     func createTestData(for ledger: Ledger) throws {
         // 获取账户和分类
-        guard let cashAccount = ledger.accounts.first(where: { $0.type == .cash }),
+        guard let cashAccount = (ledger.accounts ?? []).first(where: { $0.type == .cash }),
               let categories = getCategoriesForTest(from: ledger) else {
             return
         }
@@ -133,7 +133,8 @@ struct DataInitializer {
                 account.dueDay = 23
             }
             
-            ledger.accounts.append(account)
+            if ledger.accounts == nil { ledger.accounts = [] }
+            ledger.accounts?.append(account)
         }
     }
     
@@ -146,7 +147,7 @@ struct DataInitializer {
             "衣服鞋帽", "房租房贷", "水电燃气", "工资"
         ]
         
-        return ledger.categories.filter { categoryNames.contains($0.name) }
+        return (ledger.categories ?? []).filter { categoryNames.contains($0.name) }
     }
 }
 
@@ -155,6 +156,6 @@ struct DataInitializer {
 extension Ledger {
     /// 检查是否需要初始化数据
     var needsInitialization: Bool {
-        accounts.isEmpty || categories.isEmpty
+        (accounts ?? []).isEmpty || (categories ?? []).isEmpty
     }
 }

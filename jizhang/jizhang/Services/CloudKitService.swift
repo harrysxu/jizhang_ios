@@ -80,8 +80,8 @@ class CloudKitService: ObservableObject {
     // MARK: - Initialization
     
     init() {
-        // 使用默认容器(需要在Xcode中配置)
-        self.container = CKContainer.default()
+        // 使用指定的iCloud容器
+        self.container = CKContainer(identifier: AppConstants.iCloudContainerIdentifier)
         
         Task {
             await checkiCloudStatus()
@@ -115,6 +115,8 @@ class CloudKitService: ObservableObject {
     // MARK: - Sync Operations
     
     /// 手动触发同步
+    /// 注意：SwiftData + CloudKit 的同步是由系统自动管理的
+    /// 此方法主要用于刷新iCloud状态和触发UI更新
     func forceSyncNow() async {
         guard isCloudKitAvailable else {
             syncStatus = .notAvailable
@@ -123,20 +125,30 @@ class CloudKitService: ObservableObject {
         
         syncStatus = .syncing
         
-        // SwiftData+CloudKit会自动处理同步
-        // 这里只是模拟同步过程和更新UI状态
-        
         do {
-            // 等待一段时间模拟同步
-            try await Task.sleep(nanoseconds: 2_000_000_000)
+            // 重新检查iCloud账号状态
+            let status = try await container.accountStatus()
+            
+            guard status == .available else {
+                await MainActor.run {
+                    isCloudKitAvailable = false
+                    syncStatus = .notAvailable
+                }
+                return
+            }
+            
+            // SwiftData + CloudKit 会在后台自动同步数据
+            // 我们只需要等待一段时间让系统完成同步
+            // 首次安装或重装后，数据同步可能需要几秒到几分钟不等
+            try await Task.sleep(nanoseconds: 3_000_000_000)
             
             await MainActor.run {
                 syncStatus = .synced
                 lastSyncDate = Date()
             }
             
-            // 3秒后重置为空闲状态
-            try await Task.sleep(nanoseconds: 3_000_000_000)
+            // 5秒后重置为空闲状态
+            try await Task.sleep(nanoseconds: 5_000_000_000)
             
             await MainActor.run {
                 if case .synced = syncStatus {

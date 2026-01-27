@@ -70,10 +70,12 @@ struct BudgetFormSheet: View {
                     Picker("分类", selection: $selectedCategory) {
                         Text("请选择").tag(nil as Category?)
                         ForEach(expenseParentCategories) { category in
-                            HStack {
-                                Image(systemName: category.iconName)
-                                    .foregroundStyle(Color(hex: category.colorHex))
+                            Label {
                                 Text(category.name)
+                            } icon: {
+                                PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                                    .frame(width: 20, height: 20)
+                                    .foregroundStyle(Color(hex: category.colorHex))
                             }
                             .tag(category as Category?)
                         }

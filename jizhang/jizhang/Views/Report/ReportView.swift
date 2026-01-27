@@ -18,6 +18,14 @@ enum ReportTab: String, CaseIterable {
 
 struct ReportView: View {
     @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        ReportContentView(modelContext: modelContext)
+    }
+}
+
+private struct ReportContentView: View {
+    let modelContext: ModelContext
     @Environment(AppState.self) private var appState
     @StateObject private var viewModel: ReportViewModel
     
@@ -37,10 +45,9 @@ struct ReportView: View {
     // 订阅相关
     @State private var showSubscriptionSheet = false
     
-    init() {
-        // 临时初始化一个空的 ModelContext，实际会在 onAppear 中使用环境中的 modelContext
-        let container = try! ModelContainer(for: Transaction.self, Account.self)
-        _viewModel = StateObject(wrappedValue: ReportViewModel(modelContext: container.mainContext))
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        _viewModel = StateObject(wrappedValue: ReportViewModel(modelContext: modelContext))
     }
     
     /// 检查Tab是否需要高级权限

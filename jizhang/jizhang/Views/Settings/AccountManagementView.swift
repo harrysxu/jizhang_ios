@@ -162,7 +162,7 @@ struct AccountManagementView: View {
     
     private func deleteAccount(_ account: Account) {
         // 检查是否有关联交易
-        let transactionCount = account.outgoingTransactions.count + account.incomingTransactions.count
+        let transactionCount = (account.outgoingTransactions ?? []).count + (account.incomingTransactions ?? []).count
         if transactionCount > 0 {
             deleteErrorMessage = "账户「\(account.name)」下有 \(transactionCount) 笔交易记录，无法删除。请先删除或转移相关交易。"
             showDeleteErrorAlert = true

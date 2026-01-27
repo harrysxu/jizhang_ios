@@ -50,7 +50,7 @@ class HomeViewModel: ObservableObject {
         let todayStart = today.startOfDay
         let todayEnd = today.endOfDay
         
-        let todayTransactions = ledger.transactions.filter {
+        let todayTransactions = (ledger.transactions ?? []).filter {
             $0.date >= todayStart && $0.date <= todayEnd && $0.type == .expense
         }
         todayExpense = todayTransactions.reduce(0) { $0 + $1.amount }
@@ -59,7 +59,7 @@ class HomeViewModel: ObservableObject {
         let monthStart = today.startOfMonth
         let monthEnd = today.endOfMonth
         
-        let monthTransactions = ledger.transactions.filter {
+        let monthTransactions = (ledger.transactions ?? []).filter {
             $0.date >= monthStart && $0.date <= monthEnd
         }
         
@@ -73,7 +73,7 @@ class HomeViewModel: ObservableObject {
         
         // 获取最近交易
         recentTransactions = Array(
-            ledger.transactions
+            (ledger.transactions ?? [])
                 .sorted { $0.date > $1.date }
                 .prefix(50)
         )

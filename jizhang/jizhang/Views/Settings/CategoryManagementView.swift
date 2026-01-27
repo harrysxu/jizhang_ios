@@ -73,7 +73,7 @@ struct CategoryManagementView: View {
             } else {
                 List {
                     ForEach(filteredParentCategories) { parentCategory in
-                        if parentCategory.children.isEmpty {
+                        if (parentCategory.children ?? []).isEmpty {
                             // 无子分类
                             CategoryRowView(
                                 category: parentCategory,
@@ -87,7 +87,7 @@ struct CategoryManagementView: View {
                             // 有子分类 - 使用自定义展开机制
                             CategoryRowView(
                                 category: parentCategory,
-                                childCount: parentCategory.children.count,
+                                childCount: (parentCategory.children ?? []).count,
                                 isExpanded: expandedCategories.contains(parentCategory.id),
                                 onTap: {
                                     // 点击切换展开状态
@@ -108,7 +108,7 @@ struct CategoryManagementView: View {
                             
                             // 子分类列表 - 展开时显示
                             if expandedCategories.contains(parentCategory.id) {
-                                ForEach(parentCategory.children.sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
+                                ForEach((parentCategory.children ?? []).sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
                                     CategoryRowView(
                                         category: childCategory,
                                         isChild: true,
@@ -145,7 +145,7 @@ struct CategoryManagementView: View {
             }
         } message: {
             if let category = categoryToDelete {
-                if category.isParentCategory && !category.children.isEmpty {
+                if category.isParentCategory && !(category.children ?? []).isEmpty {
                     Text("确定要删除「\(category.name)」及其所有子分类吗？此操作无法撤销。")
                 } else {
                     Text("确定要删除「\(category.name)」吗？此操作无法撤销。")
@@ -169,24 +169,24 @@ struct CategoryManagementView: View {
     
     private func deleteCategory(_ category: Category) {
         // 检查是否有关联交易
-        if !category.transactions.isEmpty {
-            deleteErrorMessage = "分类「\(category.name)」下有 \(category.transactions.count) 笔交易记录，无法删除。请先删除或转移相关交易。"
+        if !(category.transactions ?? []).isEmpty {
+            deleteErrorMessage = "分类「\(category.name)」下有 \((category.transactions ?? []).count) 笔交易记录，无法删除。请先删除或转移相关交易。"
             showDeleteErrorAlert = true
             return
         }
         
         // 如果是父分类，检查子分类是否有交易
         if category.isParentCategory {
-            for child in category.children {
-                if !child.transactions.isEmpty {
-                    deleteErrorMessage = "子分类「\(child.name)」下有 \(child.transactions.count) 笔交易记录，无法删除。请先删除或转移相关交易。"
+            for child in (category.children ?? []) {
+                if !(child.transactions ?? []).isEmpty {
+                    deleteErrorMessage = "子分类「\(child.name)」下有 \((child.transactions ?? []).count) 笔交易记录，无法删除。请先删除或转移相关交易。"
                     showDeleteErrorAlert = true
                     return
                 }
             }
             
             // 删除所有子分类
-            for child in category.children {
+            for child in (category.children ?? []) {
                 modelContext.delete(child)
             }
         }
@@ -286,8 +286,8 @@ private struct CategoryRowView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
-            } else if !category.transactions.isEmpty {
-                Text("\(category.transactions.count)")
+            } else if !(category.transactions ?? []).isEmpty {
+                Text("\((category.transactions ?? []).count)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .monospacedDigit()

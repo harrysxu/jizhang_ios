@@ -151,7 +151,7 @@ struct LedgerOverviewView: View {
                 
                 StatCard(
                     title: "总交易",
-                    value: "\(ledger.transactions.count)笔",
+                    value: "\((ledger.transactions ?? []).count)笔",
                     icon: "chart.line.uptrend.xyaxis",
                     color: .orange
                 )

@@ -52,35 +52,3 @@ final class Tag {
     }
 }
 
-// MARK: - Computed Properties
-
-extension Tag {
-    /// 标签使用次数
-    var usageCount: Int {
-        transactions.count
-    }
-    
-    /// 本月使用次数
-    var thisMonthUsageCount: Int {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        return transactions.filter { transaction in
-            calendar.isDate(transaction.date, equalTo: now, toGranularity: .month)
-        }.count
-    }
-    
-    /// 标签总金额(支出为负, 收入为正)
-    var totalAmount: Decimal {
-        transactions.reduce(0) { total, transaction in
-            switch transaction.type {
-            case .expense:
-                return total - transaction.amount
-            case .income:
-                return total + transaction.amount
-            case .transfer, .adjustment:
-                return total
-            }
-        }
-    }
-}

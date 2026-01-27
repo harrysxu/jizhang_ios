@@ -54,15 +54,6 @@ enum FontSize {
     static let amountMini: CGFloat = 16     // 小号金额
 }
 
-// MARK: - AnimationDuration
-
-/// 动画时长
-enum AnimationDuration {
-    static let fast: Double = 0.2
-    static let normal: Double = 0.3
-    static let slow: Double = 0.5
-}
-
 // MARK: - Color Extensions
 
 extension Color {
@@ -88,65 +79,6 @@ extension Color {
     /// 警告橙色
     static var warningOrange: Color {
         Color(hex: "#FF9500")
-    }
-    
-    // MARK: - Background Colors
-    
-    /// 卡片背景(亮色模式)
-    static let cardBackgroundLight = Color(hex: "#FFFFFF")
-    
-    /// 卡片背景(暗色模式)
-    static let cardBackgroundDark = Color(hex: "#1C1C1E")
-    
-    /// 分组背景(亮色模式)
-    static let groupedBackgroundLight = Color(hex: "#F2F2F7")
-    
-    /// 分组背景(暗色模式)
-    static let groupedBackgroundDark = Color(hex: "#000000")
-    
-    // MARK: - Category Colors
-    
-    /// 分类颜色预设 (参考UI样式)
-    enum CategoryColors {
-        // 餐饮类
-        static let meals = Color(hex: "FFB74D")         // 三餐 - 橙色
-        static let snacks = Color(hex: "A1887F")        // 零食 - 棕色
-        
-        // 购物类
-        static let clothing = Color(hex: "E57373")      // 衣服 - 红色
-        static let dailyGoods = Color(hex: "AED581")    // 日用品 - 浅绿
-        
-        // 出行类
-        static let transport = Color(hex: "64B5F6")     // 交通 - 蓝色
-        static let travel = Color(hex: "81C784")        // 旅行 - 绿色
-        static let carGas = Color(hex: "90A4AE")        // 汽车/加油 - 灰蓝
-        
-        // 家庭类
-        static let housing = Color(hex: "FFB74D")       // 住房 - 橙色
-        static let utilities = Color(hex: "9FA8DA")     // 水电煤 - 蓝紫
-        static let children = Color(hex: "FFD54F")      // 孩子 - 黄色
-        
-        // 娱乐类
-        static let entertainment = Color(hex: "BA68C8") // 娱乐 - 紫色
-        static let sports = Color(hex: "4DB6AC")        // 运动 - 青色
-        
-        // 生活服务类
-        static let phone = Color(hex: "4DD0E1")         // 话费网费 - 青色
-        static let medical = Color(hex: "EF5350")       // 医疗 - 红色
-        static let beauty = Color(hex: "F48FB1")        // 美妆 - 粉色
-        
-        // 学习工作类
-        static let study = Color(hex: "4FC3F7")         // 学习 - 浅蓝
-        static let electronics = Color(hex: "78909C")   // 电器数码 - 灰色
-        
-        // 社交类
-        static let gifts = Color(hex: "FF8A65")         // 请客送礼 - 橙红
-        static let redEnvelope = Color(hex: "E57373")   // 发红包 - 红色
-        
-        // 其他类
-        static let pets = Color(hex: "9575CD")          // 宠物 - 紫色
-        static let tobacco = Color(hex: "F06292")       // 烟酒 - 粉色
-        static let other = Color(hex: "BDBDBD")         // 其它 - 灰色
     }
     
     // MARK: - Helper: Hex Initializer

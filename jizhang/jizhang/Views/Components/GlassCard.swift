@@ -101,49 +101,6 @@ extension View {
     }
 }
 
-// MARK: - Glass Card Variants
-
-/// 简洁版毛玻璃卡片 (无边框、无阴影)
-struct SimpleGlassCard<Content: View>: View {
-    let content: Content
-    
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-    
-    var body: some View {
-        content
-            .padding(Spacing.l)
-            .background(
-                RoundedRectangle(cornerRadius: CornerRadius.medium)
-                    .fill(.thinMaterial)
-            )
-    }
-}
-
-/// 强调版毛玻璃卡片 (更厚的材质)
-struct ThickGlassCard<Content: View>: View {
-    let content: Content
-    
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-    
-    var body: some View {
-        content
-            .padding(Spacing.xxl)
-            .background(
-                RoundedRectangle(cornerRadius: CornerRadius.large)
-                    .fill(.regularMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.large)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
-                    )
-                    .shadow(color: .black.opacity(0.1), radius: 15, x: 0, y: 8)
-            )
-    }
-}
-
 // MARK: - Preview
 
 #Preview("Glass Card Examples") {
@@ -165,31 +122,6 @@ struct ThickGlassCard<Content: View>: View {
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .monospacedDigit()
                     }
-                }
-            }
-            
-            // 简洁版
-            SimpleGlassCard {
-                VStack(alignment: .leading, spacing: Spacing.s) {
-                    Text("简洁版卡片")
-                        .font(.headline)
-                    
-                    Text("无边框、无阴影")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            
-            // 强调版
-            ThickGlassCard {
-                VStack(alignment: .leading, spacing: Spacing.m) {
-                    Text("强调版卡片")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                    
-                    Text("使用 regularMaterial 材质，更强的层次感")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
             }
             

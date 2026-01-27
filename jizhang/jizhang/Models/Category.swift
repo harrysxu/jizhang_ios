@@ -139,15 +139,4 @@ extension Category {
         }
         return all
     }
-    
-    /// 本月支出总额
-    func totalExpenseThisMonth() -> Decimal {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        return allTransactions
-            .filter { calendar.isDate($0.date, equalTo: now, toGranularity: .month) }
-            .filter { $0.type == .expense }
-            .reduce(0) { $0 + $1.amount }
-    }
 }

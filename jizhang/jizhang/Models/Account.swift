@@ -152,42 +152,6 @@ extension Account {
         return balance
     }
     
-    /// 信用卡额度使用率
-    var creditUtilization: Double {
-        guard type == .creditCard, let limit = creditLimit, limit > 0 else {
-            return 0
-        }
-        return Double(truncating: abs(balance) / limit as NSNumber)
-    }
-    
-    /// 距离下次账单日天数
-    var daysUntilNextStatement: Int? {
-        guard let statementDay = statementDay else { return nil }
-        
-        let calendar = Calendar.current
-        let today = Date()
-        
-        guard let nextStatement = calendar.nextDate(
-            after: today,
-            matching: DateComponents(day: statementDay),
-            matchingPolicy: .nextTime
-        ) else {
-            return nil
-        }
-        
-        return calendar.dateComponents([.day], from: today, to: nextStatement).day
-    }
-    
-    /// 本月交易笔数
-    var thisMonthTransactionCount: Int {
-        let calendar = Calendar.current
-        let now = Date()
-        let allTransactions = outgoingTransactions + incomingTransactions
-        
-        return allTransactions.filter { transaction in
-            calendar.isDate(transaction.date, equalTo: now, toGranularity: .month)
-        }.count
-    }
 }
 
 // MARK: - Business Logic
@@ -210,14 +174,4 @@ extension Account {
         return transaction
     }
     
-    /// 验证信用卡配置
-    func validateCreditCardSettings() -> Bool {
-        guard type == .creditCard else { return true }
-        
-        guard let limit = creditLimit, limit > 0 else { return false }
-        guard let statement = statementDay, (1...31).contains(statement) else { return false }
-        guard let due = dueDay, (1...31).contains(due) else { return false }
-        
-        return true
-    }
 }

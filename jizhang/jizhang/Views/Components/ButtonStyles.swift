@@ -41,44 +41,6 @@ struct PrimaryActionButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Secondary Action Button Style
-
-/// 次要操作按钮样式 (描边胶囊形状)
-struct SecondaryActionButtonStyle: ButtonStyle {
-    var borderColor: Color = .primaryBlue
-    
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 16, weight: .medium))
-            .foregroundColor(borderColor)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(
-                Capsule()
-                    .stroke(borderColor, lineWidth: 1.5)
-            )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
-
-// MARK: - Icon Button Style
-
-/// 图标按钮样式 (用于列表中的编辑、删除等操作)
-struct IconButtonStyle: ButtonStyle {
-    var size: CGFloat = 32
-    var iconColor: Color = .secondary
-    
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundColor(iconColor)
-            .frame(width: size, height: size)
-            .contentShape(Rectangle())
-            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
-
 // MARK: - View Extensions
 
 extension View {
@@ -90,16 +52,6 @@ extension View {
     /// 应用主要操作按钮样式
     func primaryActionButtonStyle(backgroundColor: Color = .primaryBlue) -> some View {
         self.buttonStyle(PrimaryActionButtonStyle(backgroundColor: backgroundColor))
-    }
-    
-    /// 应用次要操作按钮样式
-    func secondaryActionButtonStyle(borderColor: Color = .primaryBlue) -> some View {
-        self.buttonStyle(SecondaryActionButtonStyle(borderColor: borderColor))
-    }
-    
-    /// 应用图标按钮样式
-    func iconButtonStyle(size: CGFloat = 32, iconColor: Color = .secondary) -> some View {
-        self.buttonStyle(IconButtonStyle(size: size, iconColor: iconColor))
     }
 }
 
@@ -145,36 +97,6 @@ struct PrimaryActionButton: View {
         // 主要操作按钮
         PrimaryActionButton("创建预算", icon: "plus.circle.fill") {
             print("Primary button tapped")
-        }
-        
-        // 次要操作按钮
-        Button {
-            print("Secondary button tapped")
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "square.and.arrow.up")
-                Text("导出数据")
-            }
-        }
-        .secondaryActionButtonStyle()
-        
-        // 图标按钮
-        HStack(spacing: Spacing.m) {
-            Button {
-                print("Edit tapped")
-            } label: {
-                Image(systemName: "pencil")
-                    .font(.system(size: 18))
-            }
-            .iconButtonStyle(iconColor: .primaryBlue)
-            
-            Button {
-                print("Delete tapped")
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 18))
-            }
-            .iconButtonStyle(iconColor: .expenseRed)
         }
         
         // 缩放按钮

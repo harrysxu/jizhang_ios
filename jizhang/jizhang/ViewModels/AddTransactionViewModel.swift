@@ -327,10 +327,6 @@ class AddTransactionViewModel {
 enum TransactionError: LocalizedError {
     case missingDependencies
     case validationFailed(String)
-    case invalidAmount
-    case missingAccount
-    case missingCategory
-    case balanceInsufficient
     
     var errorDescription: String? {
         switch self {
@@ -338,14 +334,6 @@ enum TransactionError: LocalizedError {
             return "系统错误,请重试"
         case .validationFailed(let message):
             return message
-        case .invalidAmount:
-            return "金额无效"
-        case .missingAccount:
-            return "请选择账户"
-        case .missingCategory:
-            return "请选择分类"
-        case .balanceInsufficient:
-            return "账户余额不足"
         }
     }
 }

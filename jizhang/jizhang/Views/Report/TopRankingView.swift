@@ -118,8 +118,8 @@ struct TopRankingView: View {
     }
     
     private func categoryIcon(for item: TopRankingItem) -> some View {
-        Image(systemName: item.iconName)
-            .font(.system(size: 22, weight: .medium))
+        PhosphorIcon.icon(named: item.iconName, weight: .fill)
+            .frame(width: 28, height: 28)
             .foregroundStyle(Color(hex: item.colorHex))
             .frame(width: 36, height: 36)
     }

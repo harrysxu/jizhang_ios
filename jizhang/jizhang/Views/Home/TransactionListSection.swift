@@ -222,7 +222,7 @@ struct EmptyTransactionView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             
-            Text("点击右下角 + 按钮开始记账")
+            Text("点击 + 按钮开始记账")
                 .font(.subheadline)
                 .foregroundStyle(.tertiary)
         }

@@ -143,7 +143,7 @@ struct TransactionListView: View {
                     ContentUnavailableView(
                         searchText.isEmpty ? "暂无流水记录" : "未找到匹配的流水",
                         systemImage: "doc.text.magnifyingglass",
-                        description: Text(searchText.isEmpty ? "点击右下角添加第一笔记录" : "尝试调整筛选条件")
+                        description: Text(searchText.isEmpty ? "点击 + 添加第一笔记录" : "尝试调整筛选条件")
                     )
                 } else {
     List {
@@ -159,8 +159,8 @@ struct TransactionListView: View {
                                         .fill(Color(hex: category.colorHex))
                                         .frame(width: 44, height: 44)
                                     
-                                    Image(systemName: category.iconName)
-                                        .font(.system(size: 22, weight: .medium))
+                                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                                        .frame(width: 24, height: 24)
                                         .foregroundStyle(.white)
                                 }
                                 .shadow(color: Color(hex: category.colorHex).opacity(0.3), radius: 4, y: 2)
@@ -170,8 +170,8 @@ struct TransactionListView: View {
                                         .fill(Color.gray)
                                         .frame(width: 44, height: 44)
                                     
-                                    Image(systemName: transaction.type.icon)
-                                        .font(.system(size: 22, weight: .medium))
+                                    PhosphorIcon.icon(named: transaction.type.phosphorIcon, weight: .fill)
+                                        .frame(width: 24, height: 24)
                                         .foregroundStyle(.white)
                                 }
                                 .shadow(color: Color.gray.opacity(0.3), radius: 4, y: 2)

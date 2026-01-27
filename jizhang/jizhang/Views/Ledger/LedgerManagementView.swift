@@ -32,38 +32,42 @@ private struct LedgerManagementContentView: View {
     }
     
     var body: some View {
-        List {
-            // 活跃账本
-            Section("活跃账本") {
-                if activeLedgers.isEmpty {
-                    Text("还没有账本")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(activeLedgers) { ledger in
-                        ledgerRow(ledger)
-                    }
-                }
-            }
-            
-            // 归档账本
-            if !archivedLedgers.isEmpty {
-                Section("归档账本") {
-                    ForEach(archivedLedgers) { ledger in
-                        ledgerRow(ledger)
-                    }
-                }
-            }
-        }
-        .navigationTitle("账本管理")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "账本管理") {
                 Button {
                     viewModel.showCreateLedger()
                 } label: {
                     Image(systemName: "plus")
+                        .font(.system(size: 18))
+                }
+            }
+            
+            List {
+                // 活跃账本
+                Section("活跃账本") {
+                    if activeLedgers.isEmpty {
+                        Text("还没有账本")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(activeLedgers) { ledger in
+                            ledgerRow(ledger)
+                        }
+                    }
+                }
+                
+                // 归档账本
+                if !archivedLedgers.isEmpty {
+                    Section("归档账本") {
+                        ForEach(archivedLedgers) { ledger in
+                            ledgerRow(ledger)
+                        }
+                    }
                 }
             }
         }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .sheet(isPresented: Binding(
             get: { viewModel.showLedgerForm },
             set: { if !$0 { viewModel.showLedgerForm = false } }

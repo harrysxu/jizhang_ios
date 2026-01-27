@@ -37,7 +37,16 @@ struct AccountFormSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: isEditing ? "编辑账户" : "添加账户",
+                confirmText: isEditing ? "保存" : "添加",
+                confirmDisabled: !isValid
+            ) {
+                saveAccount()
+            }
+            
             Form {
                 // 基本信息
                 Section("基本信息") {
@@ -100,30 +109,15 @@ struct AccountFormSheet: View {
                     }
                 }
             }
-            .navigationTitle(isEditing ? "编辑账户" : "添加账户")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "保存" : "添加") {
-                        saveAccount()
-                    }
-                    .disabled(!isValid)
-                }
-            }
-            .onAppear {
-                loadAccount()
-            }
-            .alert("错误", isPresented: $showError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            loadAccount()
+        }
+        .alert("错误", isPresented: $showError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
         }
     }
     

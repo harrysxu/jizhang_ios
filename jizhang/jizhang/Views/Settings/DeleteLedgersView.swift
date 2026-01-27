@@ -38,40 +38,36 @@ struct DeleteLedgersView: View {
     private let requiredConfirmationText = "DELETE"
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // 警告横幅
-                warningBanner
-                
-                // 账本列表（使用自定义列表而非 List）
-                ledgerListContent
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            // 底部删除按钮 - 固定在底部
-            deleteButtonBar
-        }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("删除账本")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
-                .disabled(isDeleting)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "删除账本", backButtonText: "取消") {
                 if !selectedLedgerIDs.isEmpty {
                     Button("取消选择") {
                         selectedLedgerIDs.removeAll()
                     }
+                    .font(.system(size: 15))
                     .disabled(isDeleting)
                 }
             }
+            .opacity(isDeleting ? 0.5 : 1)
+            .allowsHitTesting(!isDeleting)
+            
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 警告横幅
+                    warningBanner
+                    
+                    // 账本列表（使用自定义列表而非 List）
+                    ledgerListContent
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                // 底部删除按钮 - 固定在底部
+                deleteButtonBar
+            }
         }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .disabled(isDeleting)
         .onAppear {
             hideTabBar.wrappedValue = true
@@ -324,7 +320,10 @@ struct DeleteLedgersView: View {
     // MARK: - Final Confirmation Sheet
     
     private var finalConfirmationSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCloseNavigationBar(title: "确认删除", closeText: "取消")
+            
             VStack(spacing: 24) {
                 // 警告图标
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -383,17 +382,8 @@ struct DeleteLedgersView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("确认删除")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
-                        confirmationInput = ""
-                        showFinalConfirmation = false
-                    }
-                }
-            }
         }
+        .background(Color(.systemBackground))
         .presentationDetents([.medium])
     }
     

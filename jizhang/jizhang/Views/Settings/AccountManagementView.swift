@@ -18,6 +18,10 @@ struct AccountManagementView: View {
     
     @State private var showAddAccount = false
     @State private var accountToEdit: Account?
+    @State private var accountToDelete: Account?
+    @State private var showDeleteAlert = false
+    @State private var showDeleteErrorAlert = false
+    @State private var deleteErrorMessage = ""
     
     // MARK: - Computed Properties
     
@@ -39,80 +43,102 @@ struct AccountManagementView: View {
     // MARK: - Body
     
     var body: some View {
-        List {
-            if currentLedgerAccounts.isEmpty {
-                ContentUnavailableView(
-                    "暂无账户",
-                    systemImage: "creditcard.fill",
-                    description: Text("点击右上角 + 按钮创建第一个账户")
-                )
-            } else {
-                // 资产账户
-                if !assetAccounts.isEmpty {
-                    Section {
-                        ForEach(assetAccounts) { account in
-                            AccountRowButton(account: account) {
-                                accountToEdit = account
-                            }
-                        }
-                        .onDelete { indexSet in
-                            deleteAccounts(at: indexSet, from: assetAccounts)
-                        }
-                    } header: {
-                        HStack {
-                            Text("资产账户")
-                            Spacer()
-                            Text(totalAssets.formatted(.currency(code: "CNY")))
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-                
-                // 负债账户
-                if !liabilityAccounts.isEmpty {
-                    Section {
-                        ForEach(liabilityAccounts) { account in
-                            AccountRowButton(account: account) {
-                                accountToEdit = account
-                            }
-                        }
-                        .onDelete { indexSet in
-                            deleteAccounts(at: indexSet, from: liabilityAccounts)
-                        }
-                    } header: {
-                        HStack {
-                            Text("负债账户")
-                            Spacer()
-                            Text(totalLiabilities.formatted(.currency(code: "CNY")))
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle("账户管理")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                LedgerSwitcher(displayMode: .fullName)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "账户管理") {
                 Button {
                     showAddAccount = true
                 } label: {
                     Image(systemName: "plus")
+                        .font(.system(size: 18))
+                }
+            }
+            
+            List {
+                if currentLedgerAccounts.isEmpty {
+                    ContentUnavailableView(
+                        "暂无账户",
+                        systemImage: "creditcard.fill",
+                        description: Text("点击右上角 + 按钮创建第一个账户")
+                    )
+                } else {
+                    // 资产账户
+                    if !assetAccounts.isEmpty {
+                        Section {
+                            ForEach(assetAccounts) { account in
+                                AccountRowView(
+                                    account: account,
+                                    onEdit: { accountToEdit = account },
+                                    onDelete: {
+                                        accountToDelete = account
+                                        showDeleteAlert = true
+                                    }
+                                )
+                            }
+                        } header: {
+                            HStack {
+                                Text("资产账户")
+                                Spacer()
+                                Text(totalAssets.formatted(.currency(code: "CNY")))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
+                    
+                    // 负债账户
+                    if !liabilityAccounts.isEmpty {
+                        Section {
+                            ForEach(liabilityAccounts) { account in
+                                AccountRowView(
+                                    account: account,
+                                    onEdit: { accountToEdit = account },
+                                    onDelete: {
+                                        accountToDelete = account
+                                        showDeleteAlert = true
+                                    }
+                                )
+                            }
+                        } header: {
+                            HStack {
+                                Text("负债账户")
+                                Spacer()
+                                Text(totalLiabilities.formatted(.currency(code: "CNY")))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
                 }
             }
         }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .sheet(isPresented: $showAddAccount) {
             AccountFormSheet(account: nil)
         }
         .sheet(item: $accountToEdit) { account in
             AccountFormSheet(account: account)
+        }
+        .alert("确认删除", isPresented: $showDeleteAlert) {
+            Button("取消", role: .cancel) {
+                accountToDelete = nil
+            }
+            Button("删除", role: .destructive) {
+                if let account = accountToDelete {
+                    deleteAccount(account)
+                }
+                accountToDelete = nil
+            }
+        } message: {
+            if let account = accountToDelete {
+                Text("确定要删除账户「\(account.name)」吗？此操作无法撤销。")
+            }
+        }
+        .alert("无法删除", isPresented: $showDeleteErrorAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(deleteErrorMessage)
         }
         .onAppear {
             hideTabBar.wrappedValue = true
@@ -134,80 +160,77 @@ struct AccountManagementView: View {
     
     // MARK: - Methods
     
-    private func deleteAccounts(at offsets: IndexSet, from accounts: [Account]) {
-        for index in offsets {
-            let account = accounts[index]
-            
-            // 检查是否有关联交易
-            if !account.outgoingTransactions.isEmpty || !account.incomingTransactions.isEmpty {
-                // TODO: 显示警告,无法删除有交易的账户
-                continue
-            }
-            
-            modelContext.delete(account)
+    private func deleteAccount(_ account: Account) {
+        // 检查是否有关联交易
+        let transactionCount = account.outgoingTransactions.count + account.incomingTransactions.count
+        if transactionCount > 0 {
+            deleteErrorMessage = "账户「\(account.name)」下有 \(transactionCount) 笔交易记录，无法删除。请先删除或转移相关交易。"
+            showDeleteErrorAlert = true
+            return
         }
         
-        try? modelContext.save()
+        modelContext.delete(account)
+        
+        do {
+            try modelContext.save()
+        } catch {
+            deleteErrorMessage = "删除失败: \(error.localizedDescription)"
+            showDeleteErrorAlert = true
+        }
     }
 }
 
-// MARK: - Account Row Button
+// MARK: - Account Row View
 
-private struct AccountRowButton: View {
+private struct AccountRowView: View {
     let account: Account
-    let action: () -> Void
+    let onEdit: () -> Void
+    let onDelete: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: Spacing.m) {
-                // 图标 (无圆形背景，直接展示图案)
-                Image(systemName: account.iconName)
-                    .font(.system(size: 26, weight: .medium))
-                    .foregroundStyle(Color(hex: account.colorHex))
-                    .frame(width: 44, height: 44)
+        HStack(spacing: Spacing.m) {
+            // 图标
+            Image(systemName: account.iconName)
+                .font(.system(size: 24, weight: .medium))
+                .foregroundStyle(Color(hex: account.colorHex))
+                .frame(width: 40, height: 40)
+            
+            // 账户信息
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.name)
+                    .font(.body)
+                    .foregroundColor(.primary)
                 
-                // 账户信息
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(account.name)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                    
-                    HStack(spacing: 4) {
-                        Text(account.type.displayName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        if account.type == .creditCard {
-                            Text("•")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Text("可用 \(account.availableBalance.formatAmount())")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                
-                Spacer()
-                
-                // 余额
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(account.balance.formatAmount())
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(account.balance < 0 ? .expenseRed : .primary)
-                        .monospacedDigit()
-                    
-                    if account.type == .creditCard, let limit = account.creditLimit {
-                        Text("额度 \(limit.formatAmount())")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                Text(account.type.displayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .contentShape(Rectangle())
+            
+            Spacer()
+            
+            // 余额
+            Text(account.balance.formatAmount())
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundColor(account.balance < 0 ? .expenseRed : .primary)
+                .monospacedDigit()
+            
+            // 操作按钮（在最右侧）
+            HStack(spacing: Spacing.s) {
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16))
+                        .foregroundColor(.primaryBlue)
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
     }
 }
 

@@ -180,6 +180,12 @@ extension Color {
 
 // MARK: - App Constants
 
+/// 布局常量
+enum Layout {
+    /// TabBar 底部安全间距 - 用于 ScrollView 等需要避开 TabBar 的内容
+    static let tabBarBottomPadding: CGFloat = 90
+}
+
 /// 应用常量
 enum AppConstants {
     /// App名称
@@ -202,4 +208,21 @@ enum AppConstants {
     
     /// 最大金额
     static let maxAmount: Decimal = 999_999_999.99
+}
+
+// MARK: - Subscription Products
+
+/// 订阅产品ID
+enum SubscriptionProducts {
+    /// 月订阅 - 6元/月
+    static let monthlyID = "com.xxl.jizhang.subscription.monthly"
+    
+    /// 年订阅 - 38元/年
+    static let yearlyID = "com.xxl.jizhang.subscription.yearly"
+    
+    /// 买断 - 99元
+    static let lifetimeID = "com.xxl.jizhang.lifetime"
+    
+    /// 所有产品ID
+    static let allProductIDs: Set<String> = [monthlyID, yearlyID, lifetimeID]
 }

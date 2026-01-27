@@ -44,7 +44,16 @@ struct LedgerFormSheet: View {
     ]
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: title,
+                confirmText: "保存",
+                confirmDisabled: name.isEmpty
+            ) {
+                saveLedger()
+            }
+            
             Form {
                 // 账本名称
                 Section("账本名称") {
@@ -132,30 +141,15 @@ struct LedgerFormSheet: View {
                     .padding(.vertical, Spacing.s)
                 }
             }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        saveLedger()
-                    }
-                    .disabled(name.isEmpty)
-                }
-            }
-            .alert("错误", isPresented: $showError) {
-                Button("确定", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
-            }
-            .onAppear {
-                loadLedger()
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .alert("错误", isPresented: $showError) {
+            Button("确定", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+        .onAppear {
+            loadLedger()
         }
     }
     

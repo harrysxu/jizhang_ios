@@ -42,7 +42,10 @@ struct AccountPickerSheet: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "选择账户")
+            
             List {
                 if currentLedgerAccounts.isEmpty {
                     ContentUnavailableView(
@@ -82,16 +85,8 @@ struct AccountPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("选择账户")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 

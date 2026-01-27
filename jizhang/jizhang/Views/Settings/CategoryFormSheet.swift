@@ -48,24 +48,41 @@ struct CategoryFormSheet: View {
             .sorted { $0.sortOrder < $1.sortOrder }
     }
     
-    // 常用图标 (Phosphor 图标名称)
+    // 常用图标 (Phosphor 图标名称) - 使用 CategoryIconConfig 中定义的统一图标
     private let commonIcons = [
         // 餐饮
-        "forkKnife", "coffee", "shoppingBag", "houseLine",
-        // 交通
-        "car", "bus", "taxi", "airplaneTilt",
-        // 生活
-        "heart", "gameController", "bookOpen", "pencilSimple",
-        // 医疗
-        "pill", "firstAidKit", "personSimpleRun", "gift",
-        // 金融
-        "creditCard", "money", "piggyBank", "wallet",
+        "forkKnife", "coffee", "sunHorizon", "sun", "moon", "orangeSlice",
+        // 购物
+        "shoppingBag", "tShirt", "basket", "sparkle", "laptop",
+        // 交通出行
+        "car", "bus", "taxi", "gasPump", "parking",
+        // 居家生活
+        "houseLine", "lightning", "phone", "buildings",
+        // 娱乐休闲
+        "gameController", "personSimpleRun", "airplaneTilt",
+        // 医疗健康
+        "firstAidKit", "pill", "leaf",
+        // 人情往来
+        "gift", "envelopeSimple",
+        // 学习培训
+        "bookOpen", "chalkboardTeacher",
+        // 收入相关
+        "briefcase", "money", "trophy", "trendUp",
         // 其他
-        "tShirt", "phone", "laptop", "briefcase"
+        "baby", "pawPrint", "wine", "dotsThreeCircle"
     ]
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: isEditing ? "编辑分类" : "添加分类",
+                confirmText: isEditing ? "保存" : "添加",
+                confirmDisabled: !isValid
+            ) {
+                saveCategory()
+            }
+            
             Form {
                 // 基本信息
                 Section("基本信息") {
@@ -153,30 +170,15 @@ struct CategoryFormSheet: View {
                     .padding(.vertical, Spacing.s)
                 }
             }
-            .navigationTitle(isEditing ? "编辑分类" : "添加分类")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "保存" : "添加") {
-                        saveCategory()
-                    }
-                    .disabled(!isValid)
-                }
-            }
-            .onAppear {
-                loadCategory()
-            }
-            .alert("错误", isPresented: $showError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            loadCategory()
+        }
+        .alert("错误", isPresented: $showError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
         }
     }
     

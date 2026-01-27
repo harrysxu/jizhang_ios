@@ -18,70 +18,64 @@ struct AddTransactionSheet: View {
     @State private var showKeyboard = false
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // 类型切换
-                TransactionTypeSegment(selectedType: $viewModel.type)
-                    .padding(.top, Spacing.m)
-                
-                // 金额显示 - 可点击唤起键盘
-                Button(action: {
-                    showKeyboard = true
-                }) {
-                    AmountDisplay(amount: $viewModel.amount)
-                        .padding(.vertical, Spacing.l)
-                }
-                .buttonStyle(.plain)
-                
-                Divider()
-                    .padding(.vertical, Spacing.s)
-                
-                // 选择区域 - 占据更多空间
-                SelectionArea(viewModel: viewModel)
-                    .padding(.horizontal, Spacing.m)
-                
-                Spacer()
-                
-                // 底部确认按钮
-                Button(action: {
-                    Task {
-                        do {
-                            try await viewModel.saveTransaction()
-                            dismiss()
-                        } catch {
-                            // 错误已在viewModel中处理
-                        }
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                        Text("确认添加")
-                            .font(.headline)
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: CornerRadius.medium)
-                            .fill(viewModel.isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
-                    )
-                }
-                .disabled(!viewModel.isValid)
-                .buttonStyle(ScaleButtonStyle())
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "记一笔")
+            
+            // 类型切换
+            TransactionTypeSegment(selectedType: $viewModel.type)
+                .padding(.top, Spacing.m)
+            
+            // 金额显示 - 可点击唤起键盘
+            Button(action: {
+                showKeyboard = true
+            }) {
+                AmountDisplay(amount: $viewModel.amount)
+                    .padding(.vertical, Spacing.l)
+            }
+            .buttonStyle(.plain)
+            
+            Divider()
+                .padding(.vertical, Spacing.s)
+            
+            // 选择区域 - 占据更多空间
+            SelectionArea(viewModel: viewModel)
                 .padding(.horizontal, Spacing.m)
-                .padding(.bottom, Spacing.m)
-            }
-            .navigationTitle("记一笔")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+            
+            Spacer()
+            
+            // 底部确认按钮
+            Button(action: {
+                Task {
+                    do {
+                        try await viewModel.saveTransaction()
                         dismiss()
+                    } catch {
+                        // 错误已在viewModel中处理
                     }
                 }
+            }) {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                    Text("确认添加")
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(
+                    RoundedRectangle(cornerRadius: CornerRadius.medium)
+                        .fill(viewModel.isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
+                )
             }
-            .onAppear {
+            .disabled(!viewModel.isValid)
+            .buttonStyle(ScaleButtonStyle())
+            .padding(.horizontal, Spacing.m)
+            .padding(.bottom, Spacing.m)
+        }
+        .background(Color(.systemBackground))
+        .onAppear {
                 viewModel.configure(modelContext: modelContext, appState: appState)
             }
             .alert("错误", isPresented: $viewModel.showErrorAlert) {
@@ -98,9 +92,8 @@ struct AddTransactionSheet: View {
                     isValid: true
                 )
             }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
     }
 }
 
@@ -294,7 +287,10 @@ private struct DatePickerSheet: View {
     @Binding var selectedDate: Date
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCloseNavigationBar(title: "选择日期", closeText: "完成")
+            
             DatePicker(
                 "选择日期",
                 selection: $selectedDate,
@@ -303,16 +299,8 @@ private struct DatePickerSheet: View {
             .datePickerStyle(.graphical)
             .environment(\.locale, Locale(identifier: "zh_CN"))
             .padding()
-            .navigationTitle("选择日期")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-            }
         }
+        .background(Color(.systemBackground))
         .presentationDetents([.medium])
     }
 }
@@ -331,7 +319,17 @@ private struct TimePickerSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "选择时间",
+                confirmText: "完成"
+            ) {
+                // 合并日期和时间
+                selectedDate = Date.combine(date: selectedDate, time: selectedTime)
+                dismiss()
+            }
+            
             VStack(spacing: Spacing.l) {
                 DatePicker(
                     "选择时间",
@@ -345,24 +343,8 @@ private struct TimePickerSheet: View {
                 Spacer()
             }
             .padding(.top, Spacing.l)
-            .navigationTitle("选择时间")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        // 合并日期和时间
-                        selectedDate = Date.combine(date: selectedDate, time: selectedTime)
-                        dismiss()
-                    }
-                }
-            }
         }
+        .background(Color(.systemBackground))
         .presentationDetents([.medium])
     }
 }
@@ -376,7 +358,15 @@ private struct NoteInputSheet: View {
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "添加备注",
+                confirmText: "完成"
+            ) {
+                dismiss()
+            }
+            
             VStack(spacing: Spacing.m) {
                 TextEditor(text: $note)
                     .frame(minHeight: 150)
@@ -390,24 +380,10 @@ private struct NoteInputSheet: View {
                 
                 Spacer()
             }
-            .navigationTitle("添加备注")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                isFocused = true
-            }
+        }
+        .background(Color(.systemBackground))
+        .onAppear {
+            isFocused = true
         }
         .presentationDetents([.medium, .large])
     }

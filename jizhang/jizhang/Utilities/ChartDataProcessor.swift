@@ -247,4 +247,335 @@ struct ChartDataProcessor {
         
         return sampledData
     }
+    
+    // MARK: - Period Comparison (对比分析)
+    
+    /// 计算周期对比数据
+    static func calculatePeriodComparison(
+        currentTransactions: [Transaction],
+        previousTransactions: [Transaction],
+        type: ReportType
+    ) -> PeriodComparisonData {
+        let currentAmount = sumAmount(transactions: currentTransactions, type: type)
+        let previousAmount = sumAmount(transactions: previousTransactions, type: type)
+        
+        let difference = currentAmount - previousAmount
+        let changeRate: Double = previousAmount > 0 
+            ? Double(truncating: (difference / previousAmount) as NSNumber) * 100 
+            : (currentAmount > 0 ? 100 : 0)
+        
+        return PeriodComparisonData(
+            currentAmount: currentAmount,
+            previousAmount: previousAmount,
+            difference: difference,
+            changeRate: changeRate
+        )
+    }
+    
+    /// 计算分类对比数据
+    static func calculateCategoryComparison(
+        currentTransactions: [Transaction],
+        previousTransactions: [Transaction],
+        type: ReportType
+    ) -> [CategoryComparisonData] {
+        let currentByCategory = groupAmountByCategory(transactions: currentTransactions, type: type)
+        let previousByCategory = groupAmountByCategory(transactions: previousTransactions, type: type)
+        
+        // 合并所有分类
+        var allCategoryIds = Set(currentByCategory.keys)
+        allCategoryIds.formUnion(previousByCategory.keys)
+        
+        var result: [CategoryComparisonData] = []
+        
+        for categoryId in allCategoryIds {
+            let current = currentByCategory[categoryId]
+            let previous = previousByCategory[categoryId]
+            
+            let currentAmount = current?.amount ?? 0
+            let previousAmount = previous?.amount ?? 0
+            let difference = currentAmount - previousAmount
+            
+            let changeRate: Double = previousAmount > 0
+                ? Double(truncating: (difference / previousAmount) as NSNumber) * 100
+                : (currentAmount > 0 ? 100 : 0)
+            
+            result.append(CategoryComparisonData(
+                categoryId: categoryId,
+                categoryName: current?.name ?? previous?.name ?? "未知",
+                colorHex: current?.color ?? previous?.color ?? "#BDBDBD",
+                currentAmount: currentAmount,
+                previousAmount: previousAmount,
+                difference: difference,
+                changeRate: changeRate
+            ))
+        }
+        
+        // 按当前金额排序
+        return result.sorted { $0.currentAmount > $1.currentAmount }
+    }
+    
+    /// 按账户统计收支
+    /// - Parameters:
+    ///   - transactions: 选定时间范围内的交易
+    ///   - accounts: 所有账户
+    ///   - allTransactions: 所有交易（用于计算历史余额）
+    ///   - endDate: 时间范围结束日期（用于计算期末余额）
+    static func calculateAccountStatistics(
+        transactions: [Transaction],
+        accounts: [Account],
+        allTransactions: [Transaction],
+        endDate: Date
+    ) -> [AccountStatisticsData] {
+        var result: [AccountStatisticsData] = []
+        
+        for account in accounts where !account.isArchived {
+            // 收入：toAccount 是当前账户
+            let incomeTransactions = transactions.filter {
+                $0.type == .income && $0.toAccount?.id == account.id
+            }
+            let income = incomeTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+            
+            // 支出：fromAccount 是当前账户
+            let expenseTransactions = transactions.filter {
+                $0.type == .expense && $0.fromAccount?.id == account.id
+            }
+            let expense = expenseTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+            
+            // 转入该账户（作为接收方）
+            let transferInTransactions = transactions.filter {
+                $0.type == .transfer && $0.toAccount?.id == account.id
+            }
+            let transferIn = transferInTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+            
+            // 转出该账户（作为来源方）
+            let transferOutTransactions = transactions.filter {
+                $0.type == .transfer && $0.fromAccount?.id == account.id
+            }
+            let transferOut = transferOutTransactions.reduce(Decimal(0)) { $0 + $1.amount }
+            
+            // 总交易数
+            let transactionCount = incomeTransactions.count + expenseTransactions.count + 
+                                   transferInTransactions.count + transferOutTransactions.count
+            
+            // 计算期末余额：当前余额减去endDate之后的所有交易影响
+            let periodEndBalance = calculateHistoricalBalance(
+                for: account,
+                at: endDate,
+                currentBalance: account.balance,
+                allTransactions: allTransactions
+            )
+            
+            result.append(AccountStatisticsData(
+                accountId: account.id,
+                accountName: account.name,
+                accountType: account.type,
+                iconName: account.iconName,
+                colorHex: account.colorHex,
+                balance: periodEndBalance,
+                income: income,
+                expense: expense,
+                netFlow: income - expense + transferIn - transferOut,
+                transactionCount: transactionCount
+            ))
+        }
+        
+        return result.sorted { $0.balance > $1.balance }
+    }
+    
+    /// 计算账户在指定日期的历史余额
+    private static func calculateHistoricalBalance(
+        for account: Account,
+        at date: Date,
+        currentBalance: Decimal,
+        allTransactions: [Transaction]
+    ) -> Decimal {
+        // 计算 endDate 后一天的起始时间，以便包含 endDate 当天的所有交易
+        let calendar = Calendar.current
+        let nextDayStart = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))!
+        
+        // 找出指定日期之后的所有影响该账户的交易
+        let futureTransactions = allTransactions.filter { $0.date >= nextDayStart }
+        
+        var historicalBalance = currentBalance
+        
+        for transaction in futureTransactions {
+            switch transaction.type {
+            case .income:
+                // 如果收入记到这个账户，回推时减去
+                if transaction.toAccount?.id == account.id {
+                    historicalBalance -= transaction.amount
+                }
+            case .expense:
+                // 如果从这个账户支出，回推时加回
+                if transaction.fromAccount?.id == account.id {
+                    historicalBalance += transaction.amount
+                }
+            case .transfer:
+                // 转入该账户，回推时减去
+                if transaction.toAccount?.id == account.id {
+                    historicalBalance -= transaction.amount
+                }
+                // 从该账户转出，回推时加回
+                if transaction.fromAccount?.id == account.id {
+                    historicalBalance += transaction.amount
+                }
+            case .adjustment:
+                // 余额调整：直接影响目标账户
+                if transaction.toAccount?.id == account.id {
+                    historicalBalance -= transaction.amount
+                }
+            }
+        }
+        
+        return historicalBalance
+    }
+    
+    /// 计算月度净资产趋势（用于长期趋势图）
+    static func calculateMonthlyAssetTrend(
+        accounts: [Account],
+        transactions: [Transaction],
+        months: Int = 6
+    ) -> [MonthlyAssetData] {
+        let calendar = Calendar.current
+        let now = Date()
+        var result: [MonthlyAssetData] = []
+        
+        // 获取当前资产总额
+        let activeAccounts = accounts.filter { !$0.isArchived && !$0.excludeFromTotal }
+        let currentAsset = activeAccounts.reduce(Decimal(0)) { $0 + $1.balance }
+        
+        // 从当前月份往前推算
+        for monthOffset in 0..<months {
+            let targetDate = calendar.date(byAdding: .month, value: -monthOffset, to: now)!
+            let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: targetDate))!
+            let monthEnd = calendar.date(byAdding: DateComponents(month: 1, second: -1), to: monthStart)!
+            
+            // 当前月使用实时资产，历史月需要回推
+            if monthOffset == 0 {
+                result.insert(MonthlyAssetData(
+                    date: monthStart,
+                    totalAsset: currentAsset,
+                    monthLabel: formatMonthLabel(monthStart)
+                ), at: 0)
+            } else {
+                // 获取这个月到现在的所有交易
+                let futureTransactions = transactions.filter { $0.date > monthEnd }
+                
+                // 回推资产：减去未来的收入，加回未来的支出
+                var historicalAsset = currentAsset
+                for transaction in futureTransactions {
+                    if transaction.type == .income {
+                        historicalAsset -= transaction.amount
+                    } else if transaction.type == .expense {
+                        historicalAsset += transaction.amount
+                    }
+                    // 转账不影响总资产
+                }
+                
+                result.insert(MonthlyAssetData(
+                    date: monthStart,
+                    totalAsset: historicalAsset,
+                    monthLabel: formatMonthLabel(monthStart)
+                ), at: 0)
+            }
+        }
+        
+        return result
+    }
+    
+    // MARK: - Private Helpers
+    
+    private static func sumAmount(transactions: [Transaction], type: ReportType) -> Decimal {
+        transactions
+            .filter { type == .income ? $0.type == .income : $0.type == .expense }
+            .reduce(Decimal(0)) { $0 + $1.amount }
+    }
+    
+    private static func groupAmountByCategory(
+        transactions: [Transaction],
+        type: ReportType
+    ) -> [UUID: (name: String, amount: Decimal, color: String)] {
+        var result: [UUID: (name: String, amount: Decimal, color: String)] = [:]
+        
+        let filtered = transactions.filter {
+            type == .income ? $0.type == .income : $0.type == .expense
+        }
+        
+        for transaction in filtered {
+            guard let category = transaction.category else { continue }
+            let parentCategory = category.parent ?? category
+            let categoryId = parentCategory.id
+            
+            if var existing = result[categoryId] {
+                existing.amount += transaction.amount
+                result[categoryId] = existing
+            } else {
+                result[categoryId] = (
+                    name: parentCategory.name,
+                    amount: transaction.amount,
+                    color: parentCategory.colorHex
+                )
+            }
+        }
+        
+        return result
+    }
+    
+    private static func formatMonthLabel(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "M月"
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Comparison Data Models
+
+/// 周期对比数据
+struct PeriodComparisonData {
+    let currentAmount: Decimal
+    let previousAmount: Decimal
+    let difference: Decimal
+    let changeRate: Double  // 百分比变化
+    
+    var isIncrease: Bool { difference > 0 }
+    var isDecrease: Bool { difference < 0 }
+}
+
+/// 分类对比数据
+struct CategoryComparisonData: Identifiable {
+    let id = UUID()
+    let categoryId: UUID
+    let categoryName: String
+    let colorHex: String
+    let currentAmount: Decimal
+    let previousAmount: Decimal
+    let difference: Decimal
+    let changeRate: Double
+    
+    var isIncrease: Bool { difference > 0 }
+    var isDecrease: Bool { difference < 0 }
+}
+
+/// 账户统计数据
+struct AccountStatisticsData: Identifiable {
+    let id = UUID()
+    let accountId: UUID
+    let accountName: String
+    let accountType: AccountType
+    let iconName: String
+    let colorHex: String
+    let balance: Decimal
+    let income: Decimal
+    let expense: Decimal
+    let netFlow: Decimal
+    let transactionCount: Int
+}
+
+/// 月度资产数据
+struct MonthlyAssetData: Identifiable {
+    let id = UUID()
+    let date: Date
+    let totalAsset: Decimal
+    let monthLabel: String
 }

@@ -137,7 +137,16 @@ struct CustomDateRangeSheet: View {
     let onConfirm: () -> Void
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "自定义时间范围",
+                confirmText: "确定",
+                confirmDisabled: endDate < startDate
+            ) {
+                onConfirm()
+            }
+            
             Form {
                 Section {
                     DatePicker("开始日期", selection: $startDate, displayedComponents: .date)
@@ -146,23 +155,8 @@ struct CustomDateRangeSheet: View {
                         .environment(\.locale, Locale(identifier: "zh_CN"))
                 }
             }
-            .navigationTitle("自定义时间范围")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("确定") {
-                        onConfirm()
-                    }
-                    .disabled(endDate < startDate)
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
         .presentationDetents([.medium])
     }
 }

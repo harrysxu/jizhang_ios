@@ -38,7 +38,16 @@ struct BudgetDetailView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "预算详情",
+                confirmText: "完成",
+                confirmDisabled: false
+            ) {
+                dismiss()
+            }
+            
             List {
                 budgetInfoSection
                 progressSection  
@@ -46,16 +55,12 @@ struct BudgetDetailView: View {
                 transactionsListSection
                 actionButtonsSection
             }
-            .navigationTitle("预算详情")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                toolbarButton
-            }
-            .alert("删除预算", isPresented: $showDeleteAlert) {
-                alertButtons
-            } message: {
-                Text("确定要删除这个预算吗?此操作无法撤销。")
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .alert("删除预算", isPresented: $showDeleteAlert) {
+            alertButtons
+        } message: {
+            Text("确定要删除这个预算吗?此操作无法撤销。")
         }
     }
     
@@ -250,15 +255,6 @@ struct BudgetDetailView: View {
                     Image(systemName: "trash")
                     Text("删除预算")
                 }
-            }
-        }
-    }
-    
-    @ToolbarContentBuilder
-    private var toolbarButton: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button("完成") {
-                dismiss()
             }
         }
     }

@@ -32,7 +32,10 @@ struct CategoryPickerSheet: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: type == .income ? "选择收入分类" : "选择支出分类")
+            
             List {
                 if filteredCategories.isEmpty {
                     ContentUnavailableView(
@@ -88,16 +91,8 @@ struct CategoryPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle(type == .income ? "选择收入分类" : "选择支出分类")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 

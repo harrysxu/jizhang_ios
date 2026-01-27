@@ -24,7 +24,10 @@ struct LedgerPickerSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "选择账本")
+            
             List {
                 // 账本列表
                 Section {
@@ -52,17 +55,13 @@ struct LedgerPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("选择账本")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                toolbarContent
-            }
-            .sheet(isPresented: $showLedgerForm) {
-                LedgerFormSheet(ledger: nil, viewModel: viewModel)
-            }
-            .sheet(isPresented: $showLedgerManagement) {
-                LedgerManagementView()
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .sheet(isPresented: $showLedgerForm) {
+            LedgerFormSheet(ledger: nil, viewModel: viewModel)
+        }
+        .sheet(isPresented: $showLedgerManagement) {
+            LedgerManagementView()
         }
     }
     
@@ -146,15 +145,6 @@ struct LedgerPickerSheet: View {
                 .foregroundStyle(.white)
         }
         .shadow(color: Color(hex: ledger.colorHex).opacity(0.3), radius: 4, y: 2)
-    }
-    
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button("取消") {
-                dismiss()
-            }
-        }
     }
 }
 

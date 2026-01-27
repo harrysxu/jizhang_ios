@@ -114,78 +114,70 @@ struct MonthYearPickerSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // 年份选择器
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("年份")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.leading, 4)
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(yearRange, id: \.self) { year in
-                                YearChip(
-                                    year: year,
-                                    isSelected: tempYear == year
-                                ) {
-                                    withAnimation {
-                                        tempYear = year
-                                    }
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "选择月份",
+                confirmText: "确定"
+            ) {
+                applySelection()
+            }
+            
+            // 年份选择器
+            VStack(alignment: .leading, spacing: 8) {
+                Text("年份")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(yearRange, id: \.self) { year in
+                            YearChip(
+                                year: year,
+                                isSelected: tempYear == year
+                            ) {
+                                withAnimation {
+                                    tempYear = year
                                 }
                             }
                         }
-                        .padding(.horizontal)
                     }
-                    .frame(height: 60)
+                    .padding(.horizontal)
                 }
-                .padding(.top)
+                .frame(height: 60)
+            }
+            .padding(.top)
+            
+            Divider()
+                .padding(.vertical, Spacing.m)
+            
+            // 月份网格
+            VStack(alignment: .leading, spacing: 8) {
+                Text("月份")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
                 
-                Divider()
-                    .padding(.vertical, Spacing.m)
-                
-                // 月份网格
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("月份")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.leading, 4)
-                    
-                    LazyVGrid(
-                        columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4),
-                        spacing: 12
-                    ) {
-                        ForEach(1...12, id: \.self) { month in
-                            MonthChip(
-                                month: month,
-                                isSelected: tempMonth == month
-                            ) {
-                                tempMonth = month
-                            }
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4),
+                    spacing: 12
+                ) {
+                    ForEach(1...12, id: \.self) { month in
+                        MonthChip(
+                            month: month,
+                            isSelected: tempMonth == month
+                        ) {
+                            tempMonth = month
                         }
                     }
                 }
-                .padding(.horizontal)
-                
-                Spacer()
             }
-            .navigationTitle("选择月份")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("确定") {
-                        applySelection()
-                    }
-                }
-            }
+            .padding(.horizontal)
+            
+            Spacer()
         }
+        .background(Color(.systemGroupedBackground))
         .presentationDetents([.medium])
     }
     

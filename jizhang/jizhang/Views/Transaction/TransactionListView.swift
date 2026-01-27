@@ -97,6 +97,27 @@ struct TransactionListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                // 自定义导航栏 - 无胶囊背景
+                CustomNavigationBar(title: nil) {
+                    Button {
+                        showExportOptions = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                
+                // 搜索框
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("搜索流水...", text: $searchText)
+                }
+                .padding(Spacing.s)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+                .padding(.horizontal, Spacing.m)
+                .padding(.bottom, Spacing.s)
+                
                 // 月份选择器 (参考UI样式: 2026-01格式)
                 MonthYearPicker(selectedDate: $selectedMonth)
                     .padding(.vertical, Spacing.s)
@@ -232,25 +253,10 @@ struct TransactionListView: View {
         }
     }
     .listStyle(.plain)
+    .contentMargins(.bottom, Layout.tabBarBottomPadding, for: .scrollContent)
 }
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "搜索流水...")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    LedgerSwitcher(displayMode: .fullName)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showExportOptions = true
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showExportOptions) {
                 exportOptionsSheet
             }
@@ -263,7 +269,10 @@ struct TransactionListView: View {
     // MARK: - Export Options Sheet
     
     private var exportOptionsSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "导出流水")
+            
             List {
                 Section {
                     Button {
@@ -312,23 +321,25 @@ struct TransactionListView: View {
                     Text("导出选项")
                 }
             }
-            .navigationTitle("导出流水")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        showExportOptions = false
-                    }
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
         .presentationDetents([.medium])
     }
     
     // MARK: - Date Range Picker Sheet
     
     private var dateRangePickerSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "选择日期",
+                confirmText: "导出",
+                confirmDisabled: countTransactionsInRange() == 0
+            ) {
+                showDateRangePicker = false
+                exportByDateRange()
+            }
+            
             Form {
                 Section {
                     DatePicker("开始日期", selection: $exportStartDate, displayedComponents: .date)
@@ -350,24 +361,8 @@ struct TransactionListView: View {
                 }
             }
             .environment(\.locale, Locale(identifier: "zh_CN"))
-            .navigationTitle("选择日期")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        showDateRangePicker = false
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("导出") {
-                        showDateRangePicker = false
-                        exportByDateRange()
-                    }
-                    .disabled(countTransactionsInRange() == 0)
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
         .presentationDetents([.medium])
     }
     

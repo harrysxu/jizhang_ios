@@ -23,7 +23,20 @@ struct LedgerOverviewView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            FlexibleSheetNavigationBar(
+                title: "账本详情",
+                leftText: "关闭",
+                rightText: "编辑",
+                leftAction: {
+                    dismiss()
+                },
+                rightAction: {
+                    showEditLedger = true
+                }
+            )
+            
             ScrollView {
                 VStack(spacing: 20) {
                     // 账本基本信息卡片
@@ -37,29 +50,13 @@ struct LedgerOverviewView: View {
                 }
                 .padding()
             }
-            .navigationTitle("账本详情")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showEditLedger = true
-                    } label: {
-                        Text("编辑")
-                    }
-                }
-            }
-            .sheet(isPresented: $showEditLedger) {
-                LedgerFormSheet(ledger: ledger, viewModel: viewModel)
-            }
-            .sheet(isPresented: $showExportOptions) {
-                exportOptionsSheet
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .sheet(isPresented: $showEditLedger) {
+            LedgerFormSheet(ledger: ledger, viewModel: viewModel)
+        }
+        .sheet(isPresented: $showExportOptions) {
+            exportOptionsSheet
         }
     }
     
@@ -204,7 +201,10 @@ struct LedgerOverviewView: View {
     }
     
     private var exportOptionsSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "导出选项")
+            
             List {
                 Button {
                     exportAsCSV()
@@ -218,16 +218,8 @@ struct LedgerOverviewView: View {
                     Label("导出为JSON", systemImage: "doc.badge.gearshape")
                 }
             }
-            .navigationTitle("导出选项")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("取消") {
-                        showExportOptions = false
-                    }
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
     }
     
     // MARK: - Actions

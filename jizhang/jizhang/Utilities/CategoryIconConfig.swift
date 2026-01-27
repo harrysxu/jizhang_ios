@@ -161,7 +161,7 @@ struct CategoryIconConfig {
         "sun": "sun.max.fill",
         "moon": "moon.fill",
         "coffee": "cup.and.saucer.fill",
-        "orangeSlice": "leaf.fill",
+        "orangeSlice": "circle.hexagongrid.fill",  // SF Symbol 中没有橙子图标，使用此图标作为后备
         
         // 购物类
         "shoppingBag": "bag.fill",

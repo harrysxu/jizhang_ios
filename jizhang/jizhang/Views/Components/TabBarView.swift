@@ -40,6 +40,8 @@ struct TabBarView: View {
         .sheet(isPresented: $showAddTransaction) {
             AddTransactionSheet()
         }
+        // 账本抽屉 - 放在最外层，覆盖整个界面包括 TabBar
+        .ledgerDrawer()
     }
 }
 

@@ -25,6 +25,7 @@ struct CategoryManagementView: View {
     @State private var showDeleteAlert = false
     @State private var deleteErrorMessage = ""
     @State private var showDeleteErrorAlert = false
+    @State private var expandedCategories: Set<UUID> = []
     
     // MARK: - Computed Properties
     
@@ -44,6 +45,16 @@ struct CategoryManagementView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "分类管理") {
+                Button {
+                    showAddCategory = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 18))
+                }
+            }
+            
             // Tab切换
             Picker("分类类型", selection: $selectedTab) {
                 Text("支出分类").tag(CategoryType.expense)
@@ -63,88 +74,59 @@ struct CategoryManagementView: View {
                 List {
                     ForEach(filteredParentCategories) { parentCategory in
                         if parentCategory.children.isEmpty {
-                            // 无子分类 - 支持滑动删除和编辑
-                            CategoryRowButton(category: parentCategory) {
-                                categoryToEdit = parentCategory
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
+                            // 无子分类
+                            CategoryRowView(
+                                category: parentCategory,
+                                onEdit: { categoryToEdit = parentCategory },
+                                onDelete: {
                                     categoryToDelete = parentCategory
                                     showDeleteAlert = true
-                                } label: {
-                                    Label("删除", systemImage: "trash")
                                 }
-                                
-                                Button {
-                                    categoryToEdit = parentCategory
-                                } label: {
-                                    Label("编辑", systemImage: "pencil")
-                                }
-                                .tint(.primaryBlue)
-                            }
+                            )
                         } else {
-                            // 有子分类,使用DisclosureGroup
-                            // 父分类也支持左滑编辑和删除
-                            DisclosureGroup {
-                                ForEach(parentCategory.children.sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
-                                    CategoryRowButton(category: childCategory, isChild: true) {
-                                        categoryToEdit = childCategory
+                            // 有子分类 - 使用自定义展开机制
+                            CategoryRowView(
+                                category: parentCategory,
+                                childCount: parentCategory.children.count,
+                                isExpanded: expandedCategories.contains(parentCategory.id),
+                                onTap: {
+                                    // 点击切换展开状态
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        if expandedCategories.contains(parentCategory.id) {
+                                            expandedCategories.remove(parentCategory.id)
+                                        } else {
+                                            expandedCategories.insert(parentCategory.id)
+                                        }
                                     }
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                        Button(role: .destructive) {
+                                },
+                                onEdit: { categoryToEdit = parentCategory },
+                                onDelete: {
+                                    categoryToDelete = parentCategory
+                                    showDeleteAlert = true
+                                }
+                            )
+                            
+                            // 子分类列表 - 展开时显示
+                            if expandedCategories.contains(parentCategory.id) {
+                                ForEach(parentCategory.children.sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
+                                    CategoryRowView(
+                                        category: childCategory,
+                                        isChild: true,
+                                        onEdit: { categoryToEdit = childCategory },
+                                        onDelete: {
                                             categoryToDelete = childCategory
                                             showDeleteAlert = true
-                                        } label: {
-                                            Label("删除", systemImage: "trash")
                                         }
-                                        
-                                        Button {
-                                            categoryToEdit = childCategory
-                                        } label: {
-                                            Label("编辑", systemImage: "pencil")
-                                        }
-                                        .tint(.primaryBlue)
-                                    }
+                                    )
                                 }
-                            } label: {
-                                CategoryRowLabel(category: parentCategory, childCount: parentCategory.children.count)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    categoryToDelete = parentCategory
-                                    showDeleteAlert = true
-                                } label: {
-                                    Label("删除", systemImage: "trash")
-                                }
-                                
-                                Button {
-                                    categoryToEdit = parentCategory
-                                } label: {
-                                    Label("编辑", systemImage: "pencil")
-                                }
-                                .tint(.primaryBlue)
                             }
                         }
                     }
                 }
             }
         }
-        .navigationTitle("分类管理")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                LedgerSwitcher(displayMode: .fullName)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showAddCategory = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-        }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .sheet(isPresented: $showAddCategory) {
             CategoryFormSheet(category: nil, defaultType: selectedTab)
         }
@@ -220,79 +202,89 @@ struct CategoryManagementView: View {
     }
 }
 
-// MARK: - Category Row Button
+// MARK: - Category Row View
 
-private struct CategoryRowButton: View {
+private struct CategoryRowView: View {
     let category: Category
     var isChild: Bool = false
-    let action: () -> Void
+    var childCount: Int = 0
+    var isExpanded: Bool = false
+    var onTap: (() -> Void)? = nil
+    let onEdit: () -> Void
+    let onDelete: () -> Void
     
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: Spacing.m) {
-                if isChild {
-                    Spacer()
-                        .frame(width: 20)
-                    
-                    // 子分类图标 (使用 PhosphorIcon)
-                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
-                        .frame(width: 20, height: 20)
-                        .foregroundStyle(Color(hex: category.colorHex))
-                        .frame(width: 32, height: 32)
-                } else {
-                    // 父分类图标 (使用 PhosphorIcon)
-                    PhosphorIcon.icon(named: category.iconName, weight: .fill)
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Color(hex: category.colorHex))
-                        .frame(width: 40, height: 40)
-                }
-                
-                // 名称
-                Text(category.name)
-                    .font(isChild ? .subheadline : .body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                // 交易数量
-                if !category.transactions.isEmpty {
-                    Text("\(category.transactions.count)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .monospacedDigit()
-                }
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Category Row Label
-
-private struct CategoryRowLabel: View {
-    let category: Category
-    let childCount: Int
+    private var hasChildren: Bool { childCount > 0 }
     
     var body: some View {
         HStack(spacing: Spacing.m) {
-            // 图标 (使用 PhosphorIcon)
-            PhosphorIcon.icon(named: category.iconName, weight: .fill)
-                .frame(width: 24, height: 24)
-                .foregroundStyle(Color(hex: category.colorHex))
-                .frame(width: 40, height: 40)
+            // 左侧内容区域（可点击）
+            Button {
+                onTap?()
+            } label: {
+                HStack(spacing: Spacing.m) {
+                    if isChild {
+                        Spacer()
+                            .frame(width: 20)
+                        
+                        // 子分类图标
+                        PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(Color(hex: category.colorHex))
+                            .frame(width: 32, height: 32)
+                    } else {
+                        // 父分类图标
+                        PhosphorIcon.icon(named: category.iconName, weight: .fill)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(Color(hex: category.colorHex))
+                            .frame(width: 40, height: 40)
+                    }
+                    
+                    // 名称
+                    Text(category.name)
+                        .font(isChild ? .subheadline : .body)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             
-            // 名称
-            Text(category.name)
-                .font(.body)
+            // 操作按钮（在数量和箭头左侧）
+            HStack(spacing: Spacing.s) {
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16))
+                        .foregroundColor(.primaryBlue)
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            }
             
-            Spacer()
-            
-            // 子分类数量
-            Text("\(childCount)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+            // 子分类数量或交易数量 + 箭头（在最右侧）
+            if hasChildren {
+                Text("\(childCount)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+                
+                // 展开/收起箭头
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            } else if !category.transactions.isEmpty {
+                Text("\(category.transactions.count)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+            }
         }
     }
 }

@@ -42,26 +42,27 @@ struct TestDataGeneratorView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                // 目标账本选择
-                targetLedgerSection
+            VStack(spacing: 0) {
+                // 自定义导航栏
+                SubPageNavigationBar(title: "填充测试数据", backButtonText: "取消") {
+                    EmptyView()
+                }
+                .opacity(isGenerating ? 0.5 : 1)
+                .allowsHitTesting(!isGenerating)
                 
-                // 生成配置
-                configurationSection
-                
-                // 生成按钮
-                generateButtonSection
-            }
-            .navigationTitle("填充测试数据")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                    .disabled(isGenerating)
+                Form {
+                    // 目标账本选择
+                    targetLedgerSection
+                    
+                    // 生成配置
+                    configurationSection
+                    
+                    // 生成按钮
+                    generateButtonSection
                 }
             }
+            .background(Color(.systemGroupedBackground))
+            .navigationBarHidden(true)
             .disabled(isGenerating)
             .overlay {
                 if isGenerating {

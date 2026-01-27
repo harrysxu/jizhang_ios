@@ -59,68 +59,61 @@ struct CalculatorKeyboard: View {
     ]
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // 金额显示
-                AmountDisplay(amount: $amount)
-                    .padding(.vertical, Spacing.l)
-                
-                Divider()
-                
-                // 计算器按钮区域
-                VStack(spacing: Spacing.s) {
-                    ForEach(0..<buttons.count, id: \.self) { rowIndex in
-                        HStack(spacing: Spacing.s) {
-                            ForEach(buttons[rowIndex], id: \.self) { button in
-                                CalculatorButtonView(
-                                    button: button,
-                                    amount: $amount,
-                                    hasDecimalPoint: $hasDecimalPoint,
-                                    decimalPlaces: $decimalPlaces,
-                                    previousAmount: $previousAmount,
-                                    currentOperation: $currentOperation
-                                )
-                            }
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "输入金额")
+            
+            // 金额显示
+            AmountDisplay(amount: $amount)
+                .padding(.vertical, Spacing.l)
+            
+            Divider()
+            
+            // 计算器按钮区域
+            VStack(spacing: Spacing.s) {
+                ForEach(0..<buttons.count, id: \.self) { rowIndex in
+                    HStack(spacing: Spacing.s) {
+                        ForEach(buttons[rowIndex], id: \.self) { button in
+                            CalculatorButtonView(
+                                button: button,
+                                amount: $amount,
+                                hasDecimalPoint: $hasDecimalPoint,
+                                decimalPlaces: $decimalPlaces,
+                                previousAmount: $previousAmount,
+                                currentOperation: $currentOperation
+                            )
                         }
                     }
-                    
-                    // 确认按钮 (参考UI标准: 红色保存按钮)
-                    Button(action: {
-                        HapticManager.saveSuccess()
-                        onConfirm()
-                        dismiss()
-                    }) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20))
-                            Text("完成")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(
-                            RoundedRectangle(cornerRadius: CornerRadius.medium)
-                                .fill(isValid ? Color.expenseRed : Color.gray.opacity(0.5))
-                        )
-                    }
-                    .disabled(!isValid)
-                    .buttonStyle(ScaleButtonStyle())
                 }
-                .padding(Spacing.m)
-            }
-            .navigationTitle("输入金额")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
+                
+                // 确认按钮 (参考UI标准: 红色保存按钮)
+                Button(action: {
+                    HapticManager.saveSuccess()
+                    onConfirm()
+                    dismiss()
+                }) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                        Text("完成")
+                            .font(.headline)
                     }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.medium)
+                            .fill(isValid ? Color.expenseRed : Color.gray.opacity(0.5))
+                    )
                 }
+                .disabled(!isValid)
+                .buttonStyle(ScaleButtonStyle())
             }
-            .onChange(of: amount) { oldValue, newValue in
-                updateDecimalState()
-            }
+            .padding(Spacing.m)
+        }
+        .background(Color(.systemBackground))
+        .onChange(of: amount) { oldValue, newValue in
+            updateDecimalState()
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

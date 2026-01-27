@@ -34,43 +34,39 @@ struct ResetLedgersView: View {
     @State private var resetCount = 0
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // 警告横幅
-                warningBanner
-                
-                // 说明卡片
-                explanationCard
-                
-                // 账本列表（使用自定义列表而非 List）
-                ledgerListContent
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            // 底部重置按钮 - 固定在底部
-            resetButtonBar
-        }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("重置账本")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
-                .disabled(isResetting)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SubPageNavigationBar(title: "重置账本", backButtonText: "取消") {
                 if !selectedLedgerIDs.isEmpty {
                     Button("取消选择") {
                         selectedLedgerIDs.removeAll()
                     }
+                    .font(.system(size: 15))
                     .disabled(isResetting)
                 }
             }
+            .opacity(isResetting ? 0.5 : 1)
+            .allowsHitTesting(!isResetting)
+            
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 警告横幅
+                    warningBanner
+                    
+                    // 说明卡片
+                    explanationCard
+                    
+                    // 账本列表（使用自定义列表而非 List）
+                    ledgerListContent
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                // 底部重置按钮 - 固定在底部
+                resetButtonBar
+            }
         }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
         .disabled(isResetting)
         .onAppear {
             hideTabBar.wrappedValue = true
@@ -349,7 +345,10 @@ struct ResetLedgersView: View {
     // MARK: - Final Confirmation Sheet
     
     private var finalConfirmationSheet: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCloseNavigationBar(title: "确认重置", closeText: "取消")
+            
             VStack(spacing: 24) {
                 // 警告图标
                 Image(systemName: "arrow.counterclockwise.circle.fill")
@@ -429,17 +428,8 @@ struct ResetLedgersView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("确认重置")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
-                        confirmationInput = ""
-                        showFinalConfirmation = false
-                    }
-                }
-            }
         }
+        .background(Color(.systemBackground))
         .presentationDetents([.large])
     }
     

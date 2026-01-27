@@ -19,6 +19,7 @@ struct HomeView: View {
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @Query private var ledgers: [Ledger]
     
+    
     // MARK: - Computed Properties
     
     /// 当前账本的交易记录（已过滤）
@@ -59,37 +60,36 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Spacing.m) {
-                    // 净资产卡片 (毛玻璃效果)
-                    NetAssetCard(
-                        totalAssets: totalAssets,
-                        monthIncome: monthIncome,
-                        monthExpense: monthExpense
-                    )
-                    .padding(.top, Spacing.m)
-                    
-                    // 今日支出卡片
-                    TodayExpenseCard(todayExpense: todayExpense)
-                    
-                    // 最近7日支出趋势图
-                    SevenDayExpenseChart(
-                        data: SevenDayExpenseChart.generateData(from: currentLedgerTransactions)
-                    )
-                    
-                    // 流水列表
-                    TransactionListSection(transactions: recentTransactions)
+            VStack(spacing: 0) {
+                // 自定义导航栏 - 无胶囊背景
+                CustomNavigationBar(title: nil) {
+                    EmptyView()
                 }
-                .padding(.bottom, 80) // 为底部TabBar留出空间
-            }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    LedgerSwitcher(displayMode: .fullName)
-                        .fixedSize(horizontal: true, vertical: false)
+                
+                ScrollView {
+                    VStack(spacing: Spacing.m) {
+                        // 净资产卡片 (毛玻璃效果)
+                        NetAssetCard(
+                            totalAssets: totalAssets,
+                            monthIncome: monthIncome,
+                            monthExpense: monthExpense
+                        )
+                        
+                        // 今日支出卡片
+                        TodayExpenseCard(todayExpense: todayExpense)
+                        
+                        // 最近7日支出趋势图
+                        SevenDayExpenseChart(
+                            data: SevenDayExpenseChart.generateData(from: currentLedgerTransactions)
+                        )
+                        
+                        // 流水列表
+                        TransactionListSection(transactions: recentTransactions)
+                    }
+                    .padding(.bottom, Layout.tabBarBottomPadding) // 为底部TabBar留出空间
                 }
             }
+            .navigationBarHidden(true)
             .onAppear {
                 // 仅在没有账本数据时初始化
                 if ledgers.isEmpty {

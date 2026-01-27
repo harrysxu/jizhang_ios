@@ -54,7 +54,16 @@ struct BudgetFormSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: title,
+                confirmText: "保存",
+                confirmDisabled: !isValid
+            ) {
+                saveBudget()
+            }
+            
             Form {
                 // 分类选择
                 Section("选择分类") {
@@ -114,30 +123,15 @@ struct BudgetFormSheet: View {
                     Text("启用后,预算周期结束时会将剩余金额结转到下一周期")
                 }
             }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        saveBudget()
-                    }
-                    .disabled(!isValid)
-                }
-            }
-            .alert("错误", isPresented: $showError) {
-                Button("确定", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
-            }
-            .onAppear {
-                loadBudget()
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .alert("错误", isPresented: $showError) {
+            Button("确定", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+        .onAppear {
+            loadBudget()
         }
     }
     

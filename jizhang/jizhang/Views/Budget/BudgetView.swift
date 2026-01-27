@@ -43,19 +43,23 @@ struct BudgetView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                contentView
-            }
-            .navigationTitle("预算管理")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    LedgerSwitcher(displayMode: .fullName)
-                        .fixedSize(horizontal: true, vertical: false)
+            VStack(spacing: 0) {
+                // 自定义导航栏
+                SubPageNavigationBar(title: "预算管理") {
+                    Button {
+                        viewModel.showCreateBudget()
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18))
+                    }
                 }
                 
-                toolbarContent
+                ScrollView {
+                    contentView
+                }
             }
+            .background(Color(.systemGroupedBackground))
+            .navigationBarHidden(true)
             .sheet(isPresented: budgetFormBinding) {
                 budgetFormContent
             }
@@ -118,17 +122,6 @@ struct BudgetView: View {
                     viewModel.showDetails(budget)
                 }
                 .padding(.horizontal, Spacing.m)
-            }
-        }
-    }
-    
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                viewModel.showCreateBudget()
-            } label: {
-                Image(systemName: "plus")
             }
         }
     }

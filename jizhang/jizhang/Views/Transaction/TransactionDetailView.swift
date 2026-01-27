@@ -19,71 +19,65 @@ struct EditTransactionSheet: View {
     @State private var showKeyboard = false
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // 类型切换
-                TransactionTypeSegment(selectedType: $viewModel.type)
-                    .padding(.top, Spacing.m)
-                    .disabled(true) // 编辑时不允许修改类型
-                
-                // 金额显示 - 可点击唤起键盘
-                Button(action: {
-                    showKeyboard = true
-                }) {
-                    AmountDisplay(amount: $viewModel.amount)
-                        .padding(.vertical, Spacing.l)
-                }
-                .buttonStyle(.plain)
-                
-                Divider()
-                    .padding(.vertical, Spacing.s)
-                
-                // 选择区域 - 占据更多空间
-                EditSelectionArea(viewModel: viewModel)
-                    .padding(.horizontal, Spacing.m)
-                
-                Spacer()
-                
-                // 底部确认按钮
-                Button(action: {
-                    Task {
-                        do {
-                            try await updateTransaction()
-                            dismiss()
-                        } catch {
-                            // 错误已在viewModel中处理
-                        }
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                        Text("确认修改")
-                            .font(.headline)
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: CornerRadius.medium)
-                            .fill(viewModel.isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
-                    )
-                }
-                .disabled(!viewModel.isValid)
-                .buttonStyle(ScaleButtonStyle())
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SimpleCancelNavigationBar(title: "编辑交易")
+            
+            // 类型切换
+            TransactionTypeSegment(selectedType: $viewModel.type)
+                .padding(.top, Spacing.m)
+                .disabled(true) // 编辑时不允许修改类型
+            
+            // 金额显示 - 可点击唤起键盘
+            Button(action: {
+                showKeyboard = true
+            }) {
+                AmountDisplay(amount: $viewModel.amount)
+                    .padding(.vertical, Spacing.l)
+            }
+            .buttonStyle(.plain)
+            
+            Divider()
+                .padding(.vertical, Spacing.s)
+            
+            // 选择区域 - 占据更多空间
+            EditSelectionArea(viewModel: viewModel)
                 .padding(.horizontal, Spacing.m)
-                .padding(.bottom, Spacing.m)
-            }
-            .navigationTitle("编辑交易")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+            
+            Spacer()
+            
+            // 底部确认按钮
+            Button(action: {
+                Task {
+                    do {
+                        try await updateTransaction()
                         dismiss()
+                    } catch {
+                        // 错误已在viewModel中处理
                     }
                 }
+            }) {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                    Text("确认修改")
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(
+                    RoundedRectangle(cornerRadius: CornerRadius.medium)
+                        .fill(viewModel.isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
+                )
             }
-            .onAppear {
+            .disabled(!viewModel.isValid)
+            .buttonStyle(ScaleButtonStyle())
+            .padding(.horizontal, Spacing.m)
+            .padding(.bottom, Spacing.m)
+        }
+        .background(Color(.systemBackground))
+        .onAppear {
                 viewModel.configure(modelContext: modelContext, appState: appState)
                 loadTransactionData()
             }
@@ -101,9 +95,8 @@ struct EditTransactionSheet: View {
                     isValid: true
                 )
             }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
     }
     
     private func loadTransactionData() {
@@ -332,7 +325,15 @@ private struct EditNoteInputSheet: View {
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            SheetNavigationBar(
+                title: "编辑备注",
+                confirmText: "完成"
+            ) {
+                dismiss()
+            }
+            
             VStack(spacing: Spacing.m) {
                 TextEditor(text: $note)
                     .frame(minHeight: 150)
@@ -346,24 +347,10 @@ private struct EditNoteInputSheet: View {
                 
                 Spacer()
             }
-            .navigationTitle("编辑备注")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                isFocused = true
-            }
+        }
+        .background(Color(.systemBackground))
+        .onAppear {
+            isFocused = true
         }
         .presentationDetents([.medium, .large])
     }

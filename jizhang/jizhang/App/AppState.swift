@@ -25,11 +25,17 @@ class AppState {
         }
     }
     
+    /// 是否显示账本抽屉
+    var showLedgerDrawer: Bool = false
+    
     /// 是否首次启动
     var isFirstLaunch: Bool = true
     
     /// CloudKit服务
     var cloudKitService: CloudKitService
+    
+    /// 订阅管理器
+    var subscriptionManager: SubscriptionManager
     
     /// ModelContainer (需要支持CloudKit)
     var modelContainer: ModelContainer
@@ -53,6 +59,9 @@ class AppState {
         
         // 初始化CloudKit服务
         cloudKitService = CloudKitService()
+        
+        // 初始化订阅管理器（注意：loadStatusFromCache 需要在所有属性初始化后调用）
+        subscriptionManager = SubscriptionManager()
         
         // 配置SwiftData + CloudKit + App Groups
         let schema = Schema([
@@ -117,6 +126,9 @@ class AppState {
                 fatalError("无法创建ModelContainer: \(error)")
             }
         }
+        
+        // 先从缓存加载订阅状态（快速启动）- 必须在所有属性初始化后调用
+        subscriptionManager.loadStatusFromCache()
         
         // 数据迁移：确保至少有一个默认账本
         Task { @MainActor in

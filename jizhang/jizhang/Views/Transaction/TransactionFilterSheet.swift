@@ -89,7 +89,20 @@ struct TransactionFilterSheet: View {
     @Binding var filter: TransactionFilter
     
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // 自定义导航栏
+            FlexibleSheetNavigationBar(
+                title: "筛选",
+                leftText: "重置",
+                rightText: "完成",
+                leftAction: {
+                    filter = TransactionFilter()
+                },
+                rightAction: {
+                    dismiss()
+                }
+            )
+            
             Form {
                 // 时间范围
                 Section("时间范围") {
@@ -107,23 +120,8 @@ struct TransactionFilterSheet: View {
                     }
                 }
             }
-            .navigationTitle("筛选")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("重置") {
-                        filter = TransactionFilter()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
         }
+        .background(Color(.systemGroupedBackground))
         .presentationDetents([.medium])
     }
 }

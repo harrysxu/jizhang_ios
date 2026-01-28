@@ -140,21 +140,20 @@ struct SubscriptionView: View {
                 
                 Divider()
                 
-                // 基础功能
-                FeatureRow(name: "记账功能", freeAccess: true, premiumAccess: true)
-                FeatureRow(name: "iCloud同步", freeAccess: true, premiumAccess: true)
-                FeatureRow(name: "统计总览", freeAccess: true, premiumAccess: true)
+                // 基础功能 - 免费版支持
+                FeatureRow(name: "基础记账", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "基础统计", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "单个账本", freeValue: "1个", premiumValue: "无限")
+                FeatureRow(name: "记录数量", freeValue: "有限", premiumValue: "无限")
                 
-                // 高级功能
-                FeatureRow(name: "账户管理", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "分类管理", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "预算管理", freeAccess: false, premiumAccess: true)
+                // 高级功能 - 仅Pro支持
+                FeatureRow(name: "iCloud同步", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "账本备份", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "数据导出", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "对比分析", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "趋势分析", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "账户统计", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "删除账本", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "重置账本", freeAccess: false, premiumAccess: true, isLast: true)
+                FeatureRow(name: "完整报表", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "自定义账户", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "自定义分类", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "预算管理", freeAccess: false, premiumAccess: true, isLast: true)
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
@@ -366,8 +365,10 @@ struct SubscriptionView: View {
 
 private struct FeatureRow: View {
     let name: String
-    let freeAccess: Bool
-    let premiumAccess: Bool
+    var freeAccess: Bool? = nil
+    var premiumAccess: Bool? = nil
+    var freeValue: String? = nil
+    var premiumValue: String? = nil
     var isLast: Bool = false
     
     var body: some View {
@@ -377,17 +378,35 @@ private struct FeatureRow: View {
                     .font(.subheadline)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Image(systemName: freeAccess ? "checkmark" : "xmark")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(freeAccess ? .green : .secondary)
-                    .frame(width: 60)
+                // 免费版列
+                if let value = freeValue {
+                    Text(value)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 60)
+                } else if let access = freeAccess {
+                    Image(systemName: access ? "checkmark" : "xmark")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(access ? .green : .secondary)
+                        .frame(width: 60)
+                }
                 
-                Image(systemName: premiumAccess ? "checkmark" : "xmark")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(premiumAccess ? .orange : .secondary)
-                    .frame(width: 60)
+                // 高级版列
+                if let value = premiumValue {
+                    Text(value)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.orange)
+                        .frame(width: 60)
+                } else if let access = premiumAccess {
+                    Image(systemName: access ? "checkmark" : "xmark")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(access ? .orange : .secondary)
+                        .frame(width: 60)
+                }
             }
             .padding(.horizontal, Spacing.m)
             .padding(.vertical, Spacing.s)

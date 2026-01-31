@@ -105,3 +105,17 @@ iOSInjectionProject/
 
 # Build artifacts
 *.build
+
+# Certificates and profiles (if added in future)
+*.p12
+*.cer
+*.mobileprovision
+*.provisionprofile
+
+# Environment files
+.env
+.env.local
+*.xcconfig
+
+# StoreKit configuration
+*.storekit

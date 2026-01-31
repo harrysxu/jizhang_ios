@@ -16,12 +16,17 @@ enum SubscriptionStatus: Equatable {
     case lifetime                       // 买断用户
     
     var isPremium: Bool {
+        // 测试环境默认为高级会员
+        #if DEBUG
+        return true
+        #else
         switch self {
         case .free:
             return false
         case .premium, .lifetime:
             return true
         }
+        #endif
     }
     
     var displayName: String {
@@ -116,13 +121,13 @@ class SubscriptionManager {
     
     // MARK: - Debug Settings
     
-    /// 调试模式：解锁所有功能（用于测试）
-    /// 设置为 true 时，所有付费功能都可以免费使用
-    /// 测试付费限制时请设置为 false
+    /// ⚠️ 环境配置说明：
+    /// - DEBUG 模式（测试环境）：默认为高级会员，所有付费功能均可使用
+    /// - RELEASE 模式（正式环境）：会员系统正常生效，需要购买订阅
+    /// 
+    /// 如需在测试环境中测试付费限制，请将 testSubscriptionSystem 设置为 true
     #if DEBUG
-    static let unlockAllFeatures: Bool = false
-    #else
-    static let unlockAllFeatures: Bool = false
+    static let testSubscriptionSystem: Bool = false  // true = 测试付费限制，false = 默认高级会员
     #endif
     
     // MARK: - Properties
@@ -173,10 +178,14 @@ class SubscriptionManager {
     
     /// 检查是否有权限使用某功能
     func hasAccess(to feature: PremiumFeature) -> Bool {
-        // 调试模式下解锁所有功能
-        if Self.unlockAllFeatures {
+        // 测试环境：默认拥有所有权限（除非开启了付费测试）
+        #if DEBUG
+        if !Self.testSubscriptionSystem {
             return true
         }
+        #endif
+        
+        // 正式环境或测试付费限制时：检查订阅状态
         return subscriptionStatus.isPremium
     }
     

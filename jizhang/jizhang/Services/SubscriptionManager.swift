@@ -49,6 +49,7 @@ enum PremiumFeature: String, CaseIterable {
     case comparisonReport = "对比分析"
     case trendReport = "趋势分析"
     case accountStatistics = "账户统计"
+    case cloudSync = "iCloud同步"
     
     var description: String {
         switch self {
@@ -74,6 +75,8 @@ enum PremiumFeature: String, CaseIterable {
             return "净资产趋势分析"
         case .accountStatistics:
             return "账户收支统计"
+        case .cloudSync:
+            return "多设备同步，数据云端备份"
         }
     }
     
@@ -101,6 +104,8 @@ enum PremiumFeature: String, CaseIterable {
             return "chart.line.uptrend.xyaxis"
         case .accountStatistics:
             return "building.columns"
+        case .cloudSync:
+            return "icloud"
         }
     }
 }
@@ -113,9 +118,9 @@ class SubscriptionManager {
     
     /// 调试模式：解锁所有功能（用于测试）
     /// 设置为 true 时，所有付费功能都可以免费使用
-    /// 发布前请设置为 false
+    /// 测试付费限制时请设置为 false
     #if DEBUG
-    static let unlockAllFeatures: Bool = true
+    static let unlockAllFeatures: Bool = false
     #else
     static let unlockAllFeatures: Bool = false
     #endif
@@ -341,11 +346,12 @@ class SubscriptionManager {
     private func listenForTransactions() -> Task<Void, Error> {
         return Task.detached { [weak self] in
             for await result in StoreKit.Transaction.updates {
+                guard let self = self else { continue }
                 do {
-                    let transaction = try self?.checkVerified(result)
+                    let transaction = try await self.checkVerifiedInBackground(result)
                     
                     // 更新订阅状态
-                    await self?.updateSubscriptionStatus()
+                    await self.updateSubscriptionStatus()
                     
                     // 完成交易
                     await transaction?.finish()
@@ -354,6 +360,16 @@ class SubscriptionManager {
                     continue
                 }
             }
+        }
+    }
+    
+    /// 验证交易（后台线程版本）
+    private func checkVerifiedInBackground(_ result: VerificationResult<StoreKit.Transaction>) async throws -> StoreKit.Transaction? {
+        switch result {
+        case .unverified:
+            throw StoreError.failedVerification
+        case .verified(let safe):
+            return safe
         }
     }
     
@@ -407,6 +423,54 @@ class SubscriptionManager {
             subscriptionStatus = .free
         }
     }
+    
+    // MARK: - Debug Methods
+    
+    #if DEBUG
+    /// 清除本地缓存的订阅状态（用于测试）
+    /// 注意：这只会清除本地缓存，不会删除App Store的购买记录
+    /// 要重新测试购买流程，需要在沙盒测试环境中删除测试账号的订阅
+    func clearLocalSubscriptionCache() {
+        let defaults = UserDefaults(suiteName: AppConstants.appGroupIdentifier)
+        defaults?.removeObject(forKey: "subscriptionStatus")
+        defaults?.removeObject(forKey: "subscriptionExpiry")
+        subscriptionStatus = .free
+        print("✅ 已清除本地订阅缓存")
+    }
+    
+    /// 打印当前订阅状态的详细信息（用于调试）
+    func printSubscriptionDetails() async {
+        print("\n=== 订阅状态详情 ===")
+        print("当前状态: \(subscriptionStatus)")
+        
+        print("\n当前权益列表:")
+        for await result in StoreKit.Transaction.currentEntitlements {
+            do {
+                let transaction = try checkVerified(result)
+                print("- 产品ID: \(transaction.productID)")
+                print("  购买日期: \(transaction.purchaseDate)")
+                if let expirationDate = transaction.expirationDate {
+                    print("  过期日期: \(expirationDate)")
+                    print("  是否已过期: \(expirationDate <= Date())")
+                } else {
+                    print("  过期日期: 无（买断产品）")
+                }
+                print("  交易ID: \(transaction.id)")
+                print("")
+            } catch {
+                print("- 验证失败: \(error)")
+            }
+        }
+        
+        print("可用产品:")
+        for product in availableProducts {
+            print("- \(product.displayName): \(product.displayPrice)")
+            print("  ID: \(product.id)")
+        }
+        
+        print("===================\n")
+    }
+    #endif
 }
 
 // MARK: - Store Errors

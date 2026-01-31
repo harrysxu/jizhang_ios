@@ -37,31 +37,31 @@ final class Category {
     // MARK: - Properties
     
     /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
-    var id: UUID
+    var id: UUID = UUID()
     
     /// 分类名称
-    var name: String
+    var name: String = ""
     
     /// 图标名称
-    var iconName: String
+    var iconName: String = "folder.fill"
     
     /// 分类类型
-    var type: CategoryType
+    var type: CategoryType = CategoryType.expense
     
     /// 颜色
-    var colorHex: String
+    var colorHex: String = "#007AFF"
     
     /// 排序顺序
-    var sortOrder: Int
+    var sortOrder: Int = 0
     
     /// 是否隐藏
-    var isHidden: Bool
+    var isHidden: Bool = false
     
     /// 是否快速选择（在记账页面显示为快捷按钮）
-    var isQuickSelect: Bool
+    var isQuickSelect: Bool = false
     
     /// 创建时间
-    var createdAt: Date
+    var createdAt: Date = Date()
     
     // MARK: - Relationships
     

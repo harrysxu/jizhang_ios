@@ -84,16 +84,16 @@ class AppState {
         let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
         
         // 检查是否需要清理数据库（schema变更时需要清理）
-        // v5: 移除CloudKit不支持的unique约束
+        // v6: 添加CloudKit所需的默认值和反向关系
         // 注意：此版本默认true是为了强制清理不兼容的schema，之后的版本应改为false
-        let needsCleanDatabase = sharedDefaults?.bool(forKey: "needsCleanDatabase_v5") ?? true
+        let needsCleanDatabase = sharedDefaults?.bool(forKey: "needsCleanDatabase_v6") ?? true
         
         if needsCleanDatabase {
-            print("🗑️ 清理旧数据库（schema已更新）...")
+            print("🗑️ 清理旧数据库（schema已更新 - v6: CloudKit兼容性）...")
             try? FileManager.default.removeItem(at: storeURL)
             try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
             try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-            sharedDefaults?.set(false, forKey: "needsCleanDatabase_v5")
+            sharedDefaults?.set(false, forKey: "needsCleanDatabase_v6")
             print("✅ 旧数据库已清理")
         }
         
@@ -193,10 +193,13 @@ class AppState {
         
         // 数据迁移：确保至少有一个默认账本
         Task { @MainActor in
+            // 等待一小段时间，让CloudKit有机会完成初始同步
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+            
             migrateDefaultLedger()
             
             // 执行数据迁移检查
-            DataMigration.migrateIfNeeded(context: modelContainer.mainContext)
+            await DataMigration.migrateIfNeeded(context: modelContainer.mainContext)
         }
     }
     

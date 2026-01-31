@@ -149,13 +149,13 @@ enum AppConstants {
 
 /// 订阅产品ID
 enum SubscriptionProducts {
-    /// 月订阅 - 6元/月
+    /// 月订阅 - 3元/月
     static let monthlyID = "com.xxl.jizhang.subscription.monthly"
     
-    /// 年订阅 - 38元/年
+    /// 年订阅 - 28元/年
     static let yearlyID = "com.xxl.jizhang.subscription.yearly"
     
-    /// 买断 - 99元
+    /// 买断 - 38元
     static let lifetimeID = "com.xxl.jizhang.lifetime"
     
     /// 所有产品ID

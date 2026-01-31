@@ -104,19 +104,23 @@ actor WidgetDataService {
         let monthBudget = budgets.reduce(Decimal(0)) { $0 + $1.amount }
         let todayBudget = monthBudget / Decimal(calendar.range(of: .day, in: .month, for: now)?.count ?? 30)
         
-        // 8. 计算预算使用率
-        let budgetUsage = monthBudget > 0 ? Double(truncating: (monthExpense / monthBudget) as NSNumber) : 0
+        // 8. 计算预算使用率（今日支出 / 今日预算）
+        let budgetUsage = todayBudget > 0 ? Double(truncating: (todayExpense / todayBudget) as NSNumber) : 0
         
         // 9. 转换为简化模型 (最近5笔)
         let simpleTransactions = monthTransactions
             .sorted { $0.date > $1.date }
             .prefix(5)
             .map { transaction in
-                WidgetTransaction(
+                // 转换图标名称为 SF Symbol（兼容旧的 Phosphor 名称）
+                let iconName = transaction.category?.iconName ?? "questionmark.circle"
+                let sfSymbolName = convertToSFSymbol(iconName)
+                
+                return WidgetTransaction(
                     id: transaction.id,
                     amount: transaction.amount,
                     categoryName: transaction.category?.name ?? "未分类",
-                    categoryIcon: transaction.category?.iconName ?? "questionmark.circle",
+                    categoryIcon: sfSymbolName,
                     date: transaction.date,
                     type: transaction.type.rawValue,
                     note: transaction.note
@@ -138,6 +142,94 @@ actor WidgetDataService {
     }
     
     // MARK: - Private Methods (Sync versions for use in performAsync)
+    
+    /// 转换图标名称为 SF Symbol
+    /// 支持将 Phosphor 图标名称转换为 SF Symbol 名称
+    @MainActor
+    private func convertToSFSymbol(_ iconName: String) -> String {
+        // Phosphor 到 SF Symbol 的映射表（与 CategoryIconConfig 保持一致）
+        let phosphorToSFSymbol: [String: String] = [
+            // 餐饮类
+            "forkKnife": "fork.knife",
+            "sunHorizon": "sunrise.fill",
+            "sun": "sun.max.fill",
+            "moon": "moon.fill",
+            "coffee": "cup.and.saucer.fill",
+            "orangeSlice": "circle.hexagongrid.fill",
+            
+            // 购物类
+            "shoppingBag": "bag.fill",
+            "tShirt": "tshirt.fill",
+            "basket": "basket.fill",
+            "sparkle": "sparkles",
+            "laptop": "laptopcomputer",
+            
+            // 交通出行类
+            "car": "car.fill",
+            "bus": "bus.fill",
+            "taxi": "car.fill",
+            "gasPump": "fuelpump.fill",
+            "parking": "parkingsign.circle.fill",
+            
+            // 居家生活类
+            "houseLine": "house.fill",
+            "lightning": "bolt.fill",
+            "phone": "phone.fill",
+            "buildings": "building.2.fill",
+            
+            // 娱乐休闲类
+            "gameController": "gamecontroller.fill",
+            "personSimpleRun": "figure.run",
+            "airplaneTilt": "airplane",
+            
+            // 医疗健康类
+            "firstAidKit": "cross.case.fill",
+            "pill": "pills.fill",
+            "leaf": "leaf.fill",
+            
+            // 人情往来类
+            "gift": "gift.fill",
+            "envelopeSimple": "envelope.fill",
+            
+            // 学习培训类
+            "bookOpen": "book.fill",
+            "chalkboardTeacher": "person.fill.viewfinder",
+            
+            // 其他类
+            "baby": "figure.and.child.holdinghands",
+            "pawPrint": "pawprint.fill",
+            "wine": "wineglass.fill",
+            "dotsThreeCircle": "ellipsis.circle.fill",
+            
+            // 收入类
+            "briefcase": "briefcase.fill",
+            "money": "banknote.fill",
+            "trophy": "trophy.fill",
+            "plusCircle": "plus.circle.fill",
+            "trendUp": "chart.line.uptrend.xyaxis",
+            "chartLineUp": "chart.bar.fill",
+            "hammer": "hammer.fill",
+            "receipt": "doc.text.fill",
+            
+            // 常用图标
+            "question": "questionmark.circle.fill",
+            "folder": "folder.fill",
+            "currencyCircleDollar": "dollarsign.circle.fill",
+        ]
+        
+        // 如果是 Phosphor 名称，转换为 SF Symbol
+        if let sfSymbol = phosphorToSFSymbol[iconName] {
+            return sfSymbol
+        }
+        
+        // 如果已经是 SF Symbol 名称（包含 "."），直接返回
+        if iconName.contains(".") {
+            return iconName
+        }
+        
+        // 其他情况返回默认图标
+        return "questionmark.circle.fill"
+    }
     
     /// 获取当前账本 (同步版本)
     @MainActor

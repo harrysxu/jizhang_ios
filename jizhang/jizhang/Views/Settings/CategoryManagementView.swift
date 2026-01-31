@@ -26,6 +26,7 @@ struct CategoryManagementView: View {
     @State private var deleteErrorMessage = ""
     @State private var showDeleteErrorAlert = false
     @State private var expandedCategories: Set<UUID> = []
+    @State private var showSubscriptionSheet = false
     
     // MARK: - Computed Properties
     
@@ -48,10 +49,22 @@ struct CategoryManagementView: View {
             // 自定义导航栏
             SubPageNavigationBar(title: "分类管理") {
                 Button {
-                    showAddCategory = true
+                    if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                        showAddCategory = true
+                    } else {
+                        HapticManager.light()
+                        showSubscriptionSheet = true
+                    }
                 } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 18))
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18))
+                        if !appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
             }
             
@@ -77,16 +90,30 @@ struct CategoryManagementView: View {
                             // 无子分类
                             CategoryRowView(
                                 category: parentCategory,
-                                onEdit: { categoryToEdit = parentCategory },
+                                hasAccess: appState.subscriptionManager.hasAccess(to: .categoryManagement),
+                                onEdit: { 
+                                    if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                        categoryToEdit = parentCategory
+                                    } else {
+                                        HapticManager.light()
+                                        showSubscriptionSheet = true
+                                    }
+                                },
                                 onDelete: {
-                                    categoryToDelete = parentCategory
-                                    showDeleteAlert = true
+                                    if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                        categoryToDelete = parentCategory
+                                        showDeleteAlert = true
+                                    } else {
+                                        HapticManager.light()
+                                        showSubscriptionSheet = true
+                                    }
                                 }
                             )
                         } else {
                             // 有子分类 - 使用自定义展开机制
                             CategoryRowView(
                                 category: parentCategory,
+                                hasAccess: appState.subscriptionManager.hasAccess(to: .categoryManagement),
                                 childCount: (parentCategory.children ?? []).count,
                                 isExpanded: expandedCategories.contains(parentCategory.id),
                                 onTap: {
@@ -99,10 +126,22 @@ struct CategoryManagementView: View {
                                         }
                                     }
                                 },
-                                onEdit: { categoryToEdit = parentCategory },
+                                onEdit: { 
+                                    if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                        categoryToEdit = parentCategory
+                                    } else {
+                                        HapticManager.light()
+                                        showSubscriptionSheet = true
+                                    }
+                                },
                                 onDelete: {
-                                    categoryToDelete = parentCategory
-                                    showDeleteAlert = true
+                                    if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                        categoryToDelete = parentCategory
+                                        showDeleteAlert = true
+                                    } else {
+                                        HapticManager.light()
+                                        showSubscriptionSheet = true
+                                    }
                                 }
                             )
                             
@@ -111,11 +150,24 @@ struct CategoryManagementView: View {
                                 ForEach((parentCategory.children ?? []).sorted { $0.sortOrder < $1.sortOrder }) { childCategory in
                                     CategoryRowView(
                                         category: childCategory,
+                                        hasAccess: appState.subscriptionManager.hasAccess(to: .categoryManagement),
                                         isChild: true,
-                                        onEdit: { categoryToEdit = childCategory },
+                                        onEdit: { 
+                                            if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                                categoryToEdit = childCategory
+                                            } else {
+                                                HapticManager.light()
+                                                showSubscriptionSheet = true
+                                            }
+                                        },
                                         onDelete: {
-                                            categoryToDelete = childCategory
-                                            showDeleteAlert = true
+                                            if appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                                categoryToDelete = childCategory
+                                                showDeleteAlert = true
+                                            } else {
+                                                HapticManager.light()
+                                                showSubscriptionSheet = true
+                                            }
                                         }
                                     )
                                 }
@@ -156,6 +208,9 @@ struct CategoryManagementView: View {
             Button("确定", role: .cancel) {}
         } message: {
             Text(deleteErrorMessage)
+        }
+        .sheet(isPresented: $showSubscriptionSheet) {
+            SubscriptionView()
         }
         .onAppear {
             hideTabBar.wrappedValue = true
@@ -206,6 +261,7 @@ struct CategoryManagementView: View {
 
 private struct CategoryRowView: View {
     let category: Category
+    var hasAccess: Bool = true
     var isChild: Bool = false
     var childCount: Int = 0
     var isExpanded: Bool = false
@@ -260,16 +316,30 @@ private struct CategoryRowView: View {
             // 操作按钮（在数量和箭头左侧）
             HStack(spacing: Spacing.s) {
                 Button(action: onEdit) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 16))
-                        .foregroundColor(.primaryBlue)
+                    HStack(spacing: 2) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16))
+                            .foregroundColor(hasAccess ? .primaryBlue : .gray)
+                        if !hasAccess {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
                 
                 Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 16))
-                        .foregroundColor(.red)
+                    HStack(spacing: 2) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 16))
+                            .foregroundColor(hasAccess ? .red : .gray)
+                        if !hasAccess {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
             }

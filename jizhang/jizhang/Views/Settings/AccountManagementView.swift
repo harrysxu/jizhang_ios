@@ -22,6 +22,7 @@ struct AccountManagementView: View {
     @State private var showDeleteAlert = false
     @State private var showDeleteErrorAlert = false
     @State private var deleteErrorMessage = ""
+    @State private var showSubscriptionSheet = false
     
     // MARK: - Computed Properties
     
@@ -47,10 +48,22 @@ struct AccountManagementView: View {
             // 自定义导航栏
             SubPageNavigationBar(title: "账户管理") {
                 Button {
-                    showAddAccount = true
+                    if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                        showAddAccount = true
+                    } else {
+                        HapticManager.light()
+                        showSubscriptionSheet = true
+                    }
                 } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 18))
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18))
+                        if !appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
             }
             
@@ -68,10 +81,23 @@ struct AccountManagementView: View {
                             ForEach(assetAccounts) { account in
                                 AccountRowView(
                                     account: account,
-                                    onEdit: { accountToEdit = account },
+                                    hasAccess: appState.subscriptionManager.hasAccess(to: .accountManagement),
+                                    onEdit: { 
+                                        if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                            accountToEdit = account
+                                        } else {
+                                            HapticManager.light()
+                                            showSubscriptionSheet = true
+                                        }
+                                    },
                                     onDelete: {
-                                        accountToDelete = account
-                                        showDeleteAlert = true
+                                        if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                            accountToDelete = account
+                                            showDeleteAlert = true
+                                        } else {
+                                            HapticManager.light()
+                                            showSubscriptionSheet = true
+                                        }
                                     }
                                 )
                             }
@@ -92,10 +118,23 @@ struct AccountManagementView: View {
                             ForEach(liabilityAccounts) { account in
                                 AccountRowView(
                                     account: account,
-                                    onEdit: { accountToEdit = account },
+                                    hasAccess: appState.subscriptionManager.hasAccess(to: .accountManagement),
+                                    onEdit: { 
+                                        if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                            accountToEdit = account
+                                        } else {
+                                            HapticManager.light()
+                                            showSubscriptionSheet = true
+                                        }
+                                    },
                                     onDelete: {
-                                        accountToDelete = account
-                                        showDeleteAlert = true
+                                        if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                            accountToDelete = account
+                                            showDeleteAlert = true
+                                        } else {
+                                            HapticManager.light()
+                                            showSubscriptionSheet = true
+                                        }
                                     }
                                 )
                             }
@@ -139,6 +178,9 @@ struct AccountManagementView: View {
             Button("确定", role: .cancel) {}
         } message: {
             Text(deleteErrorMessage)
+        }
+        .sheet(isPresented: $showSubscriptionSheet) {
+            SubscriptionView()
         }
         .onAppear {
             hideTabBar.wrappedValue = true
@@ -184,6 +226,7 @@ struct AccountManagementView: View {
 
 private struct AccountRowView: View {
     let account: Account
+    let hasAccess: Bool
     let onEdit: () -> Void
     let onDelete: () -> Void
     
@@ -217,16 +260,30 @@ private struct AccountRowView: View {
             // 操作按钮（在最右侧）
             HStack(spacing: Spacing.s) {
                 Button(action: onEdit) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 16))
-                        .foregroundColor(.primaryBlue)
+                    HStack(spacing: 2) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16))
+                            .foregroundColor(hasAccess ? .primaryBlue : .gray)
+                        if !hasAccess {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
                 
                 Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 16))
-                        .foregroundColor(.red)
+                    HStack(spacing: 2) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 16))
+                            .foregroundColor(hasAccess ? .red : .gray)
+                        if !hasAccess {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
             }

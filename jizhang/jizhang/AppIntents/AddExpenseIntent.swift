@@ -38,7 +38,7 @@ struct AddExpenseIntent: AppIntent {
         let decimalAmount = Decimal(amount)
         
         // 2. 获取ModelContainer
-        let appGroupIdentifier = "group.com.yourcompany.jizhang"
+        let appGroupIdentifier = "group.com.xxl.jizhang"
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else {

@@ -53,16 +53,16 @@ final class Transaction {
     // MARK: - Properties
     
     /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
-    var id: UUID
+    var id: UUID = UUID()
     
     /// 金额
-    var amount: Decimal
+    var amount: Decimal = 0
     
     /// 交易日期
-    var date: Date
+    var date: Date = Date()
     
     /// 交易类型
-    var type: TransactionType
+    var type: TransactionType = TransactionType.expense
     
     /// 备注
     var note: String?
@@ -74,10 +74,10 @@ final class Transaction {
     var imageURL: String?
     
     /// 创建时间
-    var createdAt: Date
+    var createdAt: Date = Date()
     
     /// 修改时间
-    var modifiedAt: Date
+    var modifiedAt: Date = Date()
     
     // MARK: - Relationships
     
@@ -93,7 +93,8 @@ final class Transaction {
     /// 分类
     var category: Category?
     
-    /// 标签 (CloudKit要求关系必须为可选)
+    /// 标签 (CloudKit要求关系必须为可选，且必须有反向关系)
+    @Relationship(inverse: \Tag.transactions)
     var tags: [Tag]?
     
     // MARK: - Initialization

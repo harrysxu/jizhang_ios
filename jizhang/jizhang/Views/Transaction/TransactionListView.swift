@@ -22,6 +22,7 @@ struct TransactionListView: View {
     @State private var showDateRangePicker = false
     @State private var exportStartDate = Date()
     @State private var exportEndDate = Date()
+    @State private var showSubscriptionSheet = false
     
     // MARK: - Computed Properties
     
@@ -100,9 +101,21 @@ struct TransactionListView: View {
                 // 自定义导航栏 - 无胶囊背景
                 CustomNavigationBar(title: nil) {
                     Button {
-                        showExportOptions = true
+                        if appState.subscriptionManager.hasAccess(to: .exportData) {
+                            showExportOptions = true
+                        } else {
+                            HapticManager.light()
+                            showSubscriptionSheet = true
+                        }
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        HStack(spacing: 4) {
+                            Image(systemName: "square.and.arrow.up")
+                            if !appState.subscriptionManager.hasAccess(to: .exportData) {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
                     }
                 }
                 
@@ -193,6 +206,9 @@ struct TransactionListView: View {
             }
             .sheet(isPresented: $showDateRangePicker) {
                 dateRangePickerSheet
+            }
+            .sheet(isPresented: $showSubscriptionSheet) {
+                SubscriptionView()
             }
         }
     }

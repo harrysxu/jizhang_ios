@@ -45,6 +45,11 @@ struct SubscriptionView: View {
                     
                     // 条款说明
                     termsSection
+                    
+                    // 调试信息（仅DEBUG模式）
+                    #if DEBUG
+                    debugSection
+                    #endif
                 }
                 .padding(.horizontal, Spacing.l)
                 .padding(.vertical, Spacing.xl)
@@ -87,7 +92,7 @@ struct SubscriptionView: View {
                     
                     if case .premium(let expiresAt) = subscriptionManager.subscriptionStatus,
                        let expiry = expiresAt {
-                        Text("有效期至: \(expiry.formatted(date: .long, time: .omitted))")
+                        Text("有效期至: \(expiry.formatted(.dateTime.year().month().day().locale(Locale(identifier: "zh_CN"))))")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -141,19 +146,21 @@ struct SubscriptionView: View {
                 Divider()
                 
                 // 基础功能 - 免费版支持
-                FeatureRow(name: "基础记账", freeAccess: true, premiumAccess: true)
-                FeatureRow(name: "基础统计", freeAccess: true, premiumAccess: true)
-                FeatureRow(name: "单个账本", freeValue: "1个", premiumValue: "无限")
-                FeatureRow(name: "记录数量", freeValue: "有限", premiumValue: "无限")
+                FeatureRow(name: "首页和流水", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "记一笔", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "基础报表(总览)", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "查看默认账户", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "查看默认分类", freeAccess: true, premiumAccess: true)
                 
                 // 高级功能 - 仅Pro支持
-                FeatureRow(name: "iCloud同步", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "账本备份", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "数据导出", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "完整报表", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "完整报表分析", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "自定义账户", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "自定义分类", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "预算管理", freeAccess: false, premiumAccess: true, isLast: true)
+                FeatureRow(name: "预算管理", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "多账本管理", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "iCloud同步", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "数据导出", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "账本备份", freeAccess: false, premiumAccess: true, isLast: true)
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
@@ -180,7 +187,7 @@ struct SubscriptionView: View {
                 VStack(spacing: Spacing.m) {
                     SubscriptionOptionCard(
                         title: "月订阅",
-                        price: "¥6",
+                        price: "¥3",
                         period: "/月",
                         description: "按月付费，随时取消",
                         isSelected: false,
@@ -190,9 +197,9 @@ struct SubscriptionView: View {
                     
                     SubscriptionOptionCard(
                         title: "年订阅",
-                        price: "¥38",
+                        price: "¥28",
                         period: "/年",
-                        description: "相当于每月¥3.2，节省47%",
+                        description: "相当于每月¥2.3，节省23%",
                         isSelected: false,
                         isBestValue: true,
                         action: {}
@@ -200,7 +207,7 @@ struct SubscriptionView: View {
                     
                     SubscriptionOptionCard(
                         title: "买断",
-                        price: "¥99",
+                        price: "¥38",
                         period: "",
                         description: "一次付费，终身使用",
                         isSelected: false,
@@ -237,7 +244,7 @@ struct SubscriptionView: View {
                             title: "年订阅",
                             price: yearly.displayPrice,
                             period: "/年",
-                            description: "相当于每月¥3.2，节省47%",
+                            description: "相当于每月¥2.3，节省23%",
                             isSelected: selectedProduct?.id == yearly.id,
                             isBestValue: true
                         ) {
@@ -332,6 +339,125 @@ struct SubscriptionView: View {
         }
         .padding(.top, Spacing.m)
     }
+    
+    // MARK: - Debug Section
+    
+    #if DEBUG
+    private var debugSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.m) {
+            Text("🔧 调试工具")
+                .font(.headline)
+                .padding(.horizontal, Spacing.xs)
+            
+            VStack(spacing: Spacing.s) {
+                // 订阅详情
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("当前状态")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("状态: \(subscriptionManager.subscriptionStatus.displayName)")
+                        .font(.caption2)
+                        .foregroundStyle(.primary)
+                    
+                    if case .premium(let expiresAt) = subscriptionManager.subscriptionStatus,
+                       let expiry = expiresAt {
+                        Text("过期时间: \(expiry.formatted(.dateTime.year().month().day().hour().minute().locale(Locale(identifier: "zh_CN"))))")
+                            .font(.caption2)
+                            .foregroundStyle(.primary)
+                        
+                        let now = Date()
+                        if expiry > now {
+                            let remaining = expiry.timeIntervalSince(now)
+                            Text("剩余时间: \(formatTimeInterval(remaining))")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    
+                    Text("环境: 沙盒测试")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                    
+                    Text("沙盒订阅周期加速: 1年 = 1小时")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(Spacing.m)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                
+                // 操作按钮
+                VStack(spacing: Spacing.xs) {
+                    Button {
+                        Task {
+                            await subscriptionManager.printSubscriptionDetails()
+                        }
+                    } label: {
+                        Text("打印订阅详情到控制台")
+                            .font(.caption)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.s)
+                            .background(Color.blue.opacity(0.1))
+                            .foregroundStyle(.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                    }
+                    
+                    Button {
+                        subscriptionManager.clearLocalSubscriptionCache()
+                        Task {
+                            await subscriptionManager.refreshStatus()
+                        }
+                    } label: {
+                        Text("清除本地订阅缓存")
+                            .font(.caption)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.s)
+                            .background(Color.orange.opacity(0.1))
+                            .foregroundStyle(.orange)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                    }
+                }
+                
+                // 说明
+                Text("""
+                ⚠️ 测试说明：
+                1. 清除本地缓存不会删除App Store的购买记录
+                2. 要完全重置订阅测试，需要：
+                   • 在设备设置 > App Store > 沙盒账号
+                   • 点击你的测试账号 > 管理
+                   • 取消或删除订阅
+                3. 沙盒环境年订阅周期仅1小时，过期后自动续订
+                """)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(Spacing.s)
+                .background(Color.yellow.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+            }
+            .padding(Spacing.m)
+            .background(Color(.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
+        }
+    }
+    
+    /// 格式化时间间隔
+    private func formatTimeInterval(_ interval: TimeInterval) -> String {
+        let hours = Int(interval) / 3600
+        let minutes = (Int(interval) % 3600) / 60
+        let seconds = Int(interval) % 60
+        
+        if hours > 0 {
+            return "\(hours)小时\(minutes)分钟"
+        } else if minutes > 0 {
+            return "\(minutes)分钟\(seconds)秒"
+        } else {
+            return "\(seconds)秒"
+        }
+    }
+    #endif
     
     // MARK: - Actions
     

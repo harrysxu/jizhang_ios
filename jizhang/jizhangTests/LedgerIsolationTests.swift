@@ -65,20 +65,20 @@ final class LedgerIsolationTests: XCTestCase {
         try modelContext.save()
         
         // 验证: 账本1只能看到自己的账户
-        XCTAssertEqual(ledger1.accounts.count, 1)
-        XCTAssertEqual(ledger1.accounts.first?.name, "个人银行卡")
+        XCTAssertEqual(ledger1.accounts?.count, 1)
+        XCTAssertEqual(ledger1.accounts?.first?.name, "个人银行卡")
         
         // 验证: 账本2只能看到自己的账户
-        XCTAssertEqual(ledger2.accounts.count, 1)
-        XCTAssertEqual(ledger2.accounts.first?.name, "公司账户")
+        XCTAssertEqual(ledger2.accounts?.count, 1)
+        XCTAssertEqual(ledger2.accounts?.first?.name, "公司账户")
         
         // 验证: 账本1只能看到自己的分类
-        XCTAssertEqual(ledger1.categories.count, 1)
-        XCTAssertEqual(ledger1.categories.first?.name, "餐饮")
+        XCTAssertEqual(ledger1.categories?.count, 1)
+        XCTAssertEqual(ledger1.categories?.first?.name, "餐饮")
         
         // 验证: 账本2只能看到自己的分类
-        XCTAssertEqual(ledger2.categories.count, 1)
-        XCTAssertEqual(ledger2.categories.first?.name, "差旅")
+        XCTAssertEqual(ledger2.categories?.count, 1)
+        XCTAssertEqual(ledger2.categories?.first?.name, "差旅")
     }
     
     /// 测试2: 交易数据隔离
@@ -129,12 +129,12 @@ final class LedgerIsolationTests: XCTestCase {
         try modelContext.save()
         
         // 验证: 账本1只能看到自己的交易
-        XCTAssertEqual(ledger1.transactions.count, 1)
-        XCTAssertEqual(ledger1.transactions.first?.amount, 100)
+        XCTAssertEqual(ledger1.transactions?.count, 1)
+        XCTAssertEqual(ledger1.transactions?.first?.amount, 100)
         
         // 验证: 账本2只能看到自己的交易
-        XCTAssertEqual(ledger2.transactions.count, 1)
-        XCTAssertEqual(ledger2.transactions.first?.amount, 200)
+        XCTAssertEqual(ledger2.transactions?.count, 1)
+        XCTAssertEqual(ledger2.transactions?.first?.amount, 200)
     }
     
     /// 测试3: 预算数据隔离
@@ -164,12 +164,12 @@ final class LedgerIsolationTests: XCTestCase {
         try modelContext.save()
         
         // 验证: 账本1只能看到自己的预算
-        XCTAssertEqual(ledger1.budgets.count, 1)
-        XCTAssertEqual(ledger1.budgets.first?.amount, 500)
+        XCTAssertEqual(ledger1.budgets?.count, 1)
+        XCTAssertEqual(ledger1.budgets?.first?.amount, 500)
         
         // 验证: 账本2只能看到自己的预算
-        XCTAssertEqual(ledger2.budgets.count, 1)
-        XCTAssertEqual(ledger2.budgets.first?.amount, 800)
+        XCTAssertEqual(ledger2.budgets?.count, 1)
+        XCTAssertEqual(ledger2.budgets?.first?.amount, 800)
     }
     
     // MARK: - 级联删除测试
@@ -204,7 +204,7 @@ final class LedgerIsolationTests: XCTestCase {
         
         // 获取数据数量
         let accountCountBefore = try modelContext.fetchCount(FetchDescriptor<Account>())
-        let categoryCountBefore = try modelContext.fetchCount(FetchDescriptor<Category>())
+        let categoryCountBefore = try modelContext.fetchCount(FetchDescriptor<jizhang.Category>())
         let transactionCountBefore = try modelContext.fetchCount(FetchDescriptor<Transaction>())
         let budgetCountBefore = try modelContext.fetchCount(FetchDescriptor<Budget>())
         let tagCountBefore = try modelContext.fetchCount(FetchDescriptor<Tag>())
@@ -221,7 +221,7 @@ final class LedgerIsolationTests: XCTestCase {
         
         // 验证: 所有关联数据都被删除
         let accountCountAfter = try modelContext.fetchCount(FetchDescriptor<Account>())
-        let categoryCountAfter = try modelContext.fetchCount(FetchDescriptor<Category>())
+        let categoryCountAfter = try modelContext.fetchCount(FetchDescriptor<jizhang.Category>())
         let transactionCountAfter = try modelContext.fetchCount(FetchDescriptor<Transaction>())
         let budgetCountAfter = try modelContext.fetchCount(FetchDescriptor<Budget>())
         let tagCountAfter = try modelContext.fetchCount(FetchDescriptor<Tag>())
@@ -256,18 +256,18 @@ final class LedgerIsolationTests: XCTestCase {
         
         // 模拟切换到账本1
         let ledger1Accounts = ledger1.accounts
-        XCTAssertEqual(ledger1Accounts.count, 1)
-        XCTAssertEqual(ledger1Accounts.first?.balance, 1000)
+        XCTAssertEqual(ledger1Accounts?.count, 1)
+        XCTAssertEqual(ledger1Accounts?.first?.balance, 1000)
         
         // 模拟切换到账本2
         let ledger2Accounts = ledger2.accounts
-        XCTAssertEqual(ledger2Accounts.count, 1)
-        XCTAssertEqual(ledger2Accounts.first?.balance, 2000)
+        XCTAssertEqual(ledger2Accounts?.count, 1)
+        XCTAssertEqual(ledger2Accounts?.first?.balance, 2000)
         
         // 再次切换回账本1,数据应该保持不变
         let ledger1AccountsAgain = ledger1.accounts
-        XCTAssertEqual(ledger1AccountsAgain.count, 1)
-        XCTAssertEqual(ledger1AccountsAgain.first?.balance, 1000)
+        XCTAssertEqual(ledger1AccountsAgain?.count, 1)
+        XCTAssertEqual(ledger1AccountsAgain?.first?.balance, 1000)
     }
     
     // MARK: - 默认账本测试
@@ -340,17 +340,17 @@ final class LedgerIsolationTests: XCTestCase {
         try viewModel.copyLedgerSettings(from: sourceLedger, to: targetLedger)
         
         // 验证: 账户结构被复制
-        XCTAssertEqual(targetLedger.accounts.count, 2)
-        XCTAssertTrue(targetLedger.accounts.contains(where: { $0.name == "银行卡" }))
-        XCTAssertTrue(targetLedger.accounts.contains(where: { $0.name == "现金" }))
+        XCTAssertEqual(targetLedger.accounts?.count, 2)
+        XCTAssertTrue(targetLedger.accounts?.contains(where: { $0.name == "银行卡" }) ?? false)
+        XCTAssertTrue(targetLedger.accounts?.contains(where: { $0.name == "现金" }) ?? false)
         
         // 验证: 新账户余额为0
-        let copiedAccount = targetLedger.accounts.first(where: { $0.name == "银行卡" })
+        let copiedAccount = targetLedger.accounts?.first(where: { $0.name == "银行卡" })
         XCTAssertEqual(copiedAccount?.balance, 0)
         
         // 验证: 分类结构被复制
-        XCTAssertEqual(targetLedger.categories.count, 2)
-        XCTAssertTrue(targetLedger.categories.contains(where: { $0.name == "餐饮" }))
-        XCTAssertTrue(targetLedger.categories.contains(where: { $0.name == "早餐" }))
+        XCTAssertEqual(targetLedger.categories?.count, 2)
+        XCTAssertTrue(targetLedger.categories?.contains(where: { $0.name == "餐饮" }) ?? false)
+        XCTAssertTrue(targetLedger.categories?.contains(where: { $0.name == "早餐" }) ?? false)
     }
 }

@@ -109,6 +109,9 @@ struct MediumWidgetView: View {
             .frame(maxWidth: .infinity)
         }
         .padding()
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
     
     // MARK: - Helper Methods

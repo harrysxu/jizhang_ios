@@ -12,33 +12,32 @@ import SwiftData
 final class Ledger {
     // MARK: - Properties
     
-    /// 唯一标识符
     /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
-    var id: UUID
+    var id: UUID = UUID()
     
     /// 账本名称
-    var name: String
+    var name: String = ""
     
     /// 本位币代码 (ISO 4217)
-    var currencyCode: String
+    var currencyCode: String = "CNY"
     
     /// 创建时间
-    var createdAt: Date
+    var createdAt: Date = Date()
     
     /// 主题颜色 (Hex)
-    var colorHex: String
+    var colorHex: String = "#007AFF"
     
     /// 图标名称 (SF Symbols)
-    var iconName: String
+    var iconName: String = "book.fill"
     
     /// 是否归档
-    var isArchived: Bool
+    var isArchived: Bool = false
     
     /// 是否为默认账本
-    var isDefault: Bool
+    var isDefault: Bool = false
     
     /// 排序顺序
-    var sortOrder: Int
+    var sortOrder: Int = 0
     
     /// 描述信息(可选)
     var ledgerDescription: String?

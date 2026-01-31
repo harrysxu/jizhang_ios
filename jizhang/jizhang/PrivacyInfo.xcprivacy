@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 不进行用户追踪 -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	
+	<!-- 不使用追踪域名 -->
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	
+	<!-- 不收集用户数据 -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	
+	<!-- 声明使用的系统API -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<!-- 文件时间戳访问 - 用于SwiftData/CoreData -->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		
+		<!-- UserDefaults访问 - 访问App自己的UserDefaults -->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		
+		<!-- 系统启动时间 - 用于测量时间间隔 -->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

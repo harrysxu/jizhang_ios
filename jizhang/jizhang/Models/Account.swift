@@ -58,16 +58,16 @@ final class Account {
     // MARK: - Properties
     
     /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
-    var id: UUID
+    var id: UUID = UUID()
     
     /// 账户名称
-    var name: String
+    var name: String = ""
     
     /// 账户类型
-    var type: AccountType
+    var type: AccountType = AccountType.cash
     
     /// 当前余额
-    var balance: Decimal
+    var balance: Decimal = 0
     
     /// 信用额度(仅信用卡)
     var creditLimit: Decimal?
@@ -82,22 +82,22 @@ final class Account {
     var cardNumberLast4: String?
     
     /// 主题颜色
-    var colorHex: String
+    var colorHex: String = "#007AFF"
     
     /// 图标名称
-    var iconName: String
+    var iconName: String = "banknote.fill"
     
     /// 是否排除在总资产统计外
-    var excludeFromTotal: Bool
+    var excludeFromTotal: Bool = false
     
     /// 是否归档
-    var isArchived: Bool
+    var isArchived: Bool = false
     
     /// 创建时间
-    var createdAt: Date
+    var createdAt: Date = Date()
     
     /// 排序顺序
-    var sortOrder: Int
+    var sortOrder: Int = 0
     
     /// 备注
     var note: String?

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -17,6 +21,24 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSSiriUsageDescription</key>
+	<string>简记账需要使用 Siri 快速记账和查询账本信息</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>AddExpenseIntent</string>
+		<string>GetTodayExpenseIntent</string>
+		<string>GetBudgetIntent</string>
+	</array>
+	<key>INIntentsSupported</key>
+	<array>
+		<string>AddExpenseIntent</string>
+		<string>GetTodayExpenseIntent</string>
+		<string>GetBudgetIntent</string>
+	</array>
+	<key>INIntentsRestrictedWhileLocked</key>
+	<array/>
+	<key>INIntentsRestrictedWhileProtectedDataUnavailable</key>
+	<array/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -40,6 +62,8 @@
 			</dict>
 		</dict>
 	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

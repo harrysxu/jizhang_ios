@@ -32,28 +32,28 @@ final class Budget {
     // MARK: - Properties
     
     /// 唯一标识符 (CloudKit不支持unique约束，但UUID本身保证唯一性)
-    var id: UUID
+    var id: UUID = UUID()
     
     /// 预算金额
-    var amount: Decimal
+    var amount: Decimal = 0
     
     /// 预算周期
-    var period: BudgetPeriod
+    var period: BudgetPeriod = BudgetPeriod.monthly
     
     /// 开始日期
-    var startDate: Date
+    var startDate: Date = Date()
     
     /// 结束日期
-    var endDate: Date
+    var endDate: Date = Date()
     
     /// 是否启用结转
-    var enableRollover: Bool
+    var enableRollover: Bool = false
     
     /// 结转金额
-    var rolloverAmount: Decimal
+    var rolloverAmount: Decimal = 0
     
     /// 创建时间
-    var createdAt: Date
+    var createdAt: Date = Date()
     
     // MARK: - Relationships
     

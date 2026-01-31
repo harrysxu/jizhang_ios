@@ -108,6 +108,9 @@ struct SmallWidgetView: View {
             }
         }
         .padding()
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
     
     // MARK: - Helper Methods

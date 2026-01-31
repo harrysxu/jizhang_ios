@@ -15,6 +15,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     
     @State private var showSubscriptionSheet = false
+    @State private var showCloudSyncDetail = false
     
     var body: some View {
         NavigationStack {
@@ -32,44 +33,70 @@ struct SettingsView: View {
                     
                     // 当前账本设置
                     Section("当前账本设置") {
-                        // 账户管理 - 高级功能
-                        PremiumNavigationLink(feature: .accountManagement) {
+                        // 账户管理 - 只读模式
+                        NavigationLink {
                             AccountManagementView()
                         } label: {
-                            SettingsRow(
-                                iconName: "creditCard",
-                                iconColor: .green,
-                                title: "账户管理"
-                            )
+                            HStack {
+                                SettingsRow(
+                                    iconName: "creditCard",
+                                    iconColor: .green,
+                                    title: "账户管理"
+                                )
+                                if !appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                    Image(systemName: "eye")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                         
-                        // 分类管理 - 高级功能
-                        PremiumNavigationLink(feature: .categoryManagement) {
+                        // 分类管理 - 只读模式
+                        NavigationLink {
                             CategoryManagementView()
                         } label: {
-                            SettingsRow(
-                                iconName: "folder",
-                                iconColor: .orange,
-                                title: "分类管理"
-                            )
+                            HStack {
+                                SettingsRow(
+                                    iconName: "folder",
+                                    iconColor: .orange,
+                                    title: "分类管理"
+                                )
+                                if !appState.subscriptionManager.hasAccess(to: .categoryManagement) {
+                                    Image(systemName: "eye")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                         
-                        // 预算管理 - 高级功能
-                        PremiumNavigationLink(feature: .budgetManagement) {
+                        // 预算管理 - 只读模式
+                        NavigationLink {
                             BudgetView()
                         } label: {
-                            SettingsRow(
-                                iconName: "piggyBank",
-                                iconColor: .purple,
-                                title: "预算管理"
-                            )
+                            HStack {
+                                SettingsRow(
+                                    iconName: "piggyBank",
+                                    iconColor: .purple,
+                                    title: "预算管理"
+                                )
+                                if !appState.subscriptionManager.hasAccess(to: .budgetManagement) {
+                                    Image(systemName: "eye")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                     }
                     
                     // 数据
                     Section("数据") {
-                        NavigationLink {
-                            CloudSyncStatusDetailView(cloudKitService: appState.cloudKitService)
+                        Button {
+                            if appState.subscriptionManager.hasAccess(to: .cloudSync) {
+                                showCloudSyncDetail = true
+                            } else {
+                                HapticManager.light()
+                                showSubscriptionSheet = true
+                            }
                         } label: {
                             HStack {
                                 SettingsRow(
@@ -78,9 +105,21 @@ struct SettingsView: View {
                                     title: "iCloud同步"
                                 )
                                 Spacer()
-                                CloudSyncStatusView(cloudKitService: appState.cloudKitService, showText: false)
+                                
+                                if appState.subscriptionManager.hasAccess(to: .cloudSync) {
+                                    CloudSyncStatusView(cloudKitService: appState.cloudKitService, showText: false)
+                                } else {
+                                    Image(systemName: "crown.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.orange)
+                                }
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
                             }
                         }
+                        .buttonStyle(.plain)
                     }
                     
                     // 数据管理
@@ -150,6 +189,11 @@ struct SettingsView: View {
             .sheet(isPresented: $showSubscriptionSheet) {
                 SubscriptionView()
             }
+            .sheet(isPresented: $showCloudSyncDetail) {
+                NavigationStack {
+                    CloudSyncStatusDetailView(cloudKitService: appState.cloudKitService)
+                }
+            }
         }
     }
     
@@ -179,7 +223,7 @@ struct SettingsView: View {
                     if appState.subscriptionManager.subscriptionStatus.isPremium {
                         if case .premium(let expiresAt) = appState.subscriptionManager.subscriptionStatus,
                            let expiry = expiresAt {
-                            Text("有效期至 \(expiry.formatted(date: .abbreviated, time: .omitted))")
+                            Text("有效期至 \(expiry.formatted(.dateTime.year().month().day().locale(Locale(identifier: "zh_CN"))))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else if case .lifetime = appState.subscriptionManager.subscriptionStatus {

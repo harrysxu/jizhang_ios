@@ -23,6 +23,7 @@ private struct BudgetContentView: View {
     @StateObject private var viewModel: BudgetViewModel
     
     @Query(sort: \Budget.createdAt, order: .reverse) private var allBudgets: [Budget]
+    @State private var showSubscriptionSheet = false
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -54,10 +55,22 @@ private struct BudgetContentView: View {
                 // 自定义导航栏
                 SubPageNavigationBar(title: "预算管理") {
                     Button {
-                        viewModel.showCreateBudget()
+                        if appState.subscriptionManager.hasAccess(to: .budgetManagement) {
+                            viewModel.showCreateBudget()
+                        } else {
+                            HapticManager.light()
+                            showSubscriptionSheet = true
+                        }
                     } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 18))
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18))
+                            if !appState.subscriptionManager.hasAccess(to: .budgetManagement) {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
                     }
                 }
                 
@@ -77,6 +90,9 @@ private struct BudgetContentView: View {
                 Button("确定", role: .cancel) { }
             } message: {
                 errorMessageContent
+            }
+            .sheet(isPresented: $showSubscriptionSheet) {
+                SubscriptionView()
             }
             .onAppear {
                 setupViewModel()
@@ -126,7 +142,12 @@ private struct BudgetContentView: View {
             // 预算卡片列表
             ForEach(budgets.sorted(by: { $0.progress > $1.progress })) { budget in
                 BudgetCardView(budget: budget) {
-                    viewModel.showDetails(budget)
+                    if appState.subscriptionManager.hasAccess(to: .budgetManagement) {
+                        viewModel.showDetails(budget)
+                    } else {
+                        HapticManager.light()
+                        showSubscriptionSheet = true
+                    }
                 }
                 .padding(.horizontal, Spacing.m)
             }
@@ -194,7 +215,12 @@ private struct BudgetContentView: View {
                 .multilineTextAlignment(.center)
             
             PrimaryActionButton("创建预算", icon: "plus.circle.fill") {
-                viewModel.showCreateBudget()
+                if appState.subscriptionManager.hasAccess(to: .budgetManagement) {
+                    viewModel.showCreateBudget()
+                } else {
+                    HapticManager.light()
+                    showSubscriptionSheet = true
+                }
             }
             .padding(.top, Spacing.m)
         }

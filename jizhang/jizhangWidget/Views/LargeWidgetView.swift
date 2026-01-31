@@ -19,7 +19,8 @@ struct LargeWidgetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("简记账")
-                        .font(.headline)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundStyle(.primary)
                     
                     Text(data.ledgerName)
@@ -33,20 +34,20 @@ struct LargeWidgetView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 3)
                     .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(6)
             }
             
-            // 本月收支汇总
-            HStack(spacing: 16) {
+            // 本月收支汇总（紧凑版）
+            HStack(spacing: 12) {
                 // 支出
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("¥\(formattedAmount(data.monthExpense))")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.red)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
                     
                     Text("支出")
                         .font(.caption2)
@@ -55,12 +56,12 @@ struct LargeWidgetView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 // 收入
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("¥\(formattedAmount(data.monthIncome))")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.green)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
                     
                     Text("收入")
                         .font(.caption2)
@@ -69,13 +70,13 @@ struct LargeWidgetView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 // 结余
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     let balance = data.monthIncome - data.monthExpense
                     Text("¥\(formattedAmount(abs(balance)))")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(balance >= 0 ? .green : .red)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
                     
                     HStack(spacing: 2) {
                         Text("结余")
@@ -84,26 +85,27 @@ struct LargeWidgetView: View {
                         
                         if balance > 0 {
                             Image(systemName: "arrow.up.right")
-                                .font(.caption2)
+                                .font(.system(size: 9))
                                 .foregroundStyle(.green)
                         } else if balance < 0 {
                             Image(systemName: "arrow.down.right")
-                                .font(.caption2)
+                                .font(.system(size: 9))
                                 .foregroundStyle(.red)
                         }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
             .background(Color.secondary.opacity(0.05))
-            .cornerRadius(12)
+            .cornerRadius(10)
             
             Divider()
+                .padding(.vertical, 2)
             
-            // 最近流水
-            VStack(alignment: .leading, spacing: 6) {
+            // 最近流水（只显示3条）
+            VStack(alignment: .leading, spacing: 4) {
                 Text("最近流水")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -111,7 +113,7 @@ struct LargeWidgetView: View {
                 if data.recentTransactions.isEmpty {
                     HStack {
                         Spacer()
-                        VStack(spacing: 8) {
+                        VStack(spacing: 6) {
                             Image(systemName: "tray")
                                 .font(.title3)
                                 .foregroundStyle(.tertiary)
@@ -120,33 +122,33 @@ struct LargeWidgetView: View {
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                         }
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 8)
                         Spacer()
                     }
                 } else {
-                    VStack(spacing: 8) {
-                        ForEach(data.recentTransactions.prefix(5)) { transaction in
+                    VStack(spacing: 6) {
+                        ForEach(data.recentTransactions.prefix(3)) { transaction in
                             LargeTransactionRowView(transaction: transaction)
                         }
                     }
                 }
             }
             
-            Spacer(minLength: 8)
+            Spacer(minLength: 0)
             
             // 底部: 快速记账按钮 (iOS 17+ 交互式Widget)
             if #available(iOS 17.0, *) {
                 Button(intent: AddTransactionIntent()) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
-                            .font(.body)
+                            .font(.callout)
                         
                         Text("记一笔")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 8)
                     .background(Color.blue)
                     .foregroundStyle(.white)
                     .cornerRadius(10)
@@ -157,21 +159,26 @@ struct LargeWidgetView: View {
                 Link(destination: URL(string: "jizhang://add-transaction")!) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
-                            .font(.body)
+                            .font(.callout)
                         
                         Text("打开App记账")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 8)
                     .background(Color.blue)
                     .foregroundStyle(.white)
                     .cornerRadius(10)
                 }
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
     
     // MARK: - Helper Methods
@@ -203,17 +210,17 @@ struct LargeTransactionRowView: View {
     }
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             // 图标
             Image(systemName: transaction.categoryIcon)
-                .font(.body)
+                .font(.callout)
                 .foregroundStyle(.blue)
-                .frame(width: 28, height: 28)
+                .frame(width: 26, height: 26)
                 .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(6)
             
             // 分类和备注
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(transaction.categoryName)
                     .font(.subheadline)
                     .foregroundStyle(.primary)
@@ -240,7 +247,7 @@ struct LargeTransactionRowView: View {
                 .foregroundStyle(amountColor)
                 .lineLimit(1)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 }
 

@@ -18,7 +18,7 @@ struct GetBudgetIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         // 1. 获取ModelContainer
-        let appGroupIdentifier = "group.com.yourcompany.jizhang"
+        let appGroupIdentifier = "group.com.xxl.jizhang"
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else {

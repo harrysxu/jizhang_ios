@@ -8,9 +8,18 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
+import AppIntents
 
 @main
 struct jizhangApp: App {
+    
+    // MARK: - App Shortcuts Registration
+    init() {
+        // 注册 App Shortcuts，确保 Siri 能识别
+        if #available(iOS 16.0, *) {
+            JizhangShortcuts.updateAppShortcutParameters()
+        }
+    }
     // MARK: - Properties
     
     /// 全局应用状态(包含ModelContainer和CloudKit服务)

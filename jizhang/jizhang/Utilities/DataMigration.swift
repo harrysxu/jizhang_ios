@@ -13,12 +13,12 @@ class DataMigration {
     
     /// 执行完整的数据迁移检查和修复
     @MainActor
-    static func migrateIfNeeded(context: ModelContext) {
+    static func migrateIfNeeded(context: ModelContext) async {
         print("📦 开始数据迁移检查...")
         
         do {
             // 1. 确保至少有一个账本
-            try ensureDefaultLedger(context: context)
+            try await ensureDefaultLedger(context: context)
             
             // 2. 确保所有数据都关联到账本
             try ensureDataLinkedToLedger(context: context)
@@ -34,30 +34,44 @@ class DataMigration {
     
     /// 1. 确保至少有一个账本
     @MainActor
-    private static func ensureDefaultLedger(context: ModelContext) throws {
+    private static func ensureDefaultLedger(context: ModelContext) async throws {
         let ledgerDescriptor = FetchDescriptor<Ledger>()
         let ledgers = try context.fetch(ledgerDescriptor)
         
         if ledgers.isEmpty {
-            print("📝 创建默认账本...")
+            print("⏳ 未检测到账本，等待CloudKit同步...")
             
-            let defaultLedger = Ledger(
-                name: "日常账本",
-                currencyCode: "CNY",
-                colorHex: "#007AFF",
-                iconName: "book.fill",
-                sortOrder: 0,
-                isDefault: true
-            )
+            // 等待2秒，给CloudKit时间完成初始同步
+            try await Task.sleep(nanoseconds: 2_000_000_000)
             
-            context.insert(defaultLedger)
+            // 再次检查
+            let ledgersAfterWait = try context.fetch(ledgerDescriptor)
             
-            // 创建默认分类和账户
-            defaultLedger.createDefaultCategories()
-            defaultLedger.createDefaultAccounts()
-            
-            try context.save()
-            print("✅ 已创建默认账本")
+            if ledgersAfterWait.isEmpty {
+                print("📝 CloudKit同步完成，仍无账本，创建默认账本...")
+                
+                let defaultLedger = Ledger(
+                    name: "日常账本",
+                    currencyCode: "CNY",
+                    colorHex: "#007AFF",
+                    iconName: "book.fill",
+                    sortOrder: 0,
+                    isDefault: true
+                )
+                
+                context.insert(defaultLedger)
+                
+                // 创建默认分类和账户
+                defaultLedger.createDefaultCategories()
+                defaultLedger.createDefaultAccounts()
+                
+                try context.save()
+                print("✅ 已创建默认账本")
+            } else {
+                print("✅ 检测到 \(ledgersAfterWait.count) 个账本（来自iCloud），跳过创建")
+            }
+        } else {
+            print("✅ 检测到 \(ledgers.count) 个账本，跳过创建")
         }
     }
     
@@ -168,17 +182,25 @@ class DataMigration {
                 print("✅ 已设置默认账本: \(firstLedger.name)")
             }
         } else if defaultLedgers.count > 1 {
-            // 如果有多个默认账本,只保留第一个
-            print("⚠️ 发现多个默认账本,修正中...")
-            for (index, ledger) in defaultLedgers.enumerated() {
+            // 如果有多个默认账本，只保留第一个（按sortOrder排序）
+            print("⚠️ 发现 \(defaultLedgers.count) 个默认账本，只保留第一个...")
+            
+            // 按sortOrder排序，保留第一个
+            let sortedLedgers = defaultLedgers.sorted { $0.sortOrder < $1.sortOrder }
+            
+            for (index, ledger) in sortedLedgers.enumerated() {
                 if index > 0 {
                     ledger.isDefault = false
+                    print("  - 取消默认: \(ledger.name) (sortOrder: \(ledger.sortOrder))")
+                } else {
+                    print("  - 保留默认: \(ledger.name) (sortOrder: \(ledger.sortOrder))")
                 }
             }
+            
             try context.save()
             print("✅ 已修正默认账本")
         } else {
-            print("✓ 默认账本设置正确")
+            print("✓ 默认账本设置正确: \(defaultLedgers[0].name)")
         }
     }
     

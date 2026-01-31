@@ -27,6 +27,7 @@ struct LedgerDrawerView: View {
     @State private var showLedgerManagement = false
     @State private var showLedgerForm = false
     @State private var dragOffset: CGFloat = 0
+    @State private var showSubscriptionSheet = false
     
     // MARK: - Computed
     
@@ -92,6 +93,9 @@ struct LedgerDrawerView: View {
         .sheet(isPresented: $showLedgerForm) {
             LedgerFormSheet(ledger: nil, viewModel: viewModel)
         }
+        .sheet(isPresented: $showSubscriptionSheet) {
+            SubscriptionView()
+        }
     }
     
     // MARK: - Drawer Content
@@ -123,9 +127,15 @@ struct LedgerDrawerView: View {
                     ForEach(activeLedgers) { ledger in
                         LedgerDrawerRow(
                             ledger: ledger,
-                            isSelected: appState.currentLedger?.id == ledger.id
+                            isSelected: appState.currentLedger?.id == ledger.id,
+                            canSwitch: ledger.isDefault || appState.subscriptionManager.hasAccess(to: .accountManagement)
                         ) {
-                            selectLedger(ledger)
+                            if ledger.isDefault || appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                                selectLedger(ledger)
+                            } else {
+                                HapticManager.light()
+                                showSubscriptionSheet = true
+                            }
                         }
                     }
                     
@@ -165,7 +175,12 @@ struct LedgerDrawerView: View {
         VStack(spacing: 0) {
             // 新建账本
             Button {
-                showLedgerForm = true
+                if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                    showLedgerForm = true
+                } else {
+                    HapticManager.light()
+                    showSubscriptionSheet = true
+                }
             } label: {
                 HStack(spacing: Spacing.m) {
                     ZStack {
@@ -183,6 +198,12 @@ struct LedgerDrawerView: View {
                         .foregroundStyle(.primary)
                     
                     Spacer()
+                    
+                    if !appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .padding(.horizontal, Spacing.l)
                 .padding(.vertical, Spacing.m)
@@ -191,7 +212,12 @@ struct LedgerDrawerView: View {
             
             // 管理账本
             Button {
-                showLedgerManagement = true
+                if appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                    showLedgerManagement = true
+                } else {
+                    HapticManager.light()
+                    showSubscriptionSheet = true
+                }
             } label: {
                 HStack(spacing: Spacing.m) {
                     ZStack {
@@ -210,9 +236,15 @@ struct LedgerDrawerView: View {
                     
                     Spacer()
                     
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if !appState.subscriptionManager.hasAccess(to: .accountManagement) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.orange)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.horizontal, Spacing.l)
                 .padding(.vertical, Spacing.m)
@@ -247,6 +279,7 @@ struct LedgerDrawerView: View {
 private struct LedgerDrawerRow: View {
     let ledger: Ledger
     let isSelected: Bool
+    var canSwitch: Bool = true
     let action: () -> Void
     
     var body: some View {
@@ -304,16 +337,21 @@ private struct LedgerDrawerRow: View {
                 
                 Spacer()
                 
-                // 选中标记
+                // 选中标记或锁定标记
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
                         .foregroundStyle(Color.primaryBlue)
+                } else if !canSwitch {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.orange)
                 }
             }
             .padding(.horizontal, Spacing.l)
             .padding(.vertical, Spacing.m)
             .background(isSelected ? Color.primaryBlue.opacity(0.08) : Color.clear)
+            .opacity(canSwitch ? 1.0 : 0.6)
         }
         .buttonStyle(.plain)
     }

@@ -78,7 +78,7 @@
 
 ## 📞 联系信息
 
-- **邮箱**：xuxiaolong890217@163.com
+- **邮箱**：ailehuoquan@163.com
 - **GitHub**：https://github.com/harrysxu/jizhang_ios
 
 ## ⚠️ 注意事项

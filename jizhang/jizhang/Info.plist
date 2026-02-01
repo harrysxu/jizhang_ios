@@ -2,9 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIBackgroundModes</key>
+	<key>CFBundleDocumentTypes</key>
 	<array>
-		<string>remote-notification</string>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>记账账本备份</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.jizhang.ledger-backup</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -19,38 +30,38 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
-	<key>NSSiriUsageDescription</key>
-	<string>简记账需要使用 Siri 快速记账和查询账本信息</string>
-	<key>NSUserActivityTypes</key>
-	<array>
-		<string>AddExpenseIntent</string>
-		<string>GetTodayExpenseIntent</string>
-		<string>GetBudgetIntent</string>
-	</array>
+	<key>INIntentsRestrictedWhileLocked</key>
+	<array/>
+	<key>INIntentsRestrictedWhileProtectedDataUnavailable</key>
+	<array/>
 	<key>INIntentsSupported</key>
 	<array>
 		<string>AddExpenseIntent</string>
 		<string>GetTodayExpenseIntent</string>
 		<string>GetBudgetIntent</string>
 	</array>
-	<key>INIntentsRestrictedWhileLocked</key>
-	<array/>
-	<key>INIntentsRestrictedWhileProtectedDataUnavailable</key>
-	<array/>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>AddExpenseIntent</string>
+		<string>GetTodayExpenseIntent</string>
+		<string>GetBudgetIntent</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.jizhang.ledger-backup</string>
-			<key>UTTypeDescription</key>
-			<string>记账账本备份文件</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.json</string>
 				<string>public.data</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>记账账本备份文件</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.jizhang.ledger-backup</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -60,23 +71,6 @@
 				<key>public.mime-type</key>
 				<string>application/json</string>
 			</dict>
-		</dict>
-	</array>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>CFBundleDocumentTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>记账账本备份</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>com.jizhang.ledger-backup</string>
-			</array>
 		</dict>
 	</array>
 </dict>

@@ -336,6 +336,28 @@ struct SubscriptionView: View {
             .font(.caption2)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.leading)
+            
+            // 隐私政策和服务条款链接
+            HStack(spacing: Spacing.l) {
+                Link(destination: URL(string: "https://harrysxu.github.io/jizhang_ios/pages/privacy-policy.html")!) {
+                    Text("隐私政策")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .underline()
+                }
+                
+                Text("•")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                Link(destination: URL(string: "https://harrysxu.github.io/jizhang_ios/pages/terms-of-service.html")!) {
+                    Text("服务条款")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .underline()
+                }
+            }
+            .padding(.top, Spacing.s)
         }
         .padding(.top, Spacing.m)
     }

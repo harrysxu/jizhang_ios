@@ -29,5 +29,6 @@ jobs:
         run: >-
           xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
           -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
-          -only-testing:jizhangUITests/jizhangUITests/testExample
+          -only-testing:jizhangUITests/jizhangUITestsLaunchTests/testLaunch
+          -parallel-testing-enabled NO
           test

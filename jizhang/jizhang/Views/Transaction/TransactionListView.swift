@@ -189,16 +189,7 @@ struct TransactionListView: View {
                         LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                             ForEach(groupedTransactions, id: \.date) { group in
                                 Section {
-                                    ForEach(group.transactions) { transaction in
-                                        TransactionRowLink(transaction: transaction)
-                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                                Button(role: .destructive) {
-                                                    delete(transaction)
-                                                } label: {
-                                                    Label("删除", systemImage: "trash")
-                                                }
-                                            }
-                                    }
+                                    transactionRows(group.transactions)
                                 } header: {
                                     TransactionSectionHeader(
                                         date: group.date,
@@ -223,6 +214,20 @@ struct TransactionListView: View {
             .sheet(isPresented: $showSubscriptionSheet) {
                 SubscriptionView()
             }
+        }
+    }
+
+    @ViewBuilder
+    private func transactionRows(_ transactions: [Transaction]) -> some View {
+        ForEach(transactions) { transaction in
+            TransactionRowLink(transaction: transaction)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        delete(transaction)
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                }
         }
     }
 

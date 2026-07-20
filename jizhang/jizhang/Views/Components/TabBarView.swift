@@ -15,15 +15,27 @@ struct TabBarView: View {
     @State private var selectedTab: Tab = .home
     @State private var showAddTransaction = false
     @State private var hideTabBar = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppState.self) private var appState
     
     // MARK: - Body
     
     var body: some View {
+        if horizontalSizeClass == .regular {
+            iPadLayout
+        } else {
+            iPhoneLayout
+        }
+    }
+
+    private var iPhoneLayout: some View {
         ZStack(alignment: .bottom) {
             // 主内容区域
             TabContent(selectedTab: selectedTab)
                 .ignoresSafeArea(.keyboard)
                 .environment(\.hideTabBar, $hideTabBar)
+                .padding(.bottom, hideTabBar ? 0 : 62)
             
             // 自定义底部TabBar
             if !hideTabBar {
@@ -36,12 +48,163 @@ struct TabBarView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: hideTabBar)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: hideTabBar)
         .sheet(isPresented: $showAddTransaction) {
             AddTransactionSheet()
         }
         // 账本抽屉 - 放在最外层，覆盖整个界面包括 TabBar
         .ledgerDrawer()
+        .safeAreaInset(edge: .bottom) { undoBar }
+        .fullScreenCover(isPresented: newUserSetupBinding) {
+            NewUserSetupView()
+                .environment(appState)
+        }
+        .sheet(isPresented: updateSummaryBinding) {
+            UpdateSummaryView()
+                .environment(appState)
+        }
+    }
+
+    private var iPadLayout: some View {
+        NavigationSplitView {
+            List {
+                Section {
+                    sidebarItem(.home, title: "首页", icon: "house")
+                    sidebarItem(.transactions, title: "流水", icon: "list.bullet")
+                    sidebarItem(.report, title: "洞察", icon: "chart.bar")
+                    sidebarItem(.budget, title: "预算", icon: "gauge.with.dots.needle.33percent")
+                }
+                Section {
+                    sidebarItem(.settings, title: "设置", icon: "gearshape")
+                }
+                Section {
+                    Button {
+                        showAddTransaction = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus")
+                            Text("记一笔")
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityIdentifier("tab.addTransaction")
+                    .keyboardShortcut("n", modifiers: .command)
+                }
+            }
+            .navigationTitle("简记账")
+        } detail: {
+            TabContent(selectedTab: selectedTab)
+                .id(selectedTab)
+                .environment(\.hideTabBar, $hideTabBar)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showAddTransaction = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .accessibilityLabel("记一笔")
+                        .accessibilityIdentifier("tab.addTransaction")
+                        .help("记一笔")
+                        .keyboardShortcut("n", modifiers: .command)
+                    }
+                }
+        }
+        .id(selectedTab)
+        .sheet(isPresented: $showAddTransaction) { AddTransactionSheet() }
+        .fullScreenCover(isPresented: newUserSetupBinding) {
+            NewUserSetupView()
+                .environment(appState)
+        }
+        .sheet(isPresented: updateSummaryBinding) {
+            UpdateSummaryView()
+                .environment(appState)
+        }
+        .background {
+            Group {
+                Button("") { selectedTab = .home }.keyboardShortcut("1", modifiers: .command)
+                Button("") { selectedTab = .transactions }.keyboardShortcut("2", modifiers: .command)
+                Button("") { selectedTab = .report }.keyboardShortcut("3", modifiers: .command)
+                Button("") { selectedTab = .settings }.keyboardShortcut("4", modifiers: .command)
+            }
+            .hidden()
+        }
+        .ledgerDrawer()
+        .safeAreaInset(edge: .bottom) { undoBar }
+    }
+
+    private func sidebarItem(_ tab: Tab, title: String, icon: String) -> some View {
+        NavigationLink {
+            TabContent(selectedTab: tab)
+                .id(tab)
+                .onAppear { selectedTab = tab }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                Text(title)
+                    .fontWeight(selectedTab == tab ? .semibold : .regular)
+            }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(.primary)
+        }
+        .accessibilityLabel(title)
+        .listRowBackground(
+            selectedTab == tab ? Color.brandEmerald.opacity(0.1) : Color.clear
+        )
+    }
+
+    private var newUserSetupBinding: Binding<Bool> {
+        Binding(
+            get: { appState.shouldShowNewUserSetup },
+            set: { appState.shouldShowNewUserSetup = $0 }
+        )
+    }
+
+    private var updateSummaryBinding: Binding<Bool> {
+        Binding(
+            get: { appState.shouldShowUpdateSummary },
+            set: { appState.shouldShowUpdateSummary = $0 }
+        )
+    }
+
+    @ViewBuilder
+    private var undoBar: some View {
+        if appState.pendingTransactionUndo != nil {
+            HStack {
+                Image(systemName: "trash")
+                Text("流水已删除")
+                Spacer()
+                Button("撤销") {
+                    try? appState.undoPendingTransactionDeletion()
+                }
+                .fontWeight(.semibold)
+            }
+            .font(.subheadline)
+            .padding(.horizontal, Spacing.l)
+            .frame(height: 48)
+            .background(.bar)
+            .accessibilityElement(children: .combine)
+        } else if appState.recentlyCreatedTransactionID != nil {
+            HStack {
+                Image(systemName: "checkmark.circle")
+                    .foregroundStyle(Color.brandEmerald)
+                Text("流水已保存")
+                Spacer()
+                Button("撤销") {
+                    try? appState.undoRecentlyCreatedTransaction()
+                }
+                .fontWeight(.semibold)
+            }
+            .font(.subheadline)
+            .padding(.horizontal, Spacing.l)
+            .frame(height: 48)
+            .background(.bar)
+            .accessibilityElement(children: .combine)
+        }
     }
 }
 
@@ -74,6 +237,8 @@ struct TabContent: View {
                 ReportView()
             case .settings:
                 SettingsView()
+            case .budget:
+                BudgetView()
             }
         }
     }
@@ -109,15 +274,8 @@ struct CustomTabBar: View {
             Button(action: onAddTap) {
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 60, height: 60)
-                        .shadow(color: Color.primaryBlue.opacity(0.4), radius: 12, x: 0, y: 6)
+                        .fill(Color.primaryBlue)
+                        .frame(width: 56, height: 56)
                     
                     PhosphorIcon.icon(named: "plus", weight: .bold)
                         .frame(width: 26, height: 26)
@@ -125,13 +283,15 @@ struct CustomTabBar: View {
                 }
             }
             .buttonStyle(ScaleButtonStyle())
+            .accessibilityLabel("记一笔")
+            .accessibilityIdentifier("tab.addTransaction")
             .offset(y: -12) // 凸出效果
             .frame(maxWidth: .infinity)
             
             // 报表
             TabBarButton(
                 iconName: "chartBar",
-                title: "报表",
+                title: "洞察",
                 isSelected: selectedTab == .report
             ) {
                 selectedTab = .report
@@ -167,6 +327,7 @@ struct TabBarButton: View {
     let action: () -> Void
     
     @State private var isPressed = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
         Button(action: {
@@ -179,17 +340,21 @@ struct TabBarButton: View {
                 // 图标
                 PhosphorIcon.icon(named: iconName, weight: isSelected ? .fill : .regular)
                     .frame(width: 24, height: 24)
-                    .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
+                    .foregroundStyle(isSelected ? Color.brandEmerald : Color.brandMuted)
                 
-                Text(title)
-                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? Color.primaryBlue : Color.secondary)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text(title)
+                        .font(isSelected ? .caption2.weight(.semibold) : .caption2)
+                        .foregroundStyle(isSelected ? Color.brandEmerald : Color.brandMuted)
+                }
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
             .scaleEffect(isPressed ? 0.9 : 1.0)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
@@ -208,11 +373,12 @@ struct TabBarButton: View {
 
 // MARK: - Tab Enum
 
-enum Tab {
+enum Tab: Hashable {
     case home
     case transactions
     case report
     case settings
+    case budget
 }
 
 // MARK: - Preview

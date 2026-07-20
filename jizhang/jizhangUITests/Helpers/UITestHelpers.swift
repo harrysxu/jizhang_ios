@@ -19,23 +19,29 @@ class UITestHelpers {
     // MARK: - App Launch
     
     /// 启动应用（重置状态）
-    func launchApp(resetState: Bool = true) {
-        if resetState {
-            app.launchArguments = ["--uitesting", "--reset"]
+    func launchApp(resetState: Bool = true, existingUser: Bool = true, premium: Bool = false) {
+        app.launchArguments = ["--uitesting"]
+        if resetState { app.launchArguments.append("--reset") }
+        if existingUser {
+            app.launchArguments.append(contentsOf: ["--existing-user", "--skip-update-summary"])
         }
+        if premium { app.launchArguments.append("--premium") }
         app.launch()
+        if existingUser {
+            XCTAssertTrue(
+                app.staticTexts["今日状态"].waitForExistence(timeout: 8),
+                "首页未能启动"
+            )
+        }
     }
     
     // MARK: - Navigation
     
     /// 切换到指定Tab
     func switchToTab(_ tabName: String) {
-        let tabBar = app.tabBars.firstMatch
-        let tab = tabBar.buttons[tabName]
-        
-        if tab.exists {
-            tab.tap()
-        }
+        let tab = app.buttons[tabName]
+        XCTAssertTrue(tab.waitForExistence(timeout: 3), "Tab '\(tabName)' 不存在")
+        tab.tap()
     }
     
     /// 点击导航栏按钮
@@ -63,19 +69,13 @@ class UITestHelpers {
     
     /// 输入金额
     func enterAmount(_ amount: String) {
-        // 假设金额输入框有特定的标识符
-        let amountField = app.textFields["AmountInput"]
+        let amountField = app.textFields["transaction.amount"]
         XCTAssertTrue(amountField.waitForExistence(timeout: 3), "金额输入框不存在")
-        
         amountField.tap()
-        
-        // 逐个输入数字
-        for char in amount {
-            if char == "." {
-                app.buttons["小数点"].tap()
-            } else if let digit = Int(String(char)) {
-                app.buttons[String(digit)].tap()
-            }
+        amountField.typeText(amount)
+        let doneButton = app.buttons["完成"].firstMatch
+        if doneButton.waitForExistence(timeout: 2) {
+            doneButton.tap()
         }
     }
     
@@ -201,25 +201,10 @@ class UITestHelpers {
     
     /// 添加交易（简化流程）
     func addExpense(amount: String, category: String, account: String = "现金") {
-        // 点击添加按钮
-        tapButton("添加")
-        
-        // 选择交易类型
-        tapButton("支出")
-        
-        // 输入金额
+        tapButton("tab.addTransaction")
         enterAmount(amount)
-        
-        // 选择分类
-        tapButton("选择分类")
-        selectListItem(category)
-        
-        // 选择账户
-        tapButton("选择账户")
-        selectListItem(account)
-        
-        // 保存
         tapButton("保存")
+        XCTAssertTrue(app.staticTexts["流水已保存"].waitForExistence(timeout: 5))
     }
     
     // MARK: - Screenshot

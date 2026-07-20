@@ -55,7 +55,7 @@ struct ReportPeriodPicker: View {
                 Spacer()
                 
                 Text(formattedDateRange)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.primary)
                 
                 Spacer()

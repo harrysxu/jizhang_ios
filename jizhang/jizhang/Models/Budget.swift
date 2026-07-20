@@ -71,6 +71,7 @@ final class Budget {
         amount: Decimal,
         period: BudgetPeriod = .monthly,
         startDate: Date = Date(),
+        endDate: Date? = nil,
         enableRollover: Bool = false
     ) {
         self.id = UUID()
@@ -89,7 +90,7 @@ final class Budget {
         case .yearly:
             self.endDate = calendar.date(byAdding: .year, value: 1, to: startDate) ?? startDate
         case .custom:
-            self.endDate = startDate
+            self.endDate = endDate ?? startDate
         }
         
         self.ledger = ledger

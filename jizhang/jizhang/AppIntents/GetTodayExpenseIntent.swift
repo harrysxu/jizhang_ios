@@ -17,31 +17,14 @@ struct GetTodayExpenseIntent: AppIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
-        // 1. 获取ModelContainer
-        let appGroupIdentifier = "group.com.xxl.jizhang"
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) else {
-            throw IntentError.dataAccessFailed
-        }
-        
-        let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
-        
-        let schema = Schema([
-            Ledger.self,
-            Account.self,
-            Category.self,
-            Transaction.self,
-            Budget.self,
-            Tag.self
-        ])
-        
-        let config = ModelConfiguration(schema: schema, url: storeURL)
-        let modelContainer = try ModelContainer(for: schema, configurations: [config])
-        let context = modelContainer.mainContext
+        let result = try ModelContainerFactory().makeContainer(mode: .production)
+        let context = result.container.mainContext
         
         // 2. 获取当前账本
-        guard let ledger = try await getCurrentLedger(context: context, appGroupIdentifier: appGroupIdentifier) else {
+        guard let ledger = try await getCurrentLedger(
+            context: context,
+            appGroupIdentifier: AppConstants.appGroupIdentifier
+        ) else {
             throw IntentError.noLedger
         }
         

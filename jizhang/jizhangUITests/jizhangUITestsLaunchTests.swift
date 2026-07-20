@@ -20,7 +20,10 @@ final class jizhangUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--reset", "--existing-user", "--skip-update-summary"]
         app.launch()
+
+        XCTAssertTrue(app.staticTexts["今日状态"].waitForExistence(timeout: 8))
 
         // Insert steps here to perform after app launch but before taking a screenshot,
         // such as logging into a test account or navigating somewhere in the app

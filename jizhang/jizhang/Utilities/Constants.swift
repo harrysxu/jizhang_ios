@@ -26,9 +26,9 @@ enum Spacing {
 /// 圆角系统
 enum CornerRadius {
     static let small: CGFloat = 8    // 小圆角(按钮)
-    static let medium: CGFloat = 12  // 中圆角(小卡片)
-    static let large: CGFloat = 16   // 大圆角(主卡片) ⭐
-    static let xlarge: CGFloat = 20  // 超大圆角(特殊组件)
+    static let medium: CGFloat = 8
+    static let large: CGFloat = 8
+    static let xlarge: CGFloat = 8
 }
 
 // MARK: - FontSize
@@ -58,22 +58,54 @@ enum FontSize {
 
 extension Color {
     // MARK: - Primary Colors
+
+    static var brandInk: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.95, green: 0.96, blue: 0.95, alpha: 1)
+                : UIColor(red: 0.067, green: 0.075, blue: 0.071, alpha: 1)
+        })
+    }
+
+    static var brandEmerald: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.31, green: 0.82, blue: 0.63, alpha: 1)
+                : UIColor(red: 0.043, green: 0.431, blue: 0.31, alpha: 1)
+        })
+    }
+
+    static var brandCoral: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 1, green: 0.48, blue: 0.44, alpha: 1)
+                : UIColor(red: 0.78, green: 0.259, blue: 0.227, alpha: 1)
+        })
+    }
+
+    static var brandMuted: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.68, green: 0.72, blue: 0.69, alpha: 1)
+                : UIColor(red: 0.28, green: 0.30, blue: 0.29, alpha: 1)
+        })
+    }
     
     /// 主色调
     static var primaryBlue: Color {
-        Color(hex: "#007AFF")
+        Color(hex: "#0B6E4F")
     }
     
     // MARK: - Function Colors
     
     /// 收入绿色
     static var incomeGreen: Color {
-        Color(hex: "#34C759")
+        brandEmerald
     }
     
     /// 支出红色
     static var expenseRed: Color {
-        Color(hex: "#FF3B30")
+        brandCoral
     }
     
     /// 警告橙色

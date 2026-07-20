@@ -58,35 +58,89 @@ struct AmountInputField: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            // 金额输入框
-            TextField("0", text: $textValue)
-                .font(.system(size: fontSize, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-                .keyboardType(.decimalPad)
-                .focused($isFocused)
-                .minimumScaleFactor(0.5)
-                .onChange(of: textValue) { oldValue, newValue in
-                    handleTextChange(newValue)
-                }
-                .onAppear {
-                    // 初始化文本值
-                    if amount > 0 {
-                        textValue = formatForEditing(amount)
+            // 金额输入框。两侧保留等宽区域，确保清空按钮不会挤动居中的金额。
+            HStack(spacing: 0) {
+                Color.clear
+                    .frame(width: 88, height: 44)
+                    .accessibilityHidden(true)
+
+                TextField("0", text: $textValue)
+                    .accessibilityLabel("金额")
+                    .accessibilityIdentifier("transaction.amount")
+                    .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .keyboardType(.decimalPad)
+                    .focused($isFocused)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("完成") {
+                                isFocused = false
+                            }
+                        }
+                    }
+                    .lineLimit(1)
+                    .onChange(of: textValue) { oldValue, newValue in
+                        handleTextChange(newValue)
+                    }
+                    .onAppear {
+                        // 初始化文本值
+                        if amount > 0 {
+                            textValue = formatForEditing(amount)
+                        }
+                    }
+                    .onChange(of: amount) { oldValue, newValue in
+                        // 建议金额和“上一笔”可能在键盘聚焦时更新绑定值。
+                        if Decimal(string: textValue) != newValue {
+                            textValue = newValue > 0 ? formatForEditing(newValue) : ""
+                        }
+                    }
+
+                HStack(spacing: 0) {
+                    if isFocused {
+                        Group {
+                            if !textValue.isEmpty {
+                                Button {
+                                    textValue = ""
+                                    amount = 0
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                                .accessibilityLabel("清空金额")
+                                .accessibilityIdentifier("transaction.amount.clear")
+                            } else {
+                                Color.clear
+                                    .frame(width: 44, height: 44)
+                                    .accessibilityHidden(true)
+                            }
+                        }
+
+                        Button {
+                            isFocused = false
+                        } label: {
+                            Image(systemName: "keyboard.chevron.compact.down")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                        .accessibilityLabel("收起键盘")
+                        .accessibilityIdentifier("transaction.amount.done")
+                    } else {
+                        Color.clear
+                            .frame(width: 88, height: 44)
+                            .accessibilityHidden(true)
                     }
                 }
-                .onChange(of: amount) { oldValue, newValue in
-                    // 当外部修改 amount 时同步更新文本
-                    if !isFocused {
-                        textValue = newValue > 0 ? formatForEditing(newValue) : ""
-                    }
-                }
+                .frame(width: 88, height: 44)
+            }
         }
         .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isFocused = true
-        }
     }
     
     private func handleTextChange(_ newValue: String) {

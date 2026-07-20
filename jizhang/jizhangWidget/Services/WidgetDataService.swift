@@ -12,7 +12,7 @@ import SwiftData
 actor WidgetDataService {
     static let shared = WidgetDataService()
     
-    private let modelContainer: ModelContainer
+    private let modelContainer: ModelContainer?
     private let appGroupIdentifier = "group.com.xxl.jizhang"
     
     private init() {
@@ -30,7 +30,8 @@ actor WidgetDataService {
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else {
-            fatalError("无法获取App Groups容器URL")
+            modelContainer = nil
+            return
         }
         
         let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
@@ -40,7 +41,7 @@ actor WidgetDataService {
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [config])
         } catch {
-            fatalError("无法创建ModelContainer: \(error)")
+            modelContainer = nil
         }
     }
     
@@ -49,6 +50,7 @@ actor WidgetDataService {
     /// 获取Widget数据
     @MainActor
     func fetchWidgetData() async throws -> WidgetData {
+        guard let modelContainer else { return .empty() }
         let context = modelContainer.mainContext
         
         // 1. 获取当前账本
@@ -100,12 +102,11 @@ actor WidgetDataService {
             .reduce(Decimal(0)) { $0 + $1.amount }
         
         // 7. 获取预算信息
-        let budgets = try getBudgetsSync(in: context, ledger: currentLedger, now: now)
-        let monthBudget = budgets.reduce(Decimal(0)) { $0 + $1.amount }
-        let todayBudget = monthBudget / Decimal(calendar.range(of: .day, in: .month, for: now)?.count ?? 30)
-        
-        // 8. 计算预算使用率（今日支出 / 今日预算）
-        let budgetUsage = todayBudget > 0 ? Double(truncating: (todayExpense / todayBudget) as NSNumber) : 0
+        let budgetSummary = try BudgetCalculator(modelContext: context)
+            .summary(ledgerID: currentLedger.id, at: now)
+        let monthBudget = budgetSummary.totalBudget
+        let todayBudget = budgetSummary.safeDaily
+        let budgetUsage = budgetSummary.progress
         
         // 9. 转换为简化模型 (最近5笔)
         let simpleTransactions = monthTransactions

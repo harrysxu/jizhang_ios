@@ -17,10 +17,10 @@ struct LedgerSwitcher: View {
         // 纯文字 + 箭头，无任何背景
         HStack(spacing: 4) {
             Text(appState.currentLedger?.name ?? "选择账本")
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
             
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
         }
         .foregroundStyle(.primary)
@@ -31,6 +31,7 @@ struct LedgerSwitcher: View {
 /// 用于主页面（首页、流水、报表、设置）
 struct CustomNavigationBar<TrailingContent: View>: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String?
     let showLedgerSwitcher: Bool
     let trailingContent: TrailingContent
@@ -46,37 +47,54 @@ struct CustomNavigationBar<TrailingContent: View>: View {
     }
     
     var body: some View {
-        HStack {
-            // 左侧：账本切换器
-            if showLedgerSwitcher {
-                Button {
-                    HapticManager.light()
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                        appState.showLedgerDrawer = true
+        Group {
+            if dynamicTypeSize.isAccessibilitySize, let title {
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    HStack {
+                        ledgerButton
+                        Spacer(minLength: Spacing.m)
+                        trailingContent
+                            .foregroundStyle(.primary)
                     }
-                } label: {
-                    LedgerSwitcher()
-                        .contentShape(Rectangle())
+                    Text(title)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+            } else {
+                HStack {
+                    ledgerButton
+                    Spacer()
+                    if let title {
+                        Text(title)
+                            .font(.headline)
+                        Spacer()
+                    }
+                    trailingContent
+                        .foregroundStyle(.primary)
+                }
             }
-            
-            Spacer()
-            
-            // 中间：标题（如果有）
-            if let title = title {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-            }
-            
-            // 右侧：自定义内容
-            trailingContent
-                .foregroundStyle(.primary)
         }
         .frame(minHeight: 44) // 确保最小高度符合人机交互指南
         .padding(.horizontal, Spacing.l)
         .padding(.vertical, Spacing.m)
+    }
+
+    @ViewBuilder
+    private var ledgerButton: some View {
+        if showLedgerSwitcher {
+            Button {
+                HapticManager.light()
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    appState.showLedgerDrawer = true
+                }
+            } label: {
+                LedgerSwitcher()
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("ledger.switcher")
+        }
     }
 }
 
@@ -116,10 +134,11 @@ struct SubPageNavigationBar<TrailingContent: View>: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.body.weight(.medium))
                             Text(backButtonText)
-                                .font(.system(size: 17))
+                                .font(.body)
                         }
+                        .frame(minHeight: 44)
                         .foregroundStyle(.primary)
                         .contentShape(Rectangle())
                     }
@@ -352,4 +371,3 @@ struct FlexibleSheetNavigationBar: View {
     .modelContainer(for: [Ledger.self])
     .environment(AppState())
 }
-

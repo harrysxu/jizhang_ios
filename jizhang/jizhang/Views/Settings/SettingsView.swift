@@ -32,7 +32,7 @@ struct SettingsView: View {
                     }
                     
                     // 当前账本设置
-                    Section("当前账本设置") {
+                    Section {
                         // 账户管理 - 只读模式
                         NavigationLink {
                             AccountManagementView()
@@ -86,17 +86,14 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                    } header: {
+                        Text("当前账本设置").foregroundStyle(Color.brandMuted)
                     }
                     
                     // 数据
-                    Section("数据") {
+                    Section {
                         Button {
-                            if appState.subscriptionManager.hasAccess(to: .cloudSync) {
-                                showCloudSyncDetail = true
-                            } else {
-                                HapticManager.light()
-                                showSubscriptionSheet = true
-                            }
+                            showCloudSyncDetail = true
                         } label: {
                             HStack {
                                 SettingsRow(
@@ -106,13 +103,7 @@ struct SettingsView: View {
                                 )
                                 Spacer()
                                 
-                                if appState.subscriptionManager.hasAccess(to: .cloudSync) {
-                                    CloudSyncStatusView(cloudKitService: appState.cloudKitService, showText: false)
-                                } else {
-                                    Image(systemName: "crown.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(.orange)
-                                }
+                                CloudSyncStatusView(cloudKitService: appState.cloudKitService, showText: false)
                                 
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 14, weight: .semibold))
@@ -120,10 +111,12 @@ struct SettingsView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                    } header: {
+                        Text("数据").foregroundStyle(Color.brandMuted)
                     }
                     
                     // 数据管理
-                    Section("数据管理") {
+                    Section {
                         // 测试数据填充（仅在DEBUG模式显示）
                         #if DEBUG
                         NavigationLink {
@@ -180,8 +173,27 @@ struct SettingsView: View {
                                 title: "删除账本"
                             )
                         }
+                    } header: {
+                        Text("数据管理").foregroundStyle(Color.brandMuted)
+                    }
+
+                    // 关于与法律
+                    Section {
+                        NavigationLink {
+                            AboutLegalView()
+                        } label: {
+                            SettingsRow(
+                                iconName: "info",
+                                iconColor: .brandEmerald,
+                                title: "关于与法律"
+                            )
+                        }
+                        .accessibilityIdentifier("settings.aboutLegal")
+                    } header: {
+                        Text("关于").foregroundStyle(Color.brandMuted)
                     }
                 }
+                .font(.body)
                 .contentMargins(.bottom, Layout.tabBarBottomPadding, for: .scrollContent)
             }
             .background(Color(.systemGroupedBackground))
@@ -270,9 +282,14 @@ private struct SettingsRow: View {
                 .frame(width: 22, height: 22)
                 .foregroundStyle(iconColor)
                 .frame(width: 30)
+                .accessibilityHidden(true)
             
             Text(title)
+                .font(.body)
+                .foregroundStyle(Color.brandInk)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
     }
 }
 

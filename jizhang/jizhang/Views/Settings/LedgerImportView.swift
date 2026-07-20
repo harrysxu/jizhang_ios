@@ -17,6 +17,8 @@ struct LedgerImportView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
     @Environment(\.hideTabBar) private var hideTabBar
+
+    let initialURL: URL?
     
     // MARK: - State
     
@@ -36,6 +38,11 @@ struct LedgerImportView: View {
     
     @State private var showSwitchLedgerAlert = false
     @State private var importedLedger: Ledger?
+    @State private var didLoadInitialURL = false
+
+    init(initialURL: URL? = nil) {
+        self.initialURL = initialURL
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -72,6 +79,9 @@ struct LedgerImportView: View {
         .disabled(isImporting)
         .onAppear {
             hideTabBar.wrappedValue = true
+            guard !didLoadInitialURL, let initialURL else { return }
+            didLoadInitialURL = true
+            loadFile(at: initialURL)
         }
         .onDisappear {
             hideTabBar.wrappedValue = false
@@ -380,39 +390,31 @@ struct LedgerImportView: View {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
-            
-            // 开始访问安全作用域资源
-            guard url.startAccessingSecurityScopedResource() else {
-                errorMessage = "无法访问选择的文件"
-                showErrorAlert = true
-                return
-            }
-            
-            defer {
-                url.stopAccessingSecurityScopedResource()
-            }
-            
-            do {
-                let data = try Data(contentsOf: url)
-                selectedFileData = data
-                
-                // 解析预览
-                let service = LedgerImportService(modelContext: modelContext)
-                let preview = try service.preview(from: data)
-                
-                withAnimation {
-                    importPreview = preview
-                }
-                
-                HapticManager.success()
-            } catch {
-                errorMessage = "文件读取失败: \(error.localizedDescription)"
-                showErrorAlert = true
-                HapticManager.error()
-            }
+            loadFile(at: url)
             
         case .failure(let error):
             errorMessage = "文件选择失败: \(error.localizedDescription)"
+            showErrorAlert = true
+            HapticManager.error()
+        }
+    }
+
+    private func loadFile(at url: URL) {
+        let hasSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if hasSecurityScope { url.stopAccessingSecurityScopedResource() }
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let preview = try LedgerImportService(modelContext: modelContext).preview(from: data)
+            selectedFileData = data
+            withAnimation { importPreview = preview }
+            HapticManager.success()
+        } catch {
+            selectedFileData = nil
+            importPreview = nil
+            errorMessage = "文件读取失败: \(error.localizedDescription)"
             showErrorAlert = true
             HapticManager.error()
         }

@@ -151,14 +151,15 @@ struct SubscriptionView: View {
                 FeatureRow(name: "基础报表(总览)", freeAccess: true, premiumAccess: true)
                 FeatureRow(name: "查看默认账户", freeAccess: true, premiumAccess: true)
                 FeatureRow(name: "查看默认分类", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "iCloud同步", freeAccess: true, premiumAccess: true)
+                FeatureRow(name: "1个预算", freeAccess: true, premiumAccess: true)
                 
                 // 高级功能 - 仅Pro支持
                 FeatureRow(name: "完整报表分析", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "自定义账户", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "自定义分类", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "预算管理", freeAccess: false, premiumAccess: true)
+                FeatureRow(name: "无限预算及高级预算", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "多账本管理", freeAccess: false, premiumAccess: true)
-                FeatureRow(name: "iCloud同步", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "数据导出", freeAccess: false, premiumAccess: true)
                 FeatureRow(name: "账本备份", freeAccess: false, premiumAccess: true, isLast: true)
             }

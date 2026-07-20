@@ -12,6 +12,7 @@ import SwiftData
 struct TransactionListView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     @Query(sort: \Transaction.date, order: .reverse) private var allTransactions: [Transaction]
     
@@ -118,67 +119,71 @@ struct TransactionListView: View {
                         }
                     }
                 }
-                
-                // 搜索框
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("搜索流水...", text: $searchText)
+
+                if horizontalSizeClass == .regular {
+                    HStack(spacing: Spacing.s) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(Color.brandMuted)
+                            .accessibilityHidden(true)
+                        TextField("分类、备注或账户", text: $searchText, axis: .vertical)
+                            .textFieldStyle(.plain)
+                            .lineLimit(1...2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityLabel("搜索流水")
+                            .accessibilityIdentifier("transactions.search")
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Color.brandMuted)
+                            .accessibilityLabel("清除搜索")
+                        }
+                    }
+                    .padding(.vertical, Spacing.s)
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, Spacing.m)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                    .padding(.horizontal, Spacing.m)
                 }
-                .padding(Spacing.s)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
-                .padding(.horizontal, Spacing.m)
-                .padding(.bottom, Spacing.s)
                 
                 // 月份选择器 (参考UI样式: 2026-01格式)
                 MonthYearPicker(selectedDate: $selectedMonth)
                     .padding(.vertical, Spacing.s)
                 
                 // 类型筛选（全部、支出、收入、转账）
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Spacing.s) {
-                        QuickFilterButton(
-                            title: "全部",
-                            isSelected: selectedType == nil
-                        ) {
-                            selectedType = nil
-                        }
-                        
-                        QuickFilterButton(
-                            title: "支出",
-                            isSelected: selectedType == .expense
-                        ) {
-                            selectedType = .expense
-                        }
-                        
-                        QuickFilterButton(
-                            title: "收入",
-                            isSelected: selectedType == .income
-                        ) {
-                            selectedType = .income
-                        }
-                        
-                        QuickFilterButton(
-                            title: "转账",
-                            isSelected: selectedType == .transfer
-                        ) {
-                            selectedType = .transfer
-                        }
-                    }
-                    .padding(.horizontal, Spacing.m)
+                Picker("流水类型", selection: $selectedType) {
+                    Text("全部").tag(nil as TransactionType?)
+                    Text("支出").tag(TransactionType.expense as TransactionType?)
+                    Text("收入").tag(TransactionType.income as TransactionType?)
+                    Text("转账").tag(TransactionType.transfer as TransactionType?)
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, Spacing.m)
                 .padding(.vertical, Spacing.s)
                 
                 Divider()
                 
                 // 流水列表
                 if filteredTransactions.isEmpty {
-                    ContentUnavailableView(
-                        searchText.isEmpty ? "暂无流水记录" : "未找到匹配的流水",
-                        systemImage: "doc.text.magnifyingglass",
-                        description: Text(searchText.isEmpty ? "点击 + 添加第一笔记录" : "尝试调整筛选条件")
-                    )
+                    VStack(spacing: Spacing.m) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.largeTitle)
+                            .foregroundStyle(Color.brandMuted)
+                            .accessibilityHidden(true)
+                        Text(searchText.isEmpty ? "暂无流水记录" : "未找到匹配的流水")
+                            .font(.title3.weight(.semibold))
+                            .multilineTextAlignment(.center)
+                        Text(searchText.isEmpty ? "点击 + 添加第一笔记录" : "尝试调整筛选条件")
+                            .font(.body)
+                            .foregroundStyle(Color.brandMuted)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(Spacing.xl)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -186,6 +191,13 @@ struct TransactionListView: View {
                                 Section {
                                     ForEach(group.transactions) { transaction in
                                         TransactionRowLink(transaction: transaction)
+                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                                Button(role: .destructive) {
+                                                    delete(transaction)
+                                                } label: {
+                                                    Label("删除", systemImage: "trash")
+                                                }
+                                            }
                                     }
                                 } header: {
                                     TransactionSectionHeader(
@@ -201,6 +213,7 @@ struct TransactionListView: View {
                 }
             }
             .navigationBarHidden(true)
+            .searchable(text: $searchText, prompt: "分类、备注或账户")
             .sheet(isPresented: $showExportOptions) {
                 exportOptionsSheet
             }
@@ -210,6 +223,15 @@ struct TransactionListView: View {
             .sheet(isPresented: $showSubscriptionSheet) {
                 SubscriptionView()
             }
+        }
+    }
+
+    private func delete(_ transaction: Transaction) {
+        guard let service = appState.transactionService else { return }
+        do {
+            appState.offerUndo(try service.delete(id: transaction.id))
+        } catch {
+            // 失败时服务已回滚，列表保持原样。
         }
     }
     
@@ -499,6 +521,7 @@ private struct TransactionRowLink: View {
             .background(Color(.systemBackground))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("transaction.row.\(transaction.id.uuidString)")
     }
     
     private func formatTime(_ date: Date) -> String {

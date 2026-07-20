@@ -1,0 +1,33 @@
+name: iOS 2.0
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build App and Widget
+        run: >-
+          xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build
+      - name: Unit and integration tests
+        run: >-
+          xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
+          -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+          -only-testing:jizhangTests test
+      - name: UI launch smoke
+        run: >-
+          xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
+          -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+          -only-testing:jizhangUITests/jizhangUITests/testExample
+          test

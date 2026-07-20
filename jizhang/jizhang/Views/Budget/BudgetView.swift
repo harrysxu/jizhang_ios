@@ -72,6 +72,10 @@ private struct BudgetContentView: View {
                             }
                         }
                     }
+                    .accessibilityLabel("创建预算")
+                    .accessibilityIdentifier("budget.create")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 
                 ScrollView {
@@ -211,7 +215,7 @@ private struct BudgetContentView: View {
             
             Text("为不同分类设置预算,更好地控制支出")
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandMuted)
                 .multilineTextAlignment(.center)
             
             PrimaryActionButton("创建预算", icon: "plus.circle.fill") {

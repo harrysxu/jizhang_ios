@@ -38,8 +38,10 @@ struct MonthYearPicker: View {
                 showPicker = true
             }) {
                 Text(formattedDate)
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
+                    .frame(minWidth: 88, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             
@@ -215,7 +217,7 @@ private struct YearChip: View {
     var body: some View {
         Button(action: action) {
             Text("\(year)年")
-                .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                .font(isSelected ? .body.weight(.semibold) : .body)
                 .foregroundColor(isSelected ? .white : .primary)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
@@ -238,7 +240,7 @@ private struct MonthChip: View {
     var body: some View {
         Button(action: action) {
             Text("\(month)月")
-                .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
+                .font(isSelected ? .callout.weight(.semibold) : .callout)
                 .foregroundColor(isSelected ? .white : .primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)

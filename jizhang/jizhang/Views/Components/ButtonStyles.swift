@@ -28,7 +28,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.headline)
             .foregroundColor(.white)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -81,7 +81,7 @@ struct PrimaryActionButton: View {
             HStack(spacing: 8) {
                 if let icon = icon {
                     Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.headline)
                 }
                 Text(title)
             }

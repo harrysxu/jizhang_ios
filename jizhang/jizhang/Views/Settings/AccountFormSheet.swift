@@ -154,9 +154,7 @@ struct AccountFormSheet: View {
         if isEditing {
             // 编辑现有账户
             guard let account = account else { return }
-            
             account.name = name.trimmingCharacters(in: .whitespaces)
-            account.balance = balance
             account.creditLimit = type == .creditCard ? creditLimit : nil
             account.statementDay = type == .creditCard ? statementDay : nil
             account.dueDay = type == .creditCard ? dueDay : nil
@@ -181,7 +179,18 @@ struct AccountFormSheet: View {
         }
         
         do {
-            try modelContext.save()
+            if let account, account.balance != balance {
+                guard let transactionService = appState.transactionService else {
+                    throw TransactionError.missingDependencies
+                }
+                _ = try transactionService.adjustBalance(
+                    accountID: account.id,
+                    to: balance,
+                    note: "账户余额调整"
+                )
+            } else {
+                try modelContext.save()
+            }
             dismiss()
         } catch {
             errorMessage = "保存失败: \(error.localizedDescription)"

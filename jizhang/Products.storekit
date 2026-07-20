@@ -1,0 +1,89 @@
+{
+  "identifier" : "47B6E2F3-1B62-4D09-9AF6-6D882E320200",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "38",
+      "familyShareable" : false,
+      "internalID" : "JIZHANG_LIFETIME",
+      "localizations" : [
+        {
+          "description" : "一次购买，永久使用高级能力",
+          "displayName" : "简记账终身会员",
+          "locale" : "zh_CN"
+        }
+      ],
+      "productID" : "com.xxl.jizhang.lifetime",
+      "referenceName" : "Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "JIZHANG",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "zh_CN",
+    "_storefront" : "CHN",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "jizhang_premium",
+      "localizations" : [
+        {
+          "description" : "简记账高级能力",
+          "displayName" : "简记账会员",
+          "locale" : "zh_CN"
+        }
+      ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "28",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "JIZHANG_YEARLY",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "按年自动续订",
+              "displayName" : "年会员",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.xxl.jizhang.subscription.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Yearly",
+          "subscriptionGroupID" : "jizhang_premium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "3",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "JIZHANG_MONTHLY",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "按月自动续订",
+              "displayName" : "月会员",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.xxl.jizhang.subscription.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly",
+          "subscriptionGroupID" : "jizhang_premium",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

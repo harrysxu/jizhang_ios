@@ -63,8 +63,22 @@ class BudgetViewModel: ObservableObject {
         amount: Decimal,
         period: BudgetPeriod,
         startDate: Date,
+        endDate: Date,
+        canCreateAdditionalBudget: Bool,
         enableRollover: Bool
     ) throws {
+        guard amount > 0 else { throw BudgetError.invalidAmount }
+        guard category.ledger?.id == ledger.id else {
+            throw BudgetError.crossLedgerRelationship
+        }
+        guard canCreateAdditionalBudget || (ledger.budgets ?? []).isEmpty else {
+            throw BudgetError.freeLimitReached
+        }
+        let resolvedEndDate = try resolveEndDate(
+            period: period,
+            startDate: startDate,
+            customEndDate: endDate
+        )
         // 验证:检查是否已存在相同分类的预算
         let categoryId = category.id
         
@@ -72,8 +86,9 @@ class BudgetViewModel: ObservableObject {
         let allBudgets = try modelContext.fetch(FetchDescriptor<Budget>())
         
         let existingBudgets = allBudgets.filter { budget in
+            budget.ledger?.id == ledger.id &&
             budget.category?.id == categoryId &&
-            budget.startDate <= startDate &&
+            budget.startDate < resolvedEndDate &&
             budget.endDate > startDate
         }
         
@@ -87,11 +102,17 @@ class BudgetViewModel: ObservableObject {
             amount: amount,
             period: period,
             startDate: startDate,
+            endDate: resolvedEndDate,
             enableRollover: enableRollover
         )
         
-        modelContext.insert(budget)
-        try modelContext.save()
+        do {
+            modelContext.insert(budget)
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            throw error
+        }
     }
     
     /// 更新预算
@@ -100,32 +121,52 @@ class BudgetViewModel: ObservableObject {
         amount: Decimal,
         period: BudgetPeriod,
         startDate: Date,
+        endDate: Date,
         enableRollover: Bool
     ) throws {
-        budget.amount = amount
-        budget.period = period
-        budget.startDate = startDate
-        budget.enableRollover = enableRollover
-        
-        // 重新计算结束日期
-        let calendar = Calendar.current
-        switch period {
-        case .monthly:
-            budget.endDate = calendar.date(byAdding: .month, value: 1, to: startDate) ?? startDate
-        case .yearly:
-            budget.endDate = calendar.date(byAdding: .year, value: 1, to: startDate) ?? startDate
-        case .custom:
-            // 自定义周期保持不变
-            break
+        guard amount > 0 else { throw BudgetError.invalidAmount }
+        guard let ledger = budget.ledger,
+              budget.category?.ledger?.id == ledger.id else {
+            throw BudgetError.crossLedgerRelationship
         }
-        
-        try modelContext.save()
+        let resolvedEndDate = try resolveEndDate(
+            period: period,
+            startDate: startDate,
+            customEndDate: endDate
+        )
+        let allBudgets = try modelContext.fetch(FetchDescriptor<Budget>())
+        if allBudgets.contains(where: {
+            $0.id != budget.id &&
+            $0.ledger?.id == ledger.id &&
+            $0.category?.id == budget.category?.id &&
+            $0.startDate < resolvedEndDate &&
+            $0.endDate > startDate
+        }) {
+            throw BudgetError.duplicateBudget
+        }
+
+        do {
+            budget.amount = amount
+            budget.period = period
+            budget.startDate = startDate
+            budget.enableRollover = enableRollover
+            budget.endDate = resolvedEndDate
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            throw error
+        }
     }
     
     /// 删除预算
     func deleteBudget(_ budget: Budget) throws {
-        modelContext.delete(budget)
-        try modelContext.save()
+        do {
+            modelContext.delete(budget)
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            throw error
+        }
     }
     
     /// 检查并执行预算结转
@@ -163,6 +204,25 @@ class BudgetViewModel: ObservableObject {
         selectedBudget = budget
         showBudgetDetail = true
     }
+
+    private func resolveEndDate(
+        period: BudgetPeriod,
+        startDate: Date,
+        customEndDate: Date
+    ) throws -> Date {
+        let calendar = Calendar.current
+        let endDate: Date
+        switch period {
+        case .monthly:
+            endDate = calendar.date(byAdding: .month, value: 1, to: startDate) ?? startDate
+        case .yearly:
+            endDate = calendar.date(byAdding: .year, value: 1, to: startDate) ?? startDate
+        case .custom:
+            endDate = customEndDate
+        }
+        guard endDate > startDate else { throw BudgetError.invalidPeriod }
+        return endDate
+    }
 }
 
 // MARK: - BudgetError
@@ -171,6 +231,8 @@ enum BudgetError: LocalizedError {
     case duplicateBudget
     case invalidAmount
     case invalidPeriod
+    case crossLedgerRelationship
+    case freeLimitReached
     
     var errorDescription: String? {
         switch self {
@@ -180,6 +242,10 @@ enum BudgetError: LocalizedError {
             return "预算金额必须大于0"
         case .invalidPeriod:
             return "无效的预算周期"
+        case .crossLedgerRelationship:
+            return "预算和分类必须属于同一个账本"
+        case .freeLimitReached:
+            return "免费版可创建 1 个预算，升级后可创建更多预算"
         }
     }
 }

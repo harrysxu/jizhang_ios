@@ -10,6 +10,7 @@
 import Foundation
 import SwiftData
 import UniformTypeIdentifiers
+import CryptoKit
 
 // MARK: - Custom UTType
 
@@ -23,6 +24,14 @@ extension UTType {
 // MARK: - Export Data Structure
 
 /// 顶层导出数据结构
+struct BackupManifest: Codable, Equatable {
+    let accountCount: Int
+    let categoryCount: Int
+    let transactionCount: Int
+    let budgetCount: Int
+    let tagCount: Int
+}
+
 struct LedgerExportData: Codable {
     /// 导出格式版本号
     let version: String
@@ -42,6 +51,8 @@ struct LedgerExportData: Codable {
     let budgets: [BudgetDTO]
     /// 标签列表
     let tags: [TagDTO]
+    let manifest: BackupManifest?
+    let checksum: String?
     
     init(
         version: String = "1.0",
@@ -52,7 +63,9 @@ struct LedgerExportData: Codable {
         categories: [CategoryDTO],
         transactions: [TransactionDTO],
         budgets: [BudgetDTO],
-        tags: [TagDTO]
+        tags: [TagDTO],
+        manifest: BackupManifest? = nil,
+        checksum: String? = nil
     ) {
         self.version = version
         self.exportDate = exportDate
@@ -63,6 +76,53 @@ struct LedgerExportData: Codable {
         self.transactions = transactions
         self.budgets = budgets
         self.tags = tags
+        self.manifest = manifest
+        self.checksum = checksum
+    }
+
+
+    private enum CodingKeys: String, CodingKey {
+        case version, exportDate, appVersion, ledger, accounts, categories
+        case transactions, budgets, tags, manifest, checksum
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decode(String.self, forKey: .version)
+        exportDate = try container.decode(Date.self, forKey: .exportDate)
+        appVersion = try container.decode(String.self, forKey: .appVersion)
+        ledger = try container.decode(LedgerDTO.self, forKey: .ledger)
+        accounts = try container.decode([AccountDTO].self, forKey: .accounts)
+        categories = try container.decode([CategoryDTO].self, forKey: .categories)
+        transactions = try container.decode([TransactionDTO].self, forKey: .transactions)
+        budgets = try container.decode([BudgetDTO].self, forKey: .budgets)
+        tags = try container.decode([TagDTO].self, forKey: .tags)
+        manifest = try container.decodeIfPresent(BackupManifest.self, forKey: .manifest)
+        checksum = try container.decodeIfPresent(String.self, forKey: .checksum)
+    }
+
+    func replacingChecksum(_ value: String?) -> LedgerExportData {
+        LedgerExportData(
+            version: version,
+            exportDate: exportDate,
+            appVersion: appVersion,
+            ledger: ledger,
+            accounts: accounts,
+            categories: categories,
+            transactions: transactions,
+            budgets: budgets,
+            tags: tags,
+            manifest: manifest,
+            checksum: value
+        )
+    }
+
+    func calculatedChecksum() throws -> String {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(replacingChecksum(nil))
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -231,6 +291,43 @@ struct BudgetDTO: Codable {
         self.createdAt = budget.createdAt
         self.categoryId = budget.category?.id
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, amount, period, startDate, endDate, enableRollover
+        case rolloverAmount, createdAt, categoryId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        amount = try container.decode(Decimal.self, forKey: .amount)
+        period = try container.decode(String.self, forKey: .period)
+        startDate = try container.decode(Date.self, forKey: .startDate)
+        enableRollover = try container.decodeIfPresent(Bool.self, forKey: .enableRollover) ?? false
+        rolloverAmount = try container.decodeIfPresent(Decimal.self, forKey: .rolloverAmount) ?? 0
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? startDate
+        categoryId = try container.decodeIfPresent(UUID.self, forKey: .categoryId)
+
+        if let decodedEnd = try container.decodeIfPresent(Date.self, forKey: .endDate) {
+            endDate = decodedEnd
+        } else {
+            let calendar = Calendar(identifier: .gregorian)
+            switch BudgetPeriod(rawValue: period) {
+            case .yearly:
+                endDate = calendar.date(byAdding: .year, value: 1, to: startDate) ?? startDate
+            case .monthly, .none:
+                endDate = calendar.date(byAdding: .month, value: 1, to: startDate) ?? startDate
+            case .custom:
+                throw DecodingError.keyNotFound(
+                    CodingKeys.endDate,
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "自定义预算缺少结束日期"
+                    )
+                )
+            }
+        }
+    }
 }
 
 // MARK: - Tag DTO
@@ -295,8 +392,15 @@ class LedgerExportService {
         progressHandler?(0.9, "正在生成文件...")
         
         // 创建导出数据
-        let exportData = LedgerExportData(
-            version: "1.0",
+        let manifest = BackupManifest(
+            accountCount: accountDTOs.count,
+            categoryCount: categoryDTOs.count,
+            transactionCount: transactionDTOs.count,
+            budgetCount: budgetDTOs.count,
+            tagCount: tagDTOs.count
+        )
+        let unsignedData = LedgerExportData(
+            version: "2.0",
             exportDate: Date(),
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
             ledger: ledgerDTO,
@@ -304,8 +408,10 @@ class LedgerExportService {
             categories: categoryDTOs,
             transactions: transactionDTOs,
             budgets: budgetDTOs,
-            tags: tagDTOs
+            tags: tagDTOs,
+            manifest: manifest
         )
+        let exportData = unsignedData.replacingChecksum(try unsignedData.calculatedChecksum())
         
         // 编码为JSON
         let encoder = JSONEncoder()

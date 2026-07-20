@@ -49,6 +49,7 @@ class AddTransactionViewModel {
     private var modelContext: ModelContext?
     private var appState: AppState?
     private var recommendationService: SmartRecommendationService?
+    private var transactionService: (any TransactionServicing)?
     
     // MARK: - Smart Defaults
     
@@ -86,6 +87,7 @@ class AddTransactionViewModel {
         self.modelContext = modelContext
         self.appState = appState
         self.recommendationService = SmartRecommendationService(modelContext: modelContext)
+        self.transactionService = appState.transactionService
         
         // 应用智能推荐
         applySmartDefaults()
@@ -209,9 +211,9 @@ class AddTransactionViewModel {
     
     // MARK: - Actions
     
-    func saveTransaction() async throws {
-        guard let modelContext = modelContext,
-              let appState = appState,
+    func saveTransaction() async throws -> TransactionReceipt {
+        guard let appState = appState,
+              let transactionService,
               let ledger = appState.currentLedger else {
             throw TransactionError.missingDependencies
         }
@@ -223,78 +225,52 @@ class AddTransactionViewModel {
             throw TransactionError.validationFailed(error)
         }
         
-        // 创建交易
-        let transaction = Transaction(
-            ledger: ledger,
+        guard let selectedAccount else {
+            throw TransactionError.validationFailed("请选择账户")
+        }
+
+        let draft = TransactionDraft(
+            ledgerID: ledger.id,
+            type: type,
             amount: amount,
             date: date,
-            type: type
+            primaryAccountID: selectedAccount.id,
+            destinationAccountID: selectedToAccount?.id,
+            categoryID: selectedCategory?.id,
+            tagIDs: selectedTags.map(\.id),
+            note: note.isEmpty ? nil : note,
+            payee: nil
         )
-        
-        transaction.fromAccount = selectedAccount
-        transaction.toAccount = selectedToAccount
-        transaction.category = selectedCategory
-        transaction.note = note.isEmpty ? nil : note
-        
-        // 添加标签
-        if !selectedTags.isEmpty {
-            transaction.tags = Array(selectedTags)
-        }
-        
-        // 插入到context
-        modelContext.insert(transaction)
-        
-        // 更新账户余额
-        try await updateAccountBalances(for: transaction)
-        
-        // 保存
-        try modelContext.save()
+        let receipt = try transactionService.create(draft)
         
         // 记忆用户选择
-        if let accountId = selectedAccount?.id {
-            UserPreferences.shared.rememberLastAccount(id: accountId, for: type)
-        }
+        UserPreferences.shared.rememberLastAccount(id: selectedAccount.id, for: type)
         if let categoryId = selectedCategory?.id {
             UserPreferences.shared.rememberLastCategory(id: categoryId, for: type)
         }
         
-        // 刷新Widget
-        refreshAllWidgets()
-        
         // 触发震动反馈
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
+        return receipt
     }
-    
-    private func updateAccountBalances(for transaction: Transaction) async throws {
-        switch transaction.type {
-        case .expense:
-            // 支出:减少账户余额
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
-            
-        case .income:
-            // 收入:增加账户余额
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
-            
-        case .transfer:
-            // 转账:转出账户减少,转入账户增加
-            if let fromAccount = transaction.fromAccount {
-                fromAccount.balance -= transaction.amount
-            }
-            if let toAccount = transaction.toAccount {
-                toAccount.balance += transaction.amount
-            }
-            
-        case .adjustment:
-            // 余额调整:直接修改余额
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
+
+    func repeatLastTransaction() {
+        guard let modelContext,
+              let ledgerID = appState?.currentLedger?.id,
+              let latest = try? modelContext.fetch(
+                FetchDescriptor<Transaction>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+              ).first(where: { $0.ledger?.id == ledgerID && $0.type != .adjustment }) else {
+            return
         }
+        type = latest.type
+        amount = latest.amount
+        date = Date()
+        selectedAccount = latest.primaryAccount
+        selectedToAccount = latest.type == .transfer ? latest.toAccount : nil
+        selectedCategory = latest.category
+        selectedTags = Set(latest.tags ?? [])
+        note = latest.note ?? ""
     }
     
     // MARK: - Helper Methods

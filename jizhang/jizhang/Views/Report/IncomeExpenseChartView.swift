@@ -18,8 +18,9 @@ struct IncomeExpenseChartView: View {
             VStack(alignment: .leading, spacing: Spacing.l) {
                 Text("\(reportType.displayName)趋势")
                     .font(.headline)
+                    .foregroundStyle(Color.brandInk)
                 
-                if data.isEmpty {
+                if !hasChartData {
                     emptyView
                 } else {
                     if period == .year {
@@ -33,6 +34,12 @@ struct IncomeExpenseChartView: View {
             }
         }
         .padding(.horizontal, Spacing.l)
+    }
+
+    private var hasChartData: Bool {
+        data.contains { item in
+            reportType == .expense ? item.expense != 0 : item.income != 0
+        }
     }
     
     // MARK: - 按年图表（月度聚合）
@@ -127,6 +134,7 @@ struct IncomeExpenseChartView: View {
                     AxisValueLabel {
                         Text(date.formatted(.dateTime.day()))
                             .font(.caption)
+                            .foregroundStyle(Color.brandInk)
                     }
                 }
             }
@@ -140,6 +148,7 @@ struct IncomeExpenseChartView: View {
                     if let decimal = value.as(Decimal.self) {
                         Text(formatAmount(decimal))
                             .font(.caption2)
+                            .foregroundStyle(Color.brandInk)
                             .monospacedDigit()
                     }
                 }
@@ -176,10 +185,11 @@ struct IncomeExpenseChartView: View {
         VStack(spacing: Spacing.s) {
             Image(systemName: "chart.bar.xaxis")
                 .font(.title)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandInk)
+                .accessibilityHidden(true)
             Text("暂无数据")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.brandInk)
         }
         .frame(height: 220)
         .frame(maxWidth: .infinity)

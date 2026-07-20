@@ -1,321 +1,238 @@
-//
-//  AppState.swift
-//  jizhang
-//
-//  Created by Cursor on 2026/1/24.
-//
-
 import Foundation
 import SwiftUI
 import SwiftData
 
-/// 应用全局状态
+enum LaunchState: Equatable {
+    case launching
+    case ready
+    case failed(message: String, storeURL: URL?)
+}
+
+@MainActor
 @Observable
-class AppState {
-    // MARK: - Properties
-    
-    /// 当前选中的账本
+final class AppState {
     var currentLedger: Ledger? {
         didSet {
             if let ledger = currentLedger, ledger.id != oldValue?.id {
                 saveCurrentLedgerID()
-                updateLastAccessedAt(ledger)
                 applyTheme(ledger)
             }
         }
     }
-    
-    /// 是否显示账本抽屉
-    var showLedgerDrawer: Bool = false
-    
-    /// 是否首次启动
-    var isFirstLaunch: Bool = true
-    
-    /// CloudKit服务
-    var cloudKitService: CloudKitService
-    
-    /// 订阅管理器
-    var subscriptionManager: SubscriptionManager
-    
-    /// ModelContainer (需要支持CloudKit)
-    var modelContainer: ModelContainer
-    
-    // MARK: - Initialization
-    
-    init() {
-        // App Groups标识符 (用于Widget和Live Activity数据共享)
-        let appGroupIdentifier = AppConstants.appGroupIdentifier
-        
-        // 使用App Groups的UserDefaults
-        let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier)
-        
-        // 检查是否首次启动
-        if sharedDefaults?.bool(forKey: "hasLaunched") == true {
-            isFirstLaunch = false
-        } else {
-            isFirstLaunch = true
-            sharedDefaults?.set(true, forKey: "hasLaunched")
-        }
-        
-        // 初始化CloudKit服务
-        cloudKitService = CloudKitService()
-        
-        // 初始化订阅管理器（注意：loadStatusFromCache 需要在所有属性初始化后调用）
-        subscriptionManager = SubscriptionManager()
-        
-        // 配置SwiftData + CloudKit + App Groups
-        let schema = Schema([
-            Ledger.self,
-            Account.self,
-            Category.self,
-            Transaction.self,
-            Budget.self,
-            Tag.self
-        ])
-        
-        // 获取App Groups共享容器URL
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) else {
-            fatalError("无法获取App Groups容器URL，请确保已在Xcode中配置App Groups能力")
-        }
-        
-        // 数据库文件路径
-        let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
-        
-        // 检查是否需要清理数据库（schema变更时需要清理）
-        // v6: 添加CloudKit所需的默认值和反向关系
-        // 注意：此版本默认true是为了强制清理不兼容的schema，之后的版本应改为false
-        let needsCleanDatabase = sharedDefaults?.bool(forKey: "needsCleanDatabase_v6") ?? true
-        
-        if needsCleanDatabase {
-            print("🗑️ 清理旧数据库（schema已更新 - v6: CloudKit兼容性）...")
-            try? FileManager.default.removeItem(at: storeURL)
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-            try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-            sharedDefaults?.set(false, forKey: "needsCleanDatabase_v6")
-            print("✅ 旧数据库已清理")
-        }
-        
-        // CloudKit + App Groups配置
-        let cloudKitConfig = ModelConfiguration(
-            url: storeURL,
-            cloudKitDatabase: .automatic  // 自动使用Private Database
-        )
-        
-        // 本地模式配置（不使用CloudKit）
-        let localConfig = ModelConfiguration(
-            url: storeURL,
-            cloudKitDatabase: .none  // 不使用CloudKit
-        )
-        
-        // 先检查 iCloud 账户状态
-        let iCloudAvailable = FileManager.default.ubiquityIdentityToken != nil
-        print("📱 iCloud 账户状态: \(iCloudAvailable ? "已登录" : "未登录")")
-        
-        if !iCloudAvailable {
-            // iCloud 未登录，直接使用本地模式
-            print("⚠️ iCloud 未登录，使用本地模式")
-            do {
-                modelContainer = try ModelContainer(
-                    for: schema,
-                    configurations: [localConfig]
-                )
-                print("✅ 成功创建ModelContainer (本地模式)")
-                print("💡 提示：请在设备设置中登录 iCloud 以启用云同步")
-            } catch {
-                fatalError("无法创建ModelContainer: \(error)")
-            }
-        } else {
-            // iCloud 已登录，尝试使用 CloudKit
-            do {
-                modelContainer = try ModelContainer(
-                    for: schema,
-                    configurations: [cloudKitConfig]
-                )
-                print("✅ 成功创建ModelContainer (CloudKit模式)")
-            } catch {
-                // CloudKit失败，打印详细错误
-                print("⚠️ CloudKit模式失败")
-                print("📋 错误详情: \(error)")
-                print("📋 错误类型: \(type(of: error))")
-                if let nsError = error as NSError? {
-                    print("📋 NSError Domain: \(nsError.domain)")
-                    print("📋 NSError Code: \(nsError.code)")
-                    print("📋 NSError UserInfo: \(nsError.userInfo)")
-                }
-                
-                print("🗑️ 删除旧数据库并重试...")
-                
-                try? FileManager.default.removeItem(at: storeURL)
-                try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-                try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-                
-                do {
-                    modelContainer = try ModelContainer(
-                        for: schema,
-                        configurations: [cloudKitConfig]
-                    )
-                    print("✅ 成功重新创建ModelContainer (CloudKit模式)")
-                } catch let retryError {
-                    // CloudKit仍然失败，回退到本地模式
-                    print("⚠️ CloudKit模式仍然失败，回退到本地模式")
-                    print("📋 重试错误: \(retryError)")
-                    
-                    // 可能的原因提示
-                    print("💡 可能的原因:")
-                    print("   1. CloudKit 容器未在 Apple Developer Portal 中创建")
-                    print("   2. 容器标识符不匹配: \(AppConstants.iCloudContainerIdentifier)")
-                    print("   3. 模拟器需要重置 (Device > Erase All Content and Settings)")
-                    print("   4. 需要在真机上测试 CloudKit")
-                    
-                    // 再次清理数据库
-                    try? FileManager.default.removeItem(at: storeURL)
-                    try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"))
-                    try? FileManager.default.removeItem(at: storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-                    
-                    do {
-                        modelContainer = try ModelContainer(
-                            for: schema,
-                            configurations: [localConfig]
-                        )
-                        print("✅ 成功创建ModelContainer (本地模式)")
-                        print("⚠️ 注意：当前未启用iCloud同步，数据仅保存在本地")
-                    } catch {
-                        fatalError("无法创建ModelContainer: \(error)")
-                    }
-                }
-            }
-        }
-        
-        // 先从缓存加载订阅状态（快速启动）- 必须在所有属性初始化后调用
-        subscriptionManager.loadStatusFromCache()
-        
-        // 数据迁移：确保至少有一个默认账本
-        Task { @MainActor in
-            // 等待一小段时间，让CloudKit有机会完成初始同步
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
-            
-            migrateDefaultLedger()
-            
-            // 执行数据迁移检查
-            await DataMigration.migrateIfNeeded(context: modelContainer.mainContext)
-        }
+
+    var showLedgerDrawer = false
+    var isFirstLaunch = true
+    var launchState: LaunchState = .launching
+    var shouldShowNewUserSetup = false
+    var shouldShowUpdateSummary = false
+    private(set) var modelContainer: ModelContainer?
+    private(set) var storeURL: URL?
+    private(set) var usesCloudKit = false
+    private(set) var transactionService: (any TransactionServicing)?
+    private(set) var budgetCalculator: (any BudgetCalculating)?
+    private(set) var backupService: (any BackupServicing)?
+    private(set) var dataIntegrityInspector: (any DataIntegrityInspecting)?
+    var pendingTransactionUndo: UndoToken?
+    var recentlyCreatedTransactionID: UUID?
+
+    let cloudKitService: CloudKitService
+    let subscriptionManager: SubscriptionManager
+    let environment: AppEnvironment
+
+    convenience init() {
+        self.init(environment: .automatic())
     }
-    
-    /// 迁移逻辑：确保至少有一个默认账本
-    @MainActor
-    private func migrateDefaultLedger() {
-        let context = modelContainer.mainContext
-        
-        do {
-            let descriptor = FetchDescriptor<Ledger>(
-                sortBy: [SortDescriptor(\.sortOrder)]
-            )
-            let ledgers = try context.fetch(descriptor)
-            
-            // 检查是否有默认账本
-            let hasDefault = ledgers.contains { $0.isDefault }
-            
-            if !hasDefault && !ledgers.isEmpty {
-                // 如果没有默认账本，将第一个账本设为默认
-                ledgers[0].isDefault = true
-                try context.save()
-                print("🔧 数据迁移：已将第一个账本设为默认")
-            }
-        } catch {
-            print("⚠️ 迁移默认账本失败: \(error)")
-        }
-    }
-    
-    // MARK: - Helper Methods
-    
-    /// 保存当前账本ID到共享容器
-    func saveCurrentLedgerID() {
-        guard let ledgerId = currentLedger?.id else { return }
+
+    init(environment: AppEnvironment) {
+        self.environment = environment
+        self.cloudKitService = environment.cloudKitService
+        self.subscriptionManager = environment.subscriptionManager
+
         let sharedDefaults = UserDefaults(suiteName: AppConstants.appGroupIdentifier)
-        sharedDefaults?.set(ledgerId.uuidString, forKey: "currentLedgerId")
+        isFirstLaunch = sharedDefaults?.bool(forKey: "hasLaunched") != true
+
+        openStore()
+        subscriptionManager.loadStatusFromCache()
     }
-    
-    /// 应用主题
-    @MainActor
-    private func applyTheme(_ ledger: Ledger) {
-        // 更新全局tint color
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            windowScene.windows.forEach { window in
-                window.tintColor = UIColor(hexString: ledger.colorHex)
-            }
+
+    func retryOpenStore() {
+        launchState = .launching
+        openStore()
+    }
+
+    func offerUndo(_ token: UndoToken) {
+        pendingTransactionUndo = token
+        Task { @MainActor [weak self] in
+            let delay = max(token.expiresAt.timeIntervalSinceNow, 0)
+            try? await Task.sleep(for: .seconds(delay))
+            guard self?.pendingTransactionUndo?.expiresAt == token.expiresAt else { return }
+            self?.pendingTransactionUndo = nil
         }
     }
-    
-    /// 记录访问时间
-    private func updateLastAccessedAt(_ ledger: Ledger) {
-        let context = modelContainer.mainContext
-        // 注意: 这里需要确保Ledger有lastAccessedAt字段
-        // 目前Ledger没有这个字段,我们稍后会添加
+
+    func undoPendingTransactionDeletion() throws {
+        guard let token = pendingTransactionUndo,
+              let transactionService else { return }
+        _ = try transactionService.undo(token)
+        pendingTransactionUndo = nil
+    }
+
+    func offerUndoForCreatedTransaction(_ receipt: TransactionReceipt) {
+        recentlyCreatedTransactionID = receipt.transactionID
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            guard self?.recentlyCreatedTransactionID == receipt.transactionID else { return }
+            self?.recentlyCreatedTransactionID = nil
+        }
+    }
+
+    func undoRecentlyCreatedTransaction() throws {
+        guard let id = recentlyCreatedTransactionID,
+              let transactionService else { return }
+        _ = try transactionService.delete(id: id)
+        recentlyCreatedTransactionID = nil
+    }
+
+    private func openStore() {
         do {
-            try context.save()
+            let result = try environment.containerFactory.makeContainer(mode: environment.storeMode)
+            modelContainer = result.container
+            storeURL = result.storeURL
+            usesCloudKit = result.usesCloudKit
+            transactionService = TransactionService(
+                modelContext: result.container.mainContext,
+                now: environment.now,
+                reloadWidgets: environment.reloadWidgets
+            )
+            budgetCalculator = BudgetCalculator(modelContext: result.container.mainContext)
+            backupService = BackupService(modelContext: result.container.mainContext)
+            dataIntegrityInspector = DataIntegrityInspector(modelContext: result.container.mainContext)
+
+            if result.isNewStore {
+                let ledger = try DataInitializer(
+                    modelContext: result.container.mainContext
+                ).initializeDefaultData()
+                ledger.isDefault = true
+                try result.container.mainContext.save()
+                currentLedger = ledger
+                if ProcessInfo.processInfo.arguments.contains("--existing-user") {
+                    shouldShowUpdateSummary = !ProcessInfo.processInfo.arguments
+                        .contains("--skip-update-summary")
+                } else {
+                    shouldShowNewUserSetup = true
+                }
+            } else {
+                currentLedger = loadDefaultLedger(in: result.container.mainContext)
+                let seenVersion = UserDefaults(suiteName: AppConstants.appGroupIdentifier)?
+                    .string(forKey: "lastSeenUpdateSummaryVersion")
+                shouldShowUpdateSummary = seenVersion != "2.0"
+            }
+
+            UserDefaults(suiteName: AppConstants.appGroupIdentifier)?
+                .set(true, forKey: "hasLaunched")
+            launchState = .ready
         } catch {
-            print("⚠️ 保存访问时间失败: \(error)")
+            modelContainer = nil
+            transactionService = nil
+            budgetCalculator = nil
+            backupService = nil
+            dataIntegrityInspector = nil
+            let initializationError = error as? StoreInitializationError
+            storeURL = initializationError?.storeURL
+            launchState = .failed(
+                message: error.localizedDescription,
+                storeURL: initializationError?.storeURL
+            )
         }
     }
-    
-    /// 获取默认账本
-    @MainActor
+
+    func completeNewUserSetup() {
+        shouldShowNewUserSetup = false
+    }
+
+    func dismissUpdateSummary() {
+        UserDefaults(suiteName: AppConstants.appGroupIdentifier)?
+            .set("2.0", forKey: "lastSeenUpdateSummaryVersion")
+        shouldShowUpdateSummary = false
+    }
+
+    func saveCurrentLedgerID() {
+        guard let ledgerID = currentLedger?.id else { return }
+        UserDefaults(suiteName: AppConstants.appGroupIdentifier)?
+            .set(ledgerID.uuidString, forKey: "currentLedgerId")
+    }
+
     func loadDefaultLedger() -> Ledger? {
-        let context = modelContainer.mainContext
-        
-        // 1. 优先加载标记为默认的账本（满足冷启动定位默认账本的需求）
-        let defaultDescriptor = FetchDescriptor<Ledger>(
-            predicate: #Predicate { $0.isDefault == true && $0.isArchived == false }
-        )
-        if let ledger = try? context.fetch(defaultDescriptor).first {
-            print("📖 加载默认账本: \(ledger.name)")
-            return ledger
-        }
-        
-        // 2. 如果没有默认账本，尝试加载上次使用的账本（从UserDefaults中读取）
-        if let savedLedgerId = UserDefaults(suiteName: AppConstants.appGroupIdentifier)?.string(forKey: "currentLedgerId"),
-           let uuid = UUID(uuidString: savedLedgerId) {
+        guard let context = modelContainer?.mainContext else { return nil }
+        return loadDefaultLedger(in: context)
+    }
+
+    private func loadDefaultLedger(in context: ModelContext) -> Ledger? {
+        if let savedLedgerID = UserDefaults(suiteName: AppConstants.appGroupIdentifier)?
+            .string(forKey: "currentLedgerId"),
+           let uuid = UUID(uuidString: savedLedgerID) {
             let descriptor = FetchDescriptor<Ledger>(
                 predicate: #Predicate { $0.id == uuid && $0.isArchived == false }
             )
             if let ledger = try? context.fetch(descriptor).first {
-                print("📖 加载上次使用的账本: \(ledger.name)")
                 return ledger
-            } else {
-                print("⚠️ 上次使用的账本已归档或不存在，尝试加载第一个可用账本")
             }
         }
-        
-        // 3. 返回第一个未归档的账本（兜底）
+
+        let defaultDescriptor = FetchDescriptor<Ledger>(
+            predicate: #Predicate { $0.isDefault == true && $0.isArchived == false }
+        )
+        if let ledger = try? context.fetch(defaultDescriptor).first {
+            return ledger
+        }
+
         let firstDescriptor = FetchDescriptor<Ledger>(
             predicate: #Predicate { $0.isArchived == false },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
-        if let ledger = try? context.fetch(firstDescriptor).first {
-            print("📖 加载第一个可用账本: \(ledger.name)")
-            return ledger
+        return try? context.fetch(firstDescriptor).first
+    }
+
+    func validateCurrentLedger() {
+        guard let context = modelContainer?.mainContext else { return }
+        guard let currentLedger else {
+            self.currentLedger = loadDefaultLedger(in: context)
+            return
         }
-        
-        print("⚠️ 没有可用的账本")
-        return nil
+
+        let ledgerID = currentLedger.id
+        let descriptor = FetchDescriptor<Ledger>(
+            predicate: #Predicate { $0.id == ledgerID }
+        )
+        guard let storedLedger = try? context.fetch(descriptor).first,
+              !storedLedger.isArchived else {
+            self.currentLedger = loadDefaultLedger(in: context)
+            return
+        }
+        self.currentLedger = storedLedger
+    }
+
+    private func applyTheme(_ ledger: Ledger) {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            return
+        }
+        windowScene.windows.forEach { window in
+            window.tintColor = UIColor(hexString: ledger.colorHex)
+        }
     }
 }
 
-// MARK: - UIColor Extension
 extension UIColor {
     convenience init?(hexString: String) {
-        var hexSanitized = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-        
+        var hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
+        hex = hex.replacingOccurrences(of: "#", with: "")
         var rgb: UInt64 = 0
-        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
-        
-        let red = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
-        let green = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
-        let blue = CGFloat(rgb & 0x0000FF) / 255.0
-        
-        self.init(red: red, green: green, blue: blue, alpha: 1.0)
+        guard Scanner(string: hex).scanHexInt64(&rgb) else { return nil }
+        self.init(
+            red: CGFloat((rgb & 0xFF0000) >> 16) / 255,
+            green: CGFloat((rgb & 0x00FF00) >> 8) / 255,
+            blue: CGFloat(rgb & 0x0000FF) / 255,
+            alpha: 1
+        )
     }
 }

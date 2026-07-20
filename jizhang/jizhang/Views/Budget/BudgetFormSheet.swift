@@ -11,9 +11,9 @@ import SwiftData
 struct BudgetFormSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     
     @Query private var categories: [Category]
-    @Query private var ledgers: [Ledger]
     
     let budget: Budget?
     let viewModel: BudgetViewModel
@@ -36,18 +36,24 @@ struct BudgetFormSheet: View {
     }
     
     private var currentLedger: Ledger? {
-        ledgers.first
+        budget?.ledger ?? appState.currentLedger
     }
     
     // 只显示一级分类且为支出类型
     private var expenseParentCategories: [Category] {
-        categories.filter { $0.type == .expense && $0.parent == nil }
+        guard let currentLedger else { return [] }
+        return categories.filter {
+            $0.ledger?.id == currentLedger.id &&
+            $0.type == .expense &&
+            $0.parent == nil
+        }
     }
     
     private var isValid: Bool {
         guard selectedCategory != nil,
               let amountValue = Decimal(string: amount),
-              amountValue > 0 else {
+              amountValue > 0,
+              selectedPeriod != .custom || endDate > startDate else {
             return false
         }
         return true
@@ -88,6 +94,8 @@ struct BudgetFormSheet: View {
                         Text("¥")
                             .foregroundStyle(.secondary)
                         TextField("0.00", text: $amount)
+                            .accessibilityLabel("预算金额")
+                            .accessibilityIdentifier("budget.amount")
                             .keyboardType(.decimalPad)
                             .monospacedDigit()
                     }
@@ -121,8 +129,11 @@ struct BudgetFormSheet: View {
                 // 结转设置
                 Section {
                     Toggle("启用结转", isOn: $enableRollover)
+                        .disabled(!appState.subscriptionManager.subscriptionStatus.isPremium)
                 } footer: {
-                    Text("启用后,预算周期结束时会将剩余金额结转到下一周期")
+                    Text(appState.subscriptionManager.subscriptionStatus.isPremium
+                         ? "启用后，预算周期结束时会将剩余金额结转到下一周期"
+                         : "预算结转属于会员高级能力")
                 }
             }
         }
@@ -181,7 +192,8 @@ struct BudgetFormSheet: View {
                     amount: amountValue,
                     period: selectedPeriod,
                     startDate: startDate,
-                    enableRollover: enableRollover
+                    endDate: endDate,
+                    enableRollover: enableRollover && appState.subscriptionManager.subscriptionStatus.isPremium
                 )
             } else {
                 // 创建新预算
@@ -191,7 +203,9 @@ struct BudgetFormSheet: View {
                     amount: amountValue,
                     period: selectedPeriod,
                     startDate: startDate,
-                    enableRollover: enableRollover
+                    endDate: endDate,
+                    canCreateAdditionalBudget: appState.subscriptionManager.subscriptionStatus.isPremium,
+                    enableRollover: enableRollover && appState.subscriptionManager.subscriptionStatus.isPremium
                 )
             }
             dismiss()

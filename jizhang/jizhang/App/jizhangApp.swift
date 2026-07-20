@@ -1,10 +1,3 @@
-//
-//  jizhangApp.swift
-//  jizhang
-//
-//  Created by 徐晓龙 on 2026/1/24.
-//
-
 import SwiftUI
 import SwiftData
 import WidgetKit
@@ -12,124 +5,120 @@ import AppIntents
 
 @main
 struct jizhangApp: App {
-    
-    // MARK: - App Shortcuts Registration
+    @State private var appState = AppState()
+    @State private var showAddTransactionSheet = false
+    @State private var recoveryErrorMessage: String?
+    @State private var importURL: URL?
+    @State private var showImportSheet = false
+    @State private var showSubscriptionSheet = false
+    @Environment(\.scenePhase) private var scenePhase
+
     init() {
-        // 注册 App Shortcuts，确保 Siri 能识别
         if #available(iOS 16.0, *) {
             JizhangShortcuts.updateAppShortcutParameters()
         }
     }
-    // MARK: - Properties
-    
-    /// 全局应用状态(包含ModelContainer和CloudKit服务)
-    @State private var appState = AppState()
-    
-    /// 是否显示记账Sheet
-    @State private var showAddTransactionSheet = false
-    
-    /// 监听App生命周期
-    @Environment(\.scenePhase) private var scenePhase
 
-    // MARK: - Body
-    
     var body: some Scene {
         WindowGroup {
-            TabBarView()
+            rootContent
                 .environment(appState)
-                .sheet(isPresented: $showAddTransactionSheet) {
-                    // 从Widget跳转过来的记账页面
-                    AddTransactionSheet()
-                        .environment(appState)
-                }
-                .onOpenURL { url in
-                    handleURL(url)
-                }
-                .onAppear {
-                    // 启动时加载默认账本
-                    loadDefaultLedgerIfNeeded()
-                }
-                .onChange(of: scenePhase) { oldPhase, newPhase in
-                    // App回到前台时验证账本状态
-                    if newPhase == .active {
-                        Task { @MainActor in
-                            validateAndLoadLedger()
-                        }
-                    }
+                .tint(.brandEmerald)
+                .task {
+                    #if DEBUG
+                    await UpgradeFixtureHarness.runIfRequested(appState: appState)
+                    #endif
                 }
         }
-        .modelContainer(appState.modelContainer)
     }
-    
-    // MARK: - URL Handling
-    
-    /// 处理URL Scheme
+
+    @ViewBuilder
+    private var rootContent: some View {
+        switch appState.launchState {
+        case .launching:
+            ProgressView("正在打开账本")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        case .ready:
+            if let container = appState.modelContainer {
+                TabBarView()
+                    .modelContainer(container)
+                    .sheet(isPresented: $showAddTransactionSheet) {
+                        AddTransactionSheet()
+                            .environment(appState)
+                    }
+                    .sheet(isPresented: $showImportSheet) {
+                        NavigationStack {
+                            LedgerImportView(initialURL: importURL)
+                                .environment(appState)
+                        }
+                    }
+                    .sheet(isPresented: $showSubscriptionSheet) {
+                        SubscriptionView()
+                            .environment(appState)
+                    }
+                    .onOpenURL(perform: handleURL)
+                    .onChange(of: scenePhase) { _, newPhase in
+                        guard newPhase == .active else { return }
+                        appState.validateCurrentLedger()
+                        Task {
+                            await appState.subscriptionManager.refreshStatus()
+                        }
+                    }
+            } else {
+                recoveryView(message: "ModelContainer 不可用")
+            }
+
+        case .failed(let message, let storeURL):
+            recoveryView(message: recoveryErrorMessage ?? message, storeURL: storeURL)
+        }
+    }
+
+    private func recoveryView(message: String, storeURL: URL? = nil) -> some View {
+        DataRecoveryView(
+            message: message,
+            canExportRecoveryPackage: storeURL != nil,
+            onRetry: {
+                recoveryErrorMessage = nil
+                appState.retryOpenStore()
+            },
+            onExportRecoveryPackage: {
+                do {
+                    let packageURL = try appState.environment.recoveryPackageService
+                        .createPackage(storeURL: storeURL)
+                    ShareUtils.share(url: packageURL)
+                } catch {
+                    recoveryErrorMessage = error.localizedDescription
+                }
+            }
+        )
+    }
+
     private func handleURL(_ url: URL) {
-        guard url.scheme == "jizhang" else { return }
-        
+        if url.isFileURL || url.pathExtension.lowercased() == "jizhang" {
+            guard appState.subscriptionManager.hasAccess(to: .importLedger) else {
+                showSubscriptionSheet = true
+                return
+            }
+            importURL = url
+            showImportSheet = true
+            return
+        }
+        guard url.scheme == AppConstants.urlScheme else {
+            return
+        }
+
         switch url.host {
         case "add-transaction":
-            // 打开记账页面
             showAddTransactionSheet = true
-            
         case "home":
-            // 跳转到首页 (默认行为，无需处理)
             break
-            
         default:
             break
         }
     }
-    
-    // MARK: - Ledger Management
-    
-    /// 首次启动时加载默认账本
-    @MainActor
-    private func loadDefaultLedgerIfNeeded() {
-        // 等待一个RunLoop，确保数据库已经完全初始化
-        Task {
-            // 如果没有当前账本，则加载默认账本
-            if appState.currentLedger == nil {
-                appState.currentLedger = appState.loadDefaultLedger()
-                print("✅ 加载默认账本: \(appState.currentLedger?.name ?? "无")")
-            }
-        }
-    }
-    
-    /// 验证并加载账本（App回到前台时调用）
-    @MainActor
-    private func validateAndLoadLedger() {
-        // 检查当前账本是否仍然有效
-        if let currentLedger = appState.currentLedger {
-            // 验证账本是否被归档或删除
-            let context = appState.modelContainer.mainContext
-            let ledgerId = currentLedger.id  // 先提取ID，避免在Predicate中捕获对象
-            let descriptor = FetchDescriptor<Ledger>(
-                predicate: #Predicate<Ledger> { 
-                    $0.id == ledgerId
-                }
-            )
-            
-            if let ledger = try? context.fetch(descriptor).first {
-                // 如果账本被归档，切换到其他可用账本
-                if ledger.isArchived {
-                    appState.currentLedger = appState.loadDefaultLedger()
-                }
-                // 如果账本仍然有效，保持当前选择
-            } else {
-                // 账本已被删除，加载默认账本
-                appState.currentLedger = appState.loadDefaultLedger()
-            }
-        } else {
-            // 没有当前账本，加载默认账本
-            appState.currentLedger = appState.loadDefaultLedger()
-        }
-    }
 }
 
-// MARK: - Global Widget Refresh Helper
-
-/// 刷新所有Widget的全局方法
 func refreshAllWidgets() {
     WidgetCenter.shared.reloadAllTimelines()
 }

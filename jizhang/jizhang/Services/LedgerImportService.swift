@@ -35,10 +35,7 @@ class LedgerImportService {
     /// - Parameter data: JSON数据
     /// - Returns: 导入预览信息
     func preview(from data: Data) throws -> ImportPreview {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        let exportData = try decoder.decode(LedgerExportData.self, from: data)
+        let exportData = try decodeAndValidate(data)
         
         return ImportPreview(
             ledgerName: exportData.ledger.name,
@@ -60,11 +57,30 @@ class LedgerImportService {
     /// - Returns: 导入的账本
     func importLedger(from data: Data, newName: String? = nil) throws -> Ledger {
         progressHandler?(0.05, "正在解析数据...")
-        
-        // 1. 解码数据
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let exportData = try decoder.decode(LedgerExportData.self, from: data)
+        let exportData = try decodeAndValidate(data)
+        let importContext = ModelContext(modelContext.container)
+        let worker = LedgerImportService(modelContext: importContext)
+        worker.progressHandler = progressHandler
+
+        do {
+            let importedID = try worker.importValidated(exportData, newName: newName)
+            let descriptor = FetchDescriptor<Ledger>(
+                predicate: #Predicate { $0.id == importedID }
+            )
+            guard let importedLedger = try modelContext.fetch(descriptor).first else {
+                throw LedgerImportError.saveFailed("保存后无法重新读取账本")
+            }
+            return importedLedger
+        } catch {
+            importContext.rollback()
+            throw error
+        }
+    }
+
+    private func importValidated(
+        _ exportData: LedgerExportData,
+        newName: String?
+    ) throws -> UUID {
         
         progressHandler?(0.1, "正在创建账本...")
         
@@ -151,12 +167,132 @@ class LedgerImportService {
         
         progressHandler?(0.95, "正在保存数据...")
         
-        // 9. 保存
-        try modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            throw LedgerImportError.saveFailed(error.localizedDescription)
+        }
         
         progressHandler?(1.0, "导入完成")
         
-        return newLedger
+        return newLedger.id
+    }
+
+    private func decodeAndValidate(_ data: Data) throws -> LedgerExportData {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let exportData: LedgerExportData
+        do {
+            exportData = try decoder.decode(LedgerExportData.self, from: data)
+        } catch {
+            throw LedgerImportError.decodingFailed(error.localizedDescription)
+        }
+
+        guard exportData.version == "1.0" || exportData.version == "2.0" else {
+            throw LedgerImportError.invalidVersion(exportData.version)
+        }
+        if exportData.version == "2.0" {
+            guard let expectedChecksum = exportData.checksum else {
+                throw LedgerImportError.dataCorrupted("备份缺少校验和")
+            }
+            let actualChecksum = try exportData.calculatedChecksum()
+            guard expectedChecksum == actualChecksum else {
+                throw LedgerImportError.dataCorrupted("校验和不匹配，文件可能已损坏")
+            }
+            let expectedManifest = BackupManifest(
+                accountCount: exportData.accounts.count,
+                categoryCount: exportData.categories.count,
+                transactionCount: exportData.transactions.count,
+                budgetCount: exportData.budgets.count,
+                tagCount: exportData.tags.count
+            )
+            guard exportData.manifest == expectedManifest else {
+                throw LedgerImportError.dataCorrupted("数据计数与清单不一致")
+            }
+        }
+
+        try validateReferences(in: exportData)
+        return exportData
+    }
+
+    private func validateReferences(in data: LedgerExportData) throws {
+        try requireUnique(data.accounts.map(\.id), entity: "账户")
+        try requireUnique(data.categories.map(\.id), entity: "分类")
+        try requireUnique(data.transactions.map(\.id), entity: "交易")
+        try requireUnique(data.budgets.map(\.id), entity: "预算")
+        try requireUnique(data.tags.map(\.id), entity: "标签")
+
+        let accountIDs = Set(data.accounts.map(\.id))
+        let categoryIDs = Set(data.categories.map(\.id))
+        let tagIDs = Set(data.tags.map(\.id))
+
+        guard data.accounts.allSatisfy({ AccountType(rawValue: $0.type) != nil }) else {
+            throw LedgerImportError.dataCorrupted("包含未知账户类型")
+        }
+        guard data.categories.allSatisfy({ CategoryType(rawValue: $0.type) != nil }) else {
+            throw LedgerImportError.dataCorrupted("包含未知分类类型")
+        }
+        for category in data.categories {
+            if let parentID = category.parentId {
+                guard parentID != category.id, categoryIDs.contains(parentID) else {
+                    throw LedgerImportError.dataCorrupted("分类父级引用无效")
+                }
+            }
+        }
+
+        for transaction in data.transactions {
+            guard let type = TransactionType(rawValue: transaction.type) else {
+                throw LedgerImportError.dataCorrupted("包含未知交易类型")
+            }
+            guard transaction.amount != 0,
+                  transaction.tagIds.allSatisfy(tagIDs.contains),
+                  transaction.categoryId.map(categoryIDs.contains) ?? true,
+                  transaction.fromAccountId.map(accountIDs.contains) ?? true,
+                  transaction.toAccountId.map(accountIDs.contains) ?? true else {
+                throw LedgerImportError.dataCorrupted("交易包含缺失引用或无效金额")
+            }
+            switch type {
+            case .expense:
+                guard transaction.amount > 0,
+                      transaction.fromAccountId != nil,
+                      transaction.categoryId != nil else {
+                    throw LedgerImportError.dataCorrupted("支出交易缺少账户或分类")
+                }
+            case .income:
+                guard transaction.amount > 0,
+                      transaction.fromAccountId != nil || transaction.toAccountId != nil,
+                      transaction.categoryId != nil else {
+                    throw LedgerImportError.dataCorrupted("收入交易缺少账户或分类")
+                }
+            case .transfer:
+                guard transaction.amount > 0,
+                      let fromID = transaction.fromAccountId,
+                      let toID = transaction.toAccountId,
+                      fromID != toID else {
+                    throw LedgerImportError.dataCorrupted("转账交易账户引用无效")
+                }
+            case .adjustment:
+                guard transaction.fromAccountId != nil || transaction.toAccountId != nil else {
+                    throw LedgerImportError.dataCorrupted("调整交易缺少账户")
+                }
+            }
+        }
+
+        for budget in data.budgets {
+            guard budget.amount > 0,
+                  BudgetPeriod(rawValue: budget.period) != nil,
+                  budget.endDate > budget.startDate,
+                  budget.categoryId.map(categoryIDs.contains) == true else {
+                throw LedgerImportError.dataCorrupted("预算周期、金额或分类引用无效")
+            }
+        }
+    }
+
+    private func requireUnique(_ ids: [UUID], entity: String) throws {
+        guard Set(ids).count == ids.count else {
+            throw LedgerImportError.dataCorrupted("\(entity)包含重复 ID")
+        }
     }
     
     // MARK: - Private Helper Methods
@@ -364,6 +500,7 @@ class LedgerImportService {
             amount: dto.amount,
             period: period,
             startDate: dto.startDate,
+            endDate: dto.endDate,
             enableRollover: dto.enableRollover
         )
         

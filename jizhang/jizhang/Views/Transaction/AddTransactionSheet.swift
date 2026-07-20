@@ -16,50 +16,73 @@ struct AddTransactionSheet: View {
     
     @State private var viewModel = AddTransactionViewModel()
     @FocusState private var isAmountFocused: Bool
+    @State private var isSaving = false
     
     var body: some View {
         VStack(spacing: 0) {
             // 自定义导航栏
             SimpleCancelNavigationBar(title: "记一笔")
-            
-            // 类型切换
-            TransactionTypeSegment(selectedType: $viewModel.type)
-                .padding(.top, Spacing.m)
-            
-            // 金额输入 - 使用系统键盘
-            AmountInputField(
-                amount: $viewModel.amount,
-                isFocused: $isAmountFocused,
-                currencyCode: appState.currentLedger?.currencyCode ?? "CNY"
-            )
-            .padding(.vertical, Spacing.l)
-            
-            // 快速选择分类区域
-            if viewModel.type != .transfer && !viewModel.quickSelectCategories.isEmpty {
-                QuickCategorySelection(
-                    categories: viewModel.quickSelectCategories,
-                    selectedCategory: viewModel.selectedCategory,
-                    onSelect: { category in
-                        viewModel.selectQuickCategory(category)
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 类型切换
+                    TransactionTypeSegment(selectedType: $viewModel.type)
+                        .padding(.top, Spacing.m)
+
+                    // 金额输入 - 使用系统键盘
+                    AmountInputField(
+                        amount: $viewModel.amount,
+                        isFocused: $isAmountFocused,
+                        currencyCode: appState.currentLedger?.currencyCode ?? "CNY"
+                    )
+                    .padding(.vertical, Spacing.l)
+
+                    HStack(spacing: Spacing.s) {
+                        ForEach([20, 50, 100], id: \.self) { value in
+                            Button("¥\(value)") { viewModel.amount = Decimal(value) }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                        }
+                        Spacer()
+                        Button {
+                            viewModel.repeatLastTransaction()
+                        } label: {
+                            Label("上一笔", systemImage: "arrow.counterclockwise")
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.subheadline)
                     }
-                )
-                .padding(.horizontal, Spacing.m)
+                    .padding(.horizontal, Spacing.m)
+
+                    // 快速选择分类区域
+                    if viewModel.type != .transfer && !viewModel.quickSelectCategories.isEmpty {
+                        QuickCategorySelection(
+                            categories: viewModel.quickSelectCategories,
+                            selectedCategory: viewModel.selectedCategory,
+                            onSelect: { category in
+                                viewModel.selectQuickCategory(category)
+                            }
+                        )
+                        .padding(.horizontal, Spacing.m)
+                    }
+
+                    Divider()
+                        .padding(.vertical, Spacing.s)
+
+                    SelectionArea(viewModel: viewModel)
+                        .padding(.horizontal, Spacing.m)
+                }
             }
-            
-            Divider()
-                .padding(.vertical, Spacing.s)
-            
-            // 选择区域 - 占据更多空间
-            SelectionArea(viewModel: viewModel)
-                .padding(.horizontal, Spacing.m)
-            
-            Spacer()
+            .scrollDismissesKeyboard(.interactively)
             
             // 底部确认按钮
             Button(action: {
                 Task {
+                    isSaving = true
+                    defer { isSaving = false }
                     do {
-                        try await viewModel.saveTransaction()
+                        let receipt = try await viewModel.saveTransaction()
+                        appState.offerUndoForCreatedTransaction(receipt)
                         dismiss()
                     } catch {
                         // 错误已在viewModel中处理
@@ -69,7 +92,7 @@ struct AddTransactionSheet: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
-                    Text("确认添加")
+                    Text(isSaving ? "正在保存" : "保存")
                         .font(.headline)
                 }
                 .foregroundColor(.white)
@@ -80,7 +103,7 @@ struct AddTransactionSheet: View {
                         .fill(viewModel.isValid ? Color.primaryBlue : Color.gray.opacity(0.5))
                 )
             }
-            .disabled(!viewModel.isValid)
+            .disabled(!viewModel.isValid || isSaving)
             .buttonStyle(ScaleButtonStyle())
             .padding(.horizontal, Spacing.m)
             .padding(.bottom, Spacing.m)
@@ -107,6 +130,7 @@ struct AddTransactionSheet: View {
 
 private struct SelectionArea: View {
     @Bindable var viewModel: AddTransactionViewModel
+    @State private var showMoreFields = false
     
     var body: some View {
         VStack(spacing: Spacing.m) {
@@ -167,8 +191,9 @@ private struct SelectionArea: View {
                 }
             }
             
-            // 第二行：日期和时间
-            HStack(spacing: Spacing.m) {
+            DisclosureGroup("更多字段", isExpanded: $showMoreFields) {
+                VStack(spacing: Spacing.m) {
+                    HStack(spacing: Spacing.m) {
                 // 日期
                 SelectionCard(
                     icon: "calendar",
@@ -192,10 +217,9 @@ private struct SelectionArea: View {
                     viewModel.showTimePicker = true
                 }
                 .frame(maxWidth: .infinity)
-            }
-            
-            // 第三行：备注
-            HStack(spacing: Spacing.m) {
+                    }
+
+                    HStack(spacing: Spacing.m) {
                 // 备注
                 SelectionCard(
                     icon: "note.text",
@@ -207,7 +231,11 @@ private struct SelectionArea: View {
                     viewModel.showNotePicker = true
                 }
                 .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.top, Spacing.s)
             }
+            .font(.subheadline)
         }
         .sheet(isPresented: $viewModel.showAccountPicker) {
             AccountPickerSheet(selectedAccount: $viewModel.selectedAccount)
@@ -283,6 +311,8 @@ private struct SelectionCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(title)，\(value)")
+        .accessibilityIdentifier("transaction.selection.\(title)")
     }
 }
 

@@ -93,14 +93,16 @@ struct EditTransactionSheet: View {
         viewModel.type = transaction.type
         viewModel.amount = transaction.amount
         viewModel.date = transaction.date
-        viewModel.selectedAccount = transaction.fromAccount
+        viewModel.selectedAccount = TransactionAccountResolver.primaryAccount(for: transaction)
         viewModel.selectedToAccount = transaction.toAccount
         viewModel.selectedCategory = transaction.category
         viewModel.note = transaction.note ?? ""
     }
     
     private func updateTransaction() async throws {
-        guard appState.currentLedger != nil else {
+        guard let ledger = appState.currentLedger,
+              let selectedAccount = viewModel.selectedAccount,
+              let transactionService = appState.transactionService else {
             throw TransactionError.missingDependencies
         }
         
@@ -111,65 +113,19 @@ struct EditTransactionSheet: View {
             throw TransactionError.validationFailed(error)
         }
         
-        // 先恢复原交易的账户余额
-        switch transaction.type {
-        case .expense:
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
-        case .income:
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
-        case .transfer:
-            if let fromAccount = transaction.fromAccount {
-                fromAccount.balance += transaction.amount
-            }
-            if let toAccount = transaction.toAccount {
-                toAccount.balance -= transaction.amount
-            }
-        case .adjustment:
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
-        }
-        
-        // 更新交易数据
-        transaction.amount = viewModel.amount
-        transaction.date = viewModel.date
-        transaction.fromAccount = viewModel.selectedAccount
-        transaction.toAccount = viewModel.selectedToAccount
-        transaction.category = viewModel.selectedCategory
-        transaction.note = viewModel.note.isEmpty ? nil : viewModel.note
-        
-        // 应用新的账户余额
-        switch transaction.type {
-        case .expense:
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
-        case .income:
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
-        case .transfer:
-            if let fromAccount = transaction.fromAccount {
-                fromAccount.balance -= transaction.amount
-            }
-            if let toAccount = transaction.toAccount {
-                toAccount.balance += transaction.amount
-            }
-        case .adjustment:
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
-        }
-        
-        // 保存
-        try modelContext.save()
-        
-        // 刷新Widget
-        refreshAllWidgets()
+        let draft = TransactionDraft(
+            ledgerID: ledger.id,
+            type: viewModel.type,
+            amount: viewModel.amount,
+            date: viewModel.date,
+            primaryAccountID: selectedAccount.id,
+            destinationAccountID: viewModel.selectedToAccount?.id,
+            categoryID: viewModel.selectedCategory?.id,
+            tagIDs: Array(viewModel.selectedTags).map(\.id),
+            note: viewModel.note.isEmpty ? nil : viewModel.note,
+            payee: transaction.payee
+        )
+        _ = try transactionService.update(id: transaction.id, with: draft)
         
         // 触发震动反馈
         let generator = UINotificationFeedbackGenerator()
@@ -350,11 +306,14 @@ private struct EditNoteInputSheet: View {
 struct TransactionDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     
     let transaction: Transaction
     
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
+    @State private var showOperationError = false
+    @State private var operationErrorMessage = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -419,6 +378,12 @@ struct TransactionDetailView: View {
                 
                 // 操作
                 Section {
+                    Button {
+                        repeatTransaction()
+                    } label: {
+                        Label("重复一笔", systemImage: "plus.square.on.square")
+                    }
+
                     Button(role: .destructive) {
                         showDeleteAlert = true
                     } label: {
@@ -440,44 +405,54 @@ struct TransactionDetailView: View {
                 deleteTransaction()
             }
         } message: {
-            Text("删除后将恢复账户余额，此操作无法撤销")
+            Text("删除后将恢复账户余额，5 秒内可撤销")
         }
         .sheet(isPresented: $showEditSheet) {
             EditTransactionSheet(transaction: transaction)
+        }
+        .alert("操作结果", isPresented: $showOperationError) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(operationErrorMessage)
         }
     }
     
     // MARK: - Methods
     
     private func deleteTransaction() {
-        // 恢复账户余额
-        switch transaction.type {
-        case .expense:
-            if let account = transaction.fromAccount {
-                account.balance += transaction.amount
-            }
-        case .income:
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
-        case .transfer:
-            if let fromAccount = transaction.fromAccount {
-                fromAccount.balance += transaction.amount
-            }
-            if let toAccount = transaction.toAccount {
-                toAccount.balance -= transaction.amount
-            }
-        case .adjustment:
-            // 调整类型的余额恢复需要反向操作
-            if let account = transaction.fromAccount {
-                account.balance -= transaction.amount
-            }
+        guard let transactionService = appState.transactionService else { return }
+        do {
+            appState.offerUndo(try transactionService.delete(id: transaction.id))
+            dismiss()
+        } catch {
+            operationErrorMessage = "未能删除，账目没有变化。\n\(error.localizedDescription)"
+            showOperationError = true
         }
-        
-        modelContext.delete(transaction)
-        try? modelContext.save()
-        
-        dismiss()
+    }
+
+    private func repeatTransaction() {
+        guard let service = appState.transactionService,
+              let ledgerID = transaction.ledger?.id,
+              let accountID = transaction.primaryAccount?.id else { return }
+        do {
+            _ = try service.create(TransactionDraft(
+                ledgerID: ledgerID,
+                type: transaction.type,
+                amount: transaction.amount,
+                date: Date(),
+                primaryAccountID: accountID,
+                destinationAccountID: transaction.type == .transfer ? transaction.toAccount?.id : nil,
+                categoryID: transaction.category?.id,
+                tagIDs: (transaction.tags ?? []).map(\.id),
+                note: transaction.note,
+                payee: transaction.payee
+            ))
+            operationErrorMessage = "已重复添加一笔流水"
+            showOperationError = true
+        } catch {
+            operationErrorMessage = "未能重复添加，账目没有变化。\n\(error.localizedDescription)"
+            showOperationError = true
+        }
     }
 }
 

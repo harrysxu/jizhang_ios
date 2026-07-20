@@ -14,9 +14,10 @@ struct CSVExporter {
     /// 导出交易数据为CSV格式字符串
     static func export(transactions: [Transaction]) -> String {
         // 添加 BOM 以支持 Excel 正确识别 UTF-8
-        var csv = "\u{FEFF}日期,类型,分类,账户,金额,备注\n"
+        var csv = "\u{FEFF}日期,类型,分类,账户,金额,备注\r\n"
         
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
         for transaction in transactions.sorted(by: { $0.date > $1.date }) {
@@ -24,10 +25,10 @@ struct CSVExporter {
             let type = typeString(for: transaction.type)
             let category = transaction.category?.name ?? "未分类"
             let account = getAccountName(for: transaction)
-            let amount = transaction.amount.formatted(.number.precision(.fractionLength(2)))
+            let amount = amountString(transaction.amount)
             let note = escapeCSV(transaction.note ?? "")
             
-            csv += "\(date),\(type),\(escapeCSV(category)),\(escapeCSV(account)),\(amount),\(note)\n"
+            csv += "\(escapeCSV(date)),\(escapeCSV(type)),\(escapeCSV(category)),\(escapeCSV(account)),\(amount),\(note)\r\n"
         }
         
         return csv
@@ -39,6 +40,7 @@ struct CSVExporter {
         
         // 生成文件名
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
         let timestamp = dateFormatter.string(from: Date())
         let finalFileName = fileName ?? "流水导出_\(timestamp).csv"
@@ -74,22 +76,22 @@ struct CSVExporter {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         
         // 报表期间
-        csv += "统计报表\n"
-        csv += "报表期间,\(dateFormatter.string(from: startDate)) 至 \(dateFormatter.string(from: endDate))\n\n"
+        csv += "统计报表\r\n"
+        csv += "报表期间,\(escapeCSV(dateFormatter.string(from: startDate) + " 至 " + dateFormatter.string(from: endDate)))\r\n\r\n"
         
         // 汇总数据
-        csv += "汇总数据\n"
-        csv += "收入,\(totalIncome.formatted(.number.precision(.fractionLength(2))))\n"
-        csv += "支出,\(totalExpense.formatted(.number.precision(.fractionLength(2))))\n"
-        csv += "结余,\(netAmount.formatted(.number.precision(.fractionLength(2))))\n\n"
+        csv += "汇总数据\r\n"
+        csv += "收入,\(amountString(totalIncome))\r\n"
+        csv += "支出,\(amountString(totalExpense))\r\n"
+        csv += "结余,\(amountString(netAmount))\r\n\r\n"
         
         // 分类明细
-        csv += "\(reportType == .income ? "收入" : "支出")分类明细\n"
-        csv += "分类,金额,占比\n"
+        csv += "\(reportType == .income ? "收入" : "支出")分类明细\r\n"
+        csv += "分类,金额,占比\r\n"
         
         for item in categoryData {
             let percentage = String(format: "%.1f%%", item.percentage * 100)
-            csv += "\(escapeCSV(item.name)),\(item.amount.formatted(.number.precision(.fractionLength(2)))),\(percentage)\n"
+            csv += "\(escapeCSV(item.name)),\(amountString(item.amount)),\(percentage)\r\n"
         }
         
         return csv
@@ -155,22 +157,41 @@ struct CSVExporter {
         case .expense:
             return transaction.fromAccount?.name ?? "未知账户"
         case .income:
-            return transaction.toAccount?.name ?? "未知账户"
+            return (transaction.toAccount ?? transaction.fromAccount)?.name ?? "未知账户"
         case .transfer:
             let from = transaction.fromAccount?.name ?? "未知"
             let to = transaction.toAccount?.name ?? "未知"
             return "\(from) → \(to)"
         case .adjustment:
-            return transaction.toAccount?.name ?? "未知账户"
+            return (transaction.toAccount ?? transaction.fromAccount)?.name ?? "未知账户"
         }
     }
     
     private static func escapeCSV(_ string: String) -> String {
-        // 如果包含逗号、引号或换行,需要用引号包裹并转义引号
-        if string.contains(",") || string.contains("\"") || string.contains("\n") {
-            let escaped = string.replacingOccurrences(of: "\"", with: "\"\"")
+        let protected = protectFromFormulaInjection(string)
+        if protected.contains(",") || protected.contains("\"") ||
+            protected.contains("\n") || protected.contains("\r") {
+            let escaped = protected.replacingOccurrences(of: "\"", with: "\"\"")
             return "\"\(escaped)\""
         }
-        return string
+        return protected
+    }
+
+    private static func protectFromFormulaInjection(_ string: String) -> String {
+        guard let first = string.drop(while: { $0 == " " }).first,
+              "=+-@\t\r".contains(first) else {
+            return string
+        }
+        return "'" + string
+    }
+
+    private static func amountString(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0.00"
     }
 }

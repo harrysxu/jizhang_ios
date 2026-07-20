@@ -27,6 +27,7 @@ struct ReportView: View {
 private struct ReportContentView: View {
     let modelContext: ModelContext
     @Environment(AppState.self) private var appState
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var viewModel: ReportViewModel
     
     @Query private var transactions: [Transaction]
@@ -88,7 +89,7 @@ private struct ReportContentView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // 自定义导航栏 - 无胶囊背景
-                CustomNavigationBar(title: nil) {
+                CustomNavigationBar(title: "洞察") {
                     // 导出按钮 - 高级功能
                     Button {
                         if appState.subscriptionManager.hasAccess(to: .exportData) {
@@ -103,10 +104,12 @@ private struct ReportContentView: View {
                             if !appState.subscriptionManager.hasAccess(to: .exportData) {
                                 Image(systemName: "crown.fill")
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(Color.brandInk)
+                                    .accessibilityHidden(true)
                             }
                         }
                     }
+                    .accessibilityLabel("导出洞察，高级功能")
                 }
                 
                 // 报表Tab选择器
@@ -188,7 +191,8 @@ private struct ReportContentView: View {
                             if needsPremium {
                                 Image(systemName: "crown.fill")
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(Color.brandInk)
+                                    .accessibilityHidden(true)
                             }
                         }
                         .foregroundStyle(selectedTab == tab ? .white : .primary)
@@ -196,7 +200,7 @@ private struct ReportContentView: View {
                         .padding(.vertical, Spacing.s)
                         .background(
                             Capsule()
-                                .fill(selectedTab == tab ? Color.blue : Color(.secondarySystemBackground))
+                                .fill(selectedTab == tab ? Color.primaryBlue : Color(.secondarySystemBackground))
                         )
                     }
                     .buttonStyle(.plain)
@@ -212,6 +216,8 @@ private struct ReportContentView: View {
     
     private var overviewContent: some View {
         VStack(spacing: Spacing.m) {
+            insightConclusion
+
             // 汇总卡片
             summaryCard
             
@@ -230,14 +236,45 @@ private struct ReportContentView: View {
             IncomeExpenseChartView(data: viewModel.dailyData, reportType: viewModel.reportType, period: selectedPeriod)
                 .padding(.horizontal, Spacing.m)
             
-            // 分类占比图
-            CategoryPieChartView(data: viewModel.categoryData, reportType: viewModel.reportType)
-                .padding(.horizontal, Spacing.m)
-            
-            // Top排行榜
-            TopRankingView(data: viewModel.topRanking, reportType: viewModel.reportType)
-                .padding(.horizontal, Spacing.m)
+            if !viewModel.categoryData.isEmpty {
+                CategoryPieChartView(data: viewModel.categoryData, reportType: viewModel.reportType)
+                    .padding(.horizontal, Spacing.m)
+
+                TopRankingView(data: viewModel.topRanking, reportType: viewModel.reportType)
+                    .padding(.horizontal, Spacing.m)
+            }
         }
+    }
+
+    private var insightConclusion: some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            Text("本期结论")
+                .font(.headline)
+            Text(conclusionText)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(viewModel.totalIncome - viewModel.totalExpense >= 0
+                                 ? Color.brandEmerald : Color.brandCoral)
+            NavigationLink {
+                BudgetView()
+            } label: {
+                Label("查看预算", systemImage: "chevron.right")
+                    .font(.subheadline.weight(.semibold))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Spacing.m)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var conclusionText: String {
+        let net = viewModel.totalIncome - viewModel.totalExpense
+        if viewModel.totalIncome == 0 && viewModel.totalExpense == 0 {
+            return "本期暂无可分析的流水"
+        }
+        if net >= 0 {
+            return "收入覆盖支出，结余 \(net.formatAmount())"
+        }
+        return "支出高于收入 \(abs(net).formatAmount())"
     }
     
     // MARK: - 对比分析内容
@@ -350,25 +387,52 @@ private struct ReportContentView: View {
     
     private var summaryCard: some View {
         GlassCard(padding: Spacing.l) {
-            HStack(spacing: 0) {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: Spacing.m) {
+                    accessibleSummaryMetric(
+                        title: "收入",
+                        icon: "arrow.up",
+                        amount: viewModel.totalIncome,
+                        color: Color.incomeGreen
+                    )
+                    Divider()
+                    accessibleSummaryMetric(
+                        title: "支出",
+                        icon: "arrow.down",
+                        amount: viewModel.totalExpense,
+                        color: Color.expenseRed
+                    )
+                    Divider()
+                    accessibleSummaryMetric(
+                        title: "结余",
+                        icon: viewModel.netAmount >= 0 ? "arrow.up" : "arrow.down",
+                        amount: viewModel.netAmount,
+                        color: viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed
+                    )
+                }
+            } else {
+                HStack(spacing: 0) {
                 // 收入
                 VStack(spacing: Spacing.s) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.up")
                             .font(.caption2)
-                        Text("收入")
-                            .font(.caption)
+                    Text("收入")
+                        .font(.caption)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                     
                     Text(formatSummaryAmount(viewModel.totalIncome))
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(Color.incomeGreen)
                         .monospacedDigit()
+                        .fixedSize()
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("收入 \(formatSummaryAmount(viewModel.totalIncome))")
                 
                 Divider()
                     .frame(height: 50)
@@ -381,16 +445,19 @@ private struct ReportContentView: View {
                         Text("支出")
                             .font(.caption)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                     
                     Text(formatSummaryAmount(viewModel.totalExpense))
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(Color.expenseRed)
                         .monospacedDigit()
+                        .fixedSize()
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("支出 \(formatSummaryAmount(viewModel.totalExpense))")
                 
                 Divider()
                     .frame(height: 50)
@@ -399,13 +466,14 @@ private struct ReportContentView: View {
                 VStack(spacing: Spacing.s) {
                     Text("结余")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                     
                     HStack(spacing: 2) {
                         Text(formatSummaryAmount(viewModel.netAmount))
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .font(.title3.weight(.semibold))
                             .foregroundStyle(viewModel.netAmount >= 0 ? Color.incomeGreen : Color.expenseRed)
                             .monospacedDigit()
+                            .fixedSize()
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
                         
@@ -415,9 +483,35 @@ private struct ReportContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("结余 \(formatSummaryAmount(viewModel.netAmount))")
+                }
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.l)
+    }
+
+    private func accessibleSummaryMetric(
+        title: String,
+        icon: String,
+        amount: Decimal,
+        color: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            Label(title, systemImage: icon)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text(formatSummaryAmount(amount))
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title) \(formatSummaryAmount(amount))")
     }
     
     // 格式化汇总卡片金额

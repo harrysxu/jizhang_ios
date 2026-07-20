@@ -25,12 +25,14 @@ class HomeViewModel: ObservableObject {
     // MARK: - Private Properties
     
     private let modelContext: ModelContext
+    private let transactionService: any TransactionServicing
     private var currentLedger: Ledger?
     
     // MARK: - Initialization
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        self.transactionService = TransactionService(modelContext: modelContext)
     }
     
     // MARK: - Public Methods
@@ -99,33 +101,43 @@ class HomeViewModel: ObservableObject {
             throw HomeViewModelError.noLedger
         }
         
-        let transaction = Transaction(
-            ledger: ledger,
+        let primaryAccount: Account?
+        switch type {
+        case .expense, .transfer:
+            primaryAccount = fromAccount
+        case .income, .adjustment:
+            primaryAccount = toAccount ?? fromAccount
+        }
+        guard let primaryAccount else { throw HomeViewModelError.noAccount }
+        let receipt = try transactionService.create(TransactionDraft(
+            ledgerID: ledger.id,
+            type: type,
             amount: amount,
             date: date,
-            type: type,
-            fromAccount: fromAccount,
-            toAccount: toAccount,
-            category: category,
-            note: note
-        )
-        
-        modelContext.insert(transaction)
-        transaction.updateAccountBalance()
-        
-        try modelContext.save()
+            primaryAccountID: primaryAccount.id,
+            destinationAccountID: type == .transfer ? toAccount?.id : nil,
+            categoryID: category?.id,
+            tagIDs: [],
+            note: note,
+            payee: nil
+        ))
         
         // 刷新数据
         await refreshData()
         
+        let transactionID = receipt.transactionID
+        let descriptor = FetchDescriptor<Transaction>(
+            predicate: #Predicate { $0.id == transactionID }
+        )
+        guard let transaction = try modelContext.fetch(descriptor).first else {
+            throw HomeViewModelError.transactionNotFound
+        }
         return transaction
     }
     
     /// 删除交易
     func deleteTransaction(_ transaction: Transaction) async throws {
-        transaction.revertAccountBalance()
-        modelContext.delete(transaction)
-        try modelContext.save()
+        _ = try transactionService.delete(id: transaction.id)
         
         // 刷新数据
         await refreshData()
@@ -136,11 +148,17 @@ class HomeViewModel: ObservableObject {
 
 enum HomeViewModelError: LocalizedError {
     case noLedger
+    case noAccount
+    case transactionNotFound
     
     var errorDescription: String? {
         switch self {
         case .noLedger:
             return "未找到账本"
+        case .noAccount:
+            return "未找到账户"
+        case .transactionNotFound:
+            return "保存后无法读取流水"
         }
     }
 }

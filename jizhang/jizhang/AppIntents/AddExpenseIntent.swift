@@ -37,31 +37,15 @@ struct AddExpenseIntent: AppIntent {
         // 转换 Double 到 Decimal
         let decimalAmount = Decimal(amount)
         
-        // 2. 获取ModelContainer
-        let appGroupIdentifier = "group.com.xxl.jizhang"
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) else {
-            throw IntentError.dataAccessFailed
-        }
-        
-        let storeURL = containerURL.appendingPathComponent("jizhang.sqlite")
-        
-        let schema = Schema([
-            Ledger.self,
-            Account.self,
-            Category.self,
-            Transaction.self,
-            Budget.self,
-            Tag.self
-        ])
-        
-        let config = ModelConfiguration(schema: schema, url: storeURL)
-        let modelContainer = try ModelContainer(for: schema, configurations: [config])
-        let context = modelContainer.mainContext
+        // 使用与主 App 相同的无损容器工厂；打开失败时绝不创建替代空库。
+        let result = try ModelContainerFactory().makeContainer(mode: .production)
+        let context = result.container.mainContext
         
         // 3. 获取当前账本
-        guard let ledger = try await getCurrentLedger(context: context, appGroupIdentifier: appGroupIdentifier) else {
+        guard let ledger = try await getCurrentLedger(
+            context: context,
+            appGroupIdentifier: AppConstants.appGroupIdentifier
+        ) else {
             throw IntentError.noLedger
         }
         
@@ -81,27 +65,23 @@ struct AddExpenseIntent: AppIntent {
             category = try await getDefaultExpenseCategory(context: context, ledger: ledger)
         }
         
-        // 6. 创建交易
-        let transaction = Transaction(
-            ledger: ledger,
+        guard let category else { throw IntentError.noCategory }
+        let service = TransactionService(
+            modelContext: context,
+            reloadWidgets: refreshAllWidgets
+        )
+        _ = try service.create(TransactionDraft(
+            ledgerID: ledger.id,
+            type: .expense,
             amount: decimalAmount,
             date: Date(),
-            type: .expense
-        )
-        transaction.fromAccount = account
-        transaction.category = category
-        transaction.note = note
-        
-        context.insert(transaction)
-        
-        // 7. 更新账户余额
-        account.balance -= decimalAmount
-        
-        // 8. 保存
-        try context.save()
-        
-        // 9. 刷新Widget
-        refreshAllWidgets()
+            primaryAccountID: account.id,
+            destinationAccountID: nil,
+            categoryID: category.id,
+            tagIDs: [],
+            note: note,
+            payee: nil
+        ))
         
         // 10. 返回结果
         let message = "已记录支出 ¥\(amount)"
@@ -176,6 +156,7 @@ enum IntentError: Error, CustomLocalizedStringResourceConvertible {
     case noLedger
     case noAccount
     case dataAccessFailed
+    case noCategory
     
     var localizedStringResource: LocalizedStringResource {
         switch self {
@@ -187,6 +168,8 @@ enum IntentError: Error, CustomLocalizedStringResourceConvertible {
             return "未找到账户，请先在App中创建账户"
         case .dataAccessFailed:
             return "数据访问失败"
+        case .noCategory:
+            return "未找到支出分类，请先在App中创建分类"
         }
     }
 }

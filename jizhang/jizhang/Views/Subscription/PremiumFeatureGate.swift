@@ -111,24 +111,29 @@ struct PremiumNavigationLink<Label: View, Destination: View>: View {
 /// 高级版徽章
 struct PremiumBadge: View {
     var compact: Bool = false
+
+    private var badgeColor: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 1, green: 0.76, blue: 0.38, alpha: 1)
+                : UIColor(red: 0.48, green: 0.22, blue: 0, alpha: 1)
+        })
+    }
     
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "crown.fill")
-                .font(.system(size: compact ? 10 : 12))
-            
-            if !compact {
-                Text("高级")
-                    .font(.system(size: 11, weight: .medium))
-            }
-        }
-        .foregroundStyle(.orange)
-        .padding(.horizontal, compact ? 6 : 8)
-        .padding(.vertical, compact ? 3 : 4)
-        .background(
-            Capsule()
-                .fill(Color.orange.opacity(0.15))
-        )
+        Image(systemName: "crown.fill")
+            .font(.system(size: compact ? 11 : 13, weight: .semibold))
+            .foregroundStyle(badgeColor)
+            .frame(width: compact ? 24 : 30, height: compact ? 24 : 30)
+            .background(
+                Circle()
+                    .fill(Color.clear)
+                    .overlay {
+                        Circle()
+                            .stroke(badgeColor.opacity(0.8), lineWidth: 1)
+                    }
+            )
+            .accessibilityLabel("高级功能")
     }
 }
 

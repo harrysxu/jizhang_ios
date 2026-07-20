@@ -7,8 +7,22 @@
 
 import Foundation
 import CloudKit
+import CoreData
 import SwiftUI
 import Combine
+
+protocol CloudContainerProviding: AnyObject {
+    func accountStatus() async throws -> CKAccountStatus
+}
+
+extension CloudKitService: SyncStatusProviding {}
+
+@MainActor
+protocol SyncStatusProviding {
+    var status: CloudSyncStatus { get }
+}
+
+extension CKContainer: CloudContainerProviding {}
 
 /// CloudKit同步状态
 enum CloudSyncStatus: Equatable {
@@ -21,13 +35,13 @@ enum CloudSyncStatus: Equatable {
     var displayText: String {
         switch self {
         case .notAvailable:
-            return "未登录iCloud"
+            return "本地可用，iCloud不可用"
         case .idle:
-            return "待同步"
+            return "自动同步"
         case .syncing:
             return "同步中..."
         case .synced:
-            return "已同步"
+            return "自动同步"
         case .error(let message):
             return "同步失败: \(message)"
         }
@@ -71,21 +85,34 @@ class CloudKitService: ObservableObject {
     @Published var syncStatus: CloudSyncStatus = .idle
     @Published var isCloudKitAvailable = false
     @Published var lastSyncDate: Date?
+
+    var status: CloudSyncStatus { syncStatus }
     
     // MARK: - Properties
     
-    private let container: CKContainer
+    private let container: (any CloudContainerProviding)?
     private var isMonitoring = false
+    private var eventObserver: NSObjectProtocol?
     
     // MARK: - Initialization
     
-    init() {
-        // 使用指定的iCloud容器
-        self.container = CKContainer(identifier: AppConstants.iCloudContainerIdentifier)
-        
+    convenience init() {
+        self.init(
+            container: CKContainer(identifier: AppConstants.iCloudContainerIdentifier),
+            startMonitoring: true
+        )
+    }
+
+    init(container: (any CloudContainerProviding)?, startMonitoring: Bool) {
+        self.container = container
+        guard startMonitoring else {
+            syncStatus = .notAvailable
+            return
+        }
+
         Task {
             await checkiCloudStatus()
-            await setupNotifications()
+            setupNotifications()
         }
     }
     
@@ -93,6 +120,11 @@ class CloudKitService: ObservableObject {
     
     /// 检查iCloud账号状态
     func checkiCloudStatus() async {
+        guard let container else {
+            isCloudKitAvailable = false
+            syncStatus = .notAvailable
+            return
+        }
         do {
             let status = try await container.accountStatus()
             
@@ -118,7 +150,7 @@ class CloudKitService: ObservableObject {
     /// 注意：SwiftData + CloudKit 的同步是由系统自动管理的
     /// 此方法主要用于刷新iCloud状态和触发UI更新
     func forceSyncNow() async {
-        guard isCloudKitAvailable else {
+        guard let container, isCloudKitAvailable else {
             syncStatus = .notAvailable
             return
         }
@@ -137,23 +169,8 @@ class CloudKitService: ObservableObject {
                 return
             }
             
-            // SwiftData + CloudKit 会在后台自动同步数据
-            // 我们只需要等待一段时间让系统完成同步
-            // 首次安装或重装后，数据同步可能需要几秒到几分钟不等
-            try await Task.sleep(nanoseconds: 3_000_000_000)
-            
             await MainActor.run {
-                syncStatus = .synced
-                lastSyncDate = Date()
-            }
-            
-            // 5秒后重置为空闲状态
-            try await Task.sleep(nanoseconds: 5_000_000_000)
-            
-            await MainActor.run {
-                if case .synced = syncStatus {
-                    syncStatus = .idle
-                }
+                syncStatus = .idle
             }
         } catch {
             await MainActor.run {
@@ -165,35 +182,35 @@ class CloudKitService: ObservableObject {
     // MARK: - Notifications
     
     /// 设置远程变更通知
-    private func setupNotifications() async {
+    private func setupNotifications() {
         guard !isMonitoring else { return }
         isMonitoring = true
-        
-        // 监听SwiftData远程变更通知
-        NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("NSPersistentStoreRemoteChange"),
+
+        eventObserver = NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.handleRemoteChange()
+        ) { [weak self] notification in
+            MainActor.assumeIsolated {
+                self?.handleCloudKitEvent(notification)
             }
         }
     }
-    
-    private func handleRemoteChange() {
-        print("检测到远程数据变更")
-        
-        // 更新同步状态
-        syncStatus = .synced
-        lastSyncDate = Date()
-        
-        // 3秒后重置状态
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            if case .synced = syncStatus {
-                syncStatus = .idle
-            }
+
+    private func handleCloudKitEvent(_ notification: Notification) {
+        guard let event = notification.userInfo?[
+            NSPersistentCloudKitContainer.eventNotificationUserInfoKey
+        ] as? NSPersistentCloudKitContainer.Event else {
+            return
+        }
+
+        if let error = event.error {
+            syncStatus = .error(error.localizedDescription)
+        } else if event.endDate != nil {
+            syncStatus = .synced
+            lastSyncDate = event.endDate
+        } else {
+            syncStatus = .syncing
         }
     }
     

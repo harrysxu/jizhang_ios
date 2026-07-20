@@ -16,17 +16,14 @@ enum SubscriptionStatus: Equatable {
     case lifetime                       // 买断用户
     
     var isPremium: Bool {
-        // 测试环境默认为高级会员
-        #if DEBUG
-        return true
-        #else
         switch self {
         case .free:
             return false
-        case .premium, .lifetime:
+        case .premium(let expiresAt):
+            return expiresAt.map { $0 > Date() } ?? true
+        case .lifetime:
             return true
         }
-        #endif
     }
     
     var displayName: String {
@@ -54,7 +51,6 @@ enum PremiumFeature: String, CaseIterable {
     case comparisonReport = "对比分析"
     case trendReport = "趋势分析"
     case accountStatistics = "账户统计"
-    case cloudSync = "iCloud同步"
     
     var description: String {
         switch self {
@@ -63,7 +59,7 @@ enum PremiumFeature: String, CaseIterable {
         case .categoryManagement:
             return "自定义收支分类，个性化记账"
         case .budgetManagement:
-            return "设置预算目标，控制支出"
+            return "免费创建 1 个预算，高级版解锁无限预算、结转、预测和提醒"
         case .exportData:
             return "导出CSV数据，备份或分析"
         case .exportLedger:
@@ -80,8 +76,6 @@ enum PremiumFeature: String, CaseIterable {
             return "净资产趋势分析"
         case .accountStatistics:
             return "账户收支统计"
-        case .cloudSync:
-            return "多设备同步，数据云端备份"
         }
     }
     
@@ -109,8 +103,6 @@ enum PremiumFeature: String, CaseIterable {
             return "chart.line.uptrend.xyaxis"
         case .accountStatistics:
             return "building.columns"
-        case .cloudSync:
-            return "icloud"
         }
     }
 }
@@ -120,15 +112,6 @@ enum PremiumFeature: String, CaseIterable {
 class SubscriptionManager {
     
     // MARK: - Debug Settings
-    
-    /// ⚠️ 环境配置说明：
-    /// - DEBUG 模式（测试环境）：默认为高级会员，所有付费功能均可使用
-    /// - RELEASE 模式（正式环境）：会员系统正常生效，需要购买订阅
-    /// 
-    /// 如需在测试环境中测试付费限制，请将 testSubscriptionSystem 设置为 true
-    #if DEBUG
-    static let testSubscriptionSystem: Bool = false  // true = 测试付费限制，false = 默认高级会员
-    #endif
     
     // MARK: - Properties
     
@@ -159,7 +142,12 @@ class SubscriptionManager {
     
     // MARK: - Initialization
     
-    init() {
+    init(
+        startStoreKit: Bool = true,
+        initialStatus: SubscriptionStatus = .free
+    ) {
+        subscriptionStatus = initialStatus
+        guard startStoreKit else { return }
         // 启动交易监听
         transactionListener = listenForTransactions()
         
@@ -178,14 +166,16 @@ class SubscriptionManager {
     
     /// 检查是否有权限使用某功能
     func hasAccess(to feature: PremiumFeature) -> Bool {
-        // 测试环境：默认拥有所有权限（除非开启了付费测试）
-        #if DEBUG
-        if !Self.testSubscriptionSystem {
+        if feature == .budgetManagement {
             return true
         }
-        #endif
-        
-        // 正式环境或测试付费限制时：检查订阅状态
+
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--premium") {
+            return true
+        }
+#endif
+
         return subscriptionStatus.isPremium
     }
     

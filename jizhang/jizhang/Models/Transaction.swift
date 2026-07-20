@@ -116,8 +116,9 @@ final class Transaction {
         self.type = type
         self.note = note
         self.payee = payee
-        self.createdAt = Date()
-        self.modifiedAt = Date()
+        let timestamp = Date()
+        self.createdAt = timestamp
+        self.modifiedAt = timestamp
         self.ledger = ledger
         self.fromAccount = fromAccount
         self.toAccount = toAccount
@@ -154,11 +155,11 @@ extension Transaction {
         case .expense:
             return fromAccount
         case .income:
-            return toAccount
+            return toAccount ?? fromAccount
         case .transfer:
             return fromAccount
         case .adjustment:
-            return toAccount
+            return toAccount ?? fromAccount
         }
     }
 }
@@ -177,7 +178,7 @@ extension Transaction {
             
         case .income:
             // 收入: 增加toAccount
-            if let account = toAccount {
+            if let account = toAccount ?? fromAccount {
                 account.balance += amount
             }
             
@@ -208,7 +209,7 @@ extension Transaction {
             }
             
         case .income:
-            if let account = toAccount {
+            if let account = toAccount ?? fromAccount {
                 account.balance -= amount
             }
             

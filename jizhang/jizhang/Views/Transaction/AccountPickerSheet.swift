@@ -146,6 +146,7 @@ private struct AccountRowView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("account.picker.\(account.id.uuidString)")
     }
 }
 

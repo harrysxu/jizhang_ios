@@ -11,10 +11,10 @@ concurrency:
 
 jobs:
   build-and-test:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build App and Widget
         run: >-
           xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
@@ -23,12 +23,12 @@ jobs:
       - name: Unit and integration tests
         run: >-
           xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
-          -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
           -only-testing:jizhangTests test
       - name: UI launch smoke
         run: >-
           xcodebuild -project jizhang/jizhang.xcodeproj -scheme jizhang
-          -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
           -only-testing:jizhangUITests/jizhangUITestsLaunchTests/testLaunch
           -parallel-testing-enabled NO
           test
